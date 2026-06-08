@@ -1,4 +1,4 @@
-﻿namespace WorkBoard.UI.Options;
+﻿namespace WorkBoard.Domain.Options;
 
 public class WorkBoardUiOptions
 {

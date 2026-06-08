@@ -1,4 +1,4 @@
-﻿namespace WorkBoard.UI.Constants;
+﻿namespace WorkBoard.Domain.Constants;
 
 public static class AppRoutes
 {

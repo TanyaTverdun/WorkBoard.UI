@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using WorkBoard.UI.Constants;
-using WorkBoard.UI.Services;
+using WorkBoard.Domain.Constants;
+using WorkBoard.Services.Abstraction.Auth;
 
 namespace WorkBoard.UI.Pages;
 
 public partial class Authentication
 {
     [Inject] 
-    private AuthService AuthService { get; set; } = default!;
+    private IAuthService AuthService { get; set; } = default!;
     [Inject] 
     private NavigationManager Navigation { get; set; } = default!;
     [Inject] 

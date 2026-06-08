@@ -4,15 +4,18 @@
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
                 <Authorizing>
                 </Authorizing>
+
                 <NotAuthorized>
                     <RedirectToLogin />
                 </NotAuthorized>
             </AuthorizeRouteView>
         </Found>
+
         <NotFound>
             <PageTitle>Not found</PageTitle>
+
             <LayoutView Layout="@typeof(Layout.MainLayout)">
-                <p role="alert">Сторінку не знайдено.</p>
+                <p role="alert">Page not found.</p>
             </LayoutView>
         </NotFound>
     </Router>

@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="WorkBoard.Domain/WorkBoard.Domain.csproj" Id="bc09a691-ce2e-4106-b95e-95cf390369fc" />
+  <Project Path="WorkBoard.Services.Abstraction/WorkBoard.Services.Abstraction.csproj" Id="b160887c-cf18-4c48-92b1-e1b1db5ad6ab" />
+  <Project Path="WorkBoard.Services/WorkBoard.Services.csproj" Id="beab7213-c65a-4611-acb6-2e48f8fd8f12" />
   <Project Path="WorkBoard.UI/WorkBoard.UI.csproj" />
 </Solution>

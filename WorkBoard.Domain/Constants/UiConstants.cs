@@ -1,11 +1,11 @@
-﻿namespace WorkBoard.UI.Constants;
+﻿namespace WorkBoard.Domain.Constants;
 
 public static class UiConstants
 {
     public static class Auth
     {
-        public const string DefaultUsername = "Користувач";
-        public const string LoadingText = "Завантаження...";
+        public const string DefaultUsername = "User";
+        public const string LoadingText = "Loading...";
     }
 
     public static class Marketing

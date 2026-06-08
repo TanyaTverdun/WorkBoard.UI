@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using WorkBoard.UI.Constants;
+using WorkBoard.Domain.Constants;
 
 namespace WorkBoard.UI.Pages;
 

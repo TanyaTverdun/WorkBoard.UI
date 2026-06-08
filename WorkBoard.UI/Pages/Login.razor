@@ -1,6 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Authorization
+
 @page "/login"
+
 @layout EmptyLayout
+
 @attribute [AllowAnonymous]
 
 <div class="split-screen">
@@ -8,17 +11,15 @@
     <div class="left-panel">
 
         <div class="d-flex align-items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-briefcase-fill" viewBox="0 0 16 16">
-                <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v1.384l7.614 2.076a1.5 1.5 0 0 0 .772 0L16 5.884V4.5A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1h-3zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5z" />
-                <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h11a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a2.5 2.5 0 0 1-1.258 0L0 6.85v5.65z" />
-            </svg>
+            <i class="bi bi-briefcase-fill logo-iconlogo-icon"></i>
             <span class="h4 mb-0 fw-bold tracking-wide">WorkBoard</span>
         </div>
 
-        <div class="my-auto" style="max-width: 460px;">
+        <div class="my-auto marketing-content">
             <h1 class="display-4 fw-bold text-white mb-4">
                 Your team's<br />command center.
             </h1>
+
             <p class="text-white-50 lead mb-5">
                 Boards, roles and AI assistance — all in one place.
             </p>
@@ -36,18 +37,15 @@
 
     <div class="right-panel">
         <div class="auth-box">
-
             <h2 class="auth-title">Get started</h2>
+
             <p class="auth-subtitle">Choose how you'd like to continue.</p>
 
-            <button class="btn-login" @onclick="SignIn">
+            <button class="btn-login" 
+                    @onclick=@SignIn>
                 <span>Sign In / Register</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
-                </svg>
+                <i class="bi bi-arrow-right"></i>
             </button>
-
         </div>
     </div>
-
 </div>
