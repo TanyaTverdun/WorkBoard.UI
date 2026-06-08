@@ -1,4 +1,4 @@
-﻿namespace WorkBoard.Services.Abstraction.Auth;
+﻿namespace WorkBoard.Services.Abstraction;
 
 public interface IAuthService
 {

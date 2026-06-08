@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using WorkBoard.Domain.Constants;
-using WorkBoard.Services.Abstraction.Auth;
+using WorkBoard.Services.Abstraction;
 
 namespace WorkBoard.UI.Pages;
 

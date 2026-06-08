@@ -2,7 +2,6 @@
 using WorkBoard.Domain.Constants;
 using WorkBoard.Domain.Options;
 using WorkBoard.Services;
-using WorkBoard.Services.Abstraction;
 
 namespace WorkBoard.UI.Extensions;
 
@@ -25,8 +24,7 @@ public static class DependencyInjection
         builder.Services.Configure<AzureAdOptions>(azureAdSection);
 
         builder.Services
-            .AddInfrastructureAbstractions(uiOptions.BackendBaseUrl)
-            .AddInfrastructureServices();
+            .AddInfrastructureServices(uiOptions.BackendBaseUrl);
 
         builder.Services.AddMsalAuthentication(options =>
         {

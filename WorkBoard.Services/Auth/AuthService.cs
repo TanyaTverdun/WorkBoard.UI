@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
-using WorkBoard.Services.Abstraction.Auth;
+using WorkBoard.Services.Abstraction;
 
-namespace WorkBoard.Services.Services;
+namespace WorkBoard.Services.Auth;
 
-public class AuthService : IAuthService
+internal class AuthService : IAuthService
 {
     private readonly IAuthApi _authApi;
     private readonly ILogger<AuthService> _logger;
