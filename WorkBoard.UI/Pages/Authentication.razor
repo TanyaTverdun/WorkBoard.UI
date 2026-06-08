@@ -1,0 +1,8 @@
+﻿@page "/authentication/{action}"
+
+@layout EmptyLayout
+
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+<RemoteAuthenticatorView Action=@Action 
+                         OnLogInSucceeded="HandleLogInSuccess" />

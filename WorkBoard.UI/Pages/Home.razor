@@ -1,7 +1,16 @@
-﻿@page "/"
+﻿@using Microsoft.AspNetCore.Authorization
 
-<PageTitle>Home</PageTitle>
+@page "/"
 
-<h1>Hello, world!</h1>
+@attribute [Authorize]
 
-Welcome to your new app.
+<div>
+    <h4 class="mb-0 text-secondary">
+        <i class="bi bi-person-circle me-2"></i>
+        @Username
+    </h4>
+
+    <h1 class="display-3 font-weight-bold text-primary mb-3">
+        WorkBoard
+    </h1>
+</div>
