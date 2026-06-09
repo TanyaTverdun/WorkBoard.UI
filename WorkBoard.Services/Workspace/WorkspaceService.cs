@@ -11,7 +11,7 @@ internal class WorkspaceService : IWorkspaceService
     private readonly IWorkspaceApi _workspaceApi;
     private readonly ILogger<WorkspaceService> _logger;
 
-    internal WorkspaceService(
+    public WorkspaceService(
         IWorkspaceApi workspaceApi, 
         ILogger<WorkspaceService> logger)
     {

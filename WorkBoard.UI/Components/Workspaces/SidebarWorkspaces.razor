@@ -1,0 +1,44 @@
+﻿@using WorkBoard.UI.Components.Workspaces.Modal
+
+@inherits Microsoft.AspNetCore.Components.ComponentBase
+
+<div class="workspaces-section">
+    <div class="sidebar-header d-flex align-items-center justify-content-between" 
+         @onclick=@ToggleDropdown>
+        <h3 class="sidebar-title">WORKSPACES</h3>
+
+        <i class="bi bi-chevron-down arrow-icon @(_isDropdownOpen ? "open" : "")"></i>
+    </div>
+
+    <div class="dropdown-content @(_isDropdownOpen ? "show" : "")">
+        @if (Workspaces == null)
+        {
+            <div class="loading-text text-muted small px-3">loading...</div>
+        }
+        else
+        {
+            <ul class="workspace-list list-unstyled m-0">
+                @foreach (var space in Workspaces)
+                {
+                    <li class="workspace-item d-flex align-items-center gap-2 py-0 px-2 my-1 rounded @(SelectedWorkspaceId == space.Id ? "active" : "")"
+                        @onclick="() => SelectWorkspace(space.Id)">
+
+                        <i class="bi bi-briefcase-fill workspace-icon"></i>
+
+                        <span class="workspace-name text-truncate">@space.Name</span>
+                    </li>
+                }
+            </ul>
+        }
+
+        <button class="btn-new-workspace d-flex align-items-center gap-2 mt-1" 
+                @onclick=@OpenCreateModal>
+            <i class="bi bi-plus-lg"></i>
+            <span>New Workspace</span>
+        </button>
+    </div>
+</div>
+
+<CreateWorkspaceModal IsOpen=@_isCreateModalOpen
+                      OnClose=@CloseCreateModal
+                      OnWorkspaceCreated=@HandleWorkspaceCreatedAsync />

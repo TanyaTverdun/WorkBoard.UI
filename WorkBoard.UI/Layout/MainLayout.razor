@@ -1,9 +1,11 @@
-﻿@inherits LayoutComponentBase
+﻿@using WorkBoard.UI.Components
 
-<div class="page">
-    <main>
-        <article class="content px-4">
-            @Body
-        </article>
+@inherits LayoutComponentBase
+
+<div class="d-flex vh-100 overflow-hidden bg-dark">
+    <Sidebar />
+
+    <main class="flex-grow-1 overflow-auto app-main-content">
+        @Body
     </main>
 </div>
