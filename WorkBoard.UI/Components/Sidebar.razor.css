@@ -1,0 +1,30 @@
+﻿.sidebar {
+    background-color: #0d1117;
+    width: 260px;
+    min-width: 260px;
+    border-right: 1px solid #21262d;
+}
+
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+.search-box input {
+    font-size: 0.85rem;
+}
+
+.search-box .input-group-text {
+    padding-right: 0.25rem;
+}
+
+.nav-link:hover {
+    background-color: #161b22;
+    cursor: pointer;
+}
+
+.font-xs {
+    font-size: 0.7rem;
+}

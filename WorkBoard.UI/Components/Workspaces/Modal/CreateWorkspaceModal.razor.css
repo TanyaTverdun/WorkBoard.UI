@@ -1,0 +1,67 @@
+﻿.custom-modal {
+    background-color: #222a36;
+    border: 1px solid #2d3748;
+    border-radius: 12px;
+}
+
+.form-control {
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.modal-title {
+    font-size: 1.0rem;
+}
+
+.form-label {
+    color: #94a3b8;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.btn-workspace-cancel {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.15s ease;
+}
+    .btn-workspace-cancel:hover:not(:disabled) {
+        color: #ffffff;
+    }
+
+.btn-workspace-submit {
+    background-color: #093a7a;
+    border: 1px solid #093a7a;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+    .btn-workspace-submit:hover:not(:disabled) {
+        background-color: #084ba3;
+        border-color: #084ba3;
+    }
+
+.toast {
+    border-radius: 8px;
+    min-width: 320px;
+}
+
+.toast-body {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-workspace-submit:disabled, .btn-workspace-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toast-error-container {
+    z-index: 1055;
+}
