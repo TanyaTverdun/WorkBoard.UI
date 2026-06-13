@@ -23,6 +23,7 @@
     }
 
     <div class="modal-backdrop fade show"></div>
+
     <div class="modal d-block" 
          tabindex="-1" 
          role="dialog">
@@ -30,7 +31,9 @@
              role="document">
             <div class="modal-content custom-modal">
                 <div class="modal-header border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="modal-title fw-bold text-white">Create New Workspace</h5>
+                    <h5 class="modal-title fw-bold text-white">
+                        @(IsEditMode ? "Edit Workspace" : "Create New Workspace")
+                    </h5>
 
                     <button type="button" 
                             class="btn-close btn-close-white shadow-none" 
@@ -75,11 +78,11 @@
                                       aria-hidden="true">
                                 </span>
 
-                                <span>Creating...</span>
+                                <span>@(IsEditMode ? "Saving..." : "Creating...")</span>
                             }
                             else
                             {
-                                <span>Create</span>
+                                <span>@(IsEditMode ? "Save" : "Create")</span>
                             }
                         </button>
                     </div>

@@ -1,0 +1,79 @@
+﻿.custom-modal {
+    background-color: #222a36 !important;
+    border: 1px solid #2d3748 !important;
+    border-radius: 12px !important;
+}
+
+.modal-title {
+    font-size: 1.0rem !important;
+    color: #ffffff !important;
+}
+
+.form-label, .modal-body p {
+    color: #94a3b8 !important;
+    font-size: 0.9rem !important;
+}
+
+.btn-workspace-cancel {
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    transition: color 0.15s ease !important;
+}
+
+    .btn-workspace-cancel:hover:not(:disabled) {
+        color: #ffffff !important;
+    }
+
+.btn-workspace-submit {
+    background-color: #093a7a !important;
+    border: 1px solid #093a7a !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+}
+
+    .btn-workspace-submit:hover:not(:disabled) {
+        background-color: #084ba3 !important;
+        border-color: #084ba3 !important;
+    }
+
+.btn-workspace-delete {
+    background-color: #991b1b !important;
+    border: 1px solid #991b1b !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+}
+
+    .btn-workspace-delete:hover:not(:disabled) {
+        background-color: #dc2626 !important;
+        border-color: #dc2626 !important;
+    }
+
+    .btn-workspace-submit:disabled,
+    .btn-workspace-cancel:disabled,
+    .btn-workspace-delete:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+    }
+
+.toast {
+    border-radius: 8px !important;
+    min-width: 320px !important;
+}
+
+.toast-body {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+.toast-error-container {
+    z-index: 1055 !important;
+}

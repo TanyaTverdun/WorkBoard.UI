@@ -1,4 +1,5 @@
-﻿@using WorkBoard.UI.Components.Workspaces.Modal
+﻿@using WorkBoard.Domain.Enums
+@using WorkBoard.UI.Components.Workspaces.Modal
 
 @inherits Microsoft.AspNetCore.Components.ComponentBase
 
@@ -20,12 +21,31 @@
             <ul class="workspace-list list-unstyled m-0">
                 @foreach (var space in Workspaces)
                 {
-                    <li class="workspace-item d-flex align-items-center gap-2 py-0 px-2 my-1 rounded @(SelectedWorkspaceId == space.Id ? "active" : "")"
+                    <li class="workspace-item d-flex align-items-center justify-content-between py-1 px-2 my-1 rounded @(SelectedWorkspaceId == space.Id ? "active" : "")"
                         @onclick="() => SelectWorkspace(space.Id)">
 
-                        <i class="bi bi-briefcase-fill workspace-icon"></i>
+                        <div class="d-flex align-items-center gap-2 text-truncate">
+                            <i class="bi bi-briefcase-fill workspace-icon"></i>
+                            <span class="workspace-name text-truncate">@space.Name</span>
+                        </div>
 
-                        <span class="workspace-name text-truncate">@space.Name</span>
+                        @if (space.UserRole == WorkspaceRole.Owner)
+                        {
+                            <div class="workspace-actions d-flex align-items-center gap-1.5" 
+                                @onclick:stopPropagation>
+                                <button class="btn-action edit-action"
+                                        title="Edit Workspace"
+                                        @onclick="() => OpenEditModal(space)">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+
+                                <button class="btn-action delete-action"
+                                        title="Delete Workspace"
+                                        @onclick="() => OpenDeleteModal(space)">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        }
                     </li>
                 }
             </ul>
@@ -39,6 +59,13 @@
     </div>
 </div>
 
-<CreateWorkspaceModal IsOpen=@_isCreateModalOpen
-                      OnClose=@CloseCreateModal
-                      OnWorkspaceCreated=@HandleWorkspaceCreatedAsync />
+<WorkspaceModal IsOpen=@_isCreateModalOpen
+                WorkspaceId=@_workspaceToModify?.Id
+                InitialName=@_workspaceToModify?.Name
+                OnClose=@CloseCreateModal
+                OnWorkspaceSaved=@HandleWorkspaceSavedAsync />
+
+<DeleteWorkspaceModal IsOpen=@_isDeleteModalOpen
+                      Workspace=@_workspaceToModify
+                      OnClose=@CloseDeleteModal
+                      OnWorkspaceDeleted=@HandleWorkspaceDeletedAsync />
