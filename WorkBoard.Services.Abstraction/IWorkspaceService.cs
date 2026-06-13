@@ -12,10 +12,6 @@ public interface IWorkspaceService
         CreateWorkspaceRequest request, 
         CancellationToken cancellationToken = default);
 
-    Task<UserWorkspaceDto> GetWorkspaceByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
-
     Task UpdateWorkspaceAsync(
         Guid id,
         UpdateWorkspaceRequest request,

@@ -75,36 +75,6 @@ internal class WorkspaceService : IWorkspaceService
         }
     }
 
-    public async Task<UserWorkspaceDto> GetWorkspaceByIdAsync(
-        Guid id, 
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _workspaceApi.GetWorkspaceByIdAsync(
-                id, 
-                cancellationToken);
-        }
-        catch (ApiException apiEx)
-        {
-            _logger.LogError(
-                apiEx, 
-                "API error occurred while fetching workspace " +
-                "{WorkspaceId}. Status: {StatusCode}", 
-                id, 
-                apiEx.StatusCode);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex, 
-                "Error occurred while fetching workspace {WorkspaceId}", 
-                id);
-            throw;
-        }
-    }
-
     public async Task UpdateWorkspaceAsync(
         Guid id, 
         UpdateWorkspaceRequest request, 

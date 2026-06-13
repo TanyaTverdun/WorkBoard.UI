@@ -15,11 +15,6 @@ internal interface IWorkspaceApi
         [Body] CreateWorkspaceRequest request, 
         CancellationToken cancellationToken = default);
 
-    [Get("/api/workspaces/{id}")]
-    Task<UserWorkspaceDto> GetWorkspaceByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
-
     [Put("/api/workspaces/{id}")]
     Task UpdateWorkspaceAsync(
         Guid id,
