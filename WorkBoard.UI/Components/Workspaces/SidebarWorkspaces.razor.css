@@ -85,3 +85,45 @@
     .btn-new-workspace:hover {
         color: #fff;
     }
+
+.workspace-item {
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    display: flex;
+    position: relative;
+}
+
+.workspace-actions {
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    padding-right: 2px;
+}
+
+.workspace-item:hover .workspace-actions {
+    opacity: 1;
+}
+
+.btn-action {
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.1s ease;
+    display: flex;
+    align-items: center;
+}
+
+.edit-action:hover {
+    color: #3b82f6;
+    background-color: #1e293b;
+}
+
+.delete-action:hover {
+    color: #ef4444;
+    background-color: #2d1f29;
+}

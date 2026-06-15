@@ -21,6 +21,9 @@ public partial class SidebarWorkspaces
 
     protected bool _isCreateModalOpen;
 
+    protected bool _isDeleteModalOpen;
+    protected UserWorkspaceDto? _workspaceToModify;
+
     protected override async Task OnInitializedAsync()
     {
         if (AuthenticationStateTask is not null)
@@ -70,12 +73,45 @@ public partial class SidebarWorkspaces
         _isCreateModalOpen = false;
     }
 
-    protected async Task HandleWorkspaceCreatedAsync(Guid newWorkspaceId)
+    protected void OpenEditModal(UserWorkspaceDto workspace)
+    {
+        _workspaceToModify = workspace;
+        _isCreateModalOpen = true;
+    }
+
+    protected void OpenDeleteModal(UserWorkspaceDto workspace)
+    {
+        _workspaceToModify = workspace;
+        _isDeleteModalOpen = true;
+    }
+
+    protected void CloseDeleteModal()
+    {
+        _isDeleteModalOpen = false;
+        _workspaceToModify = null;
+    }
+
+    protected async Task HandleWorkspaceSavedAsync(
+        Guid workspaceId)
     {
         _isCreateModalOpen = false;
+        _workspaceToModify = null;
 
         await LoadWorkspacesAsync();
+        SelectWorkspace(workspaceId);
+    }
 
-        SelectWorkspace(newWorkspaceId);
+    protected async Task HandleWorkspaceDeletedAsync()
+    {
+        if (_workspaceToModify != null && 
+            SelectedWorkspaceId == _workspaceToModify.Id)
+        {
+            SelectedWorkspaceId = null;
+        }
+
+        _isDeleteModalOpen = false;
+        _workspaceToModify = null;
+
+        await LoadWorkspacesAsync();
     }
 }

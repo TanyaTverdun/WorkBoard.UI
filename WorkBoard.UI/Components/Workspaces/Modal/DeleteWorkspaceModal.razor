@@ -1,0 +1,73 @@
+﻿@if (IsOpen && Workspace != null)
+{
+    @if (_showErrorToast)
+    {
+        <div class="toast-container toast-error-container position-fixed bottom-0 end-0 p-3">
+            <div class="toast show align-items-center text-white bg-danger border-0"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>@_errorMessage</span>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close btn-close-white me-2 m-auto shadow-none"
+                            @onclick=@CloseToast></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="modal-backdrop fade show"></div>
+
+    <div class="modal d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content custom-modal">
+                <div class="modal-header border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title fw-bold text-white">Delete Workspace</h5>
+                    
+                    <button type="button"
+                            class="btn-close btn-close-white shadow-none"
+                            @onclick=@CloseAsync
+                            disabled=@IsSubmitting>
+                    </button>
+                </div>
+
+                <div class="modal-body py-3">
+                    <p class="mb-0 small">
+                        Are you sure you want to delete the workspace <strong class="text-white">"@Workspace.Name"</strong>? This action cannot be undone.
+                    </p>
+                </div>
+
+                <div class="modal-footer border-0 gap-2 justify-content-end pt-0">
+                    <button type="button"
+                            class="btn btn-workspace-cancel text-decoration-none shadow-none px-3"
+                            @onclick=@CloseAsync
+                            disabled=@IsSubmitting>
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-workspace-delete px-4 d-flex align-items-center gap-2 shadow-none"
+                            @onclick=@HandleDeleteAsync
+                            disabled=@IsSubmitting>
+                        @if (IsSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm" 
+                                  role="status" 
+                                  aria-hidden="true"></span>
+                            <span>Deleting...</span>
+                        }
+                        else
+                        {
+                            <span>Delete</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

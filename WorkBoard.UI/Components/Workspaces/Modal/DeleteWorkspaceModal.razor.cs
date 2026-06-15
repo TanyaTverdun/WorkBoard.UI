@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using WorkBoard.Services.Abstraction;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.DTOs;
 
 namespace WorkBoard.UI.Components.Workspaces.Modal;
 
-public partial class CreateWorkspaceModal
+public partial class DeleteWorkspaceModal
 {
     [Inject]
     private IWorkspaceService WorkspaceService { get; set; } = null!;
@@ -13,14 +13,15 @@ public partial class CreateWorkspaceModal
     public bool IsOpen { get; set; }
 
     [Parameter]
+    public UserWorkspaceDto? Workspace { get; set; }
+
+    [Parameter]
     public EventCallback OnClose { get; set; }
 
     [Parameter]
-    public EventCallback<Guid> OnWorkspaceCreated { get; set; }
+    public EventCallback OnWorkspaceDeleted { get; set; }
 
-    protected CreateWorkspaceRequest Model { get; set; } = new();
     protected bool IsSubmitting { get; set; }
-
     protected bool _showErrorToast;
     protected string _errorMessage = string.Empty;
 
@@ -28,7 +29,6 @@ public partial class CreateWorkspaceModal
     {
         if (IsOpen)
         {
-            Model = new CreateWorkspaceRequest();
             IsSubmitting = false;
             _showErrorToast = false;
         }
@@ -49,9 +49,9 @@ public partial class CreateWorkspaceModal
         _showErrorToast = false;
     }
 
-    protected async Task HandleValidSubmitAsync()
+    protected async Task HandleDeleteAsync()
     {
-        if (IsSubmitting)
+        if (IsSubmitting || Workspace == null)
         {
             return;
         }
@@ -61,13 +61,13 @@ public partial class CreateWorkspaceModal
             IsSubmitting = true;
             _showErrorToast = false;
 
-            var newWorkspaceId = await WorkspaceService.CreateWorkspaceAsync(Model);
+            await WorkspaceService.DeleteWorkspaceAsync(Workspace.Id);
 
-            await OnWorkspaceCreated.InvokeAsync(newWorkspaceId);
+            await OnWorkspaceDeleted.InvokeAsync();
         }
         catch (Exception)
         {
-            _errorMessage = "Failed to create workspace";
+            _errorMessage = "Failed to delete workspace";
             _showErrorToast = true;
             _ = AutoHideToastAsync();
         }

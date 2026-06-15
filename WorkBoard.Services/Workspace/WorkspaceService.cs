@@ -74,4 +74,66 @@ internal class WorkspaceService : IWorkspaceService
             throw;
         }
     }
+
+    public async Task UpdateWorkspaceAsync(
+        Guid id, 
+        UpdateWorkspaceRequest request, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _workspaceApi.UpdateWorkspaceAsync(
+                id, 
+                request, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx, 
+                "API error occurred while updating workspace " +
+                "{WorkspaceId}. Status: {StatusCode}", 
+                id, 
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex, 
+                "Error occurred while updating workspace {WorkspaceId}", 
+                id);
+            throw;
+        }
+    }
+
+    public async Task DeleteWorkspaceAsync(
+        Guid id, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _workspaceApi.DeleteWorkspaceAsync(
+                id, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx, 
+                "API error occurred while deleting workspace " +
+                "{WorkspaceId}. Status: {StatusCode}", 
+                id, 
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex, 
+                "Error occurred while deleting workspace {WorkspaceId}", 
+                id);
+            throw;
+        }
+    }
 }
