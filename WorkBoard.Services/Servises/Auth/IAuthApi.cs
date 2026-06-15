@@ -1,6 +1,6 @@
 ﻿using Refit;
 
-namespace WorkBoard.Services.Auth;
+namespace WorkBoard.Services.Servises.Auth;
 
 internal interface IAuthApi
 {

@@ -4,7 +4,7 @@ using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 
-namespace WorkBoard.Services.Board;
+namespace WorkBoard.Services.Servises.Board;
 
 internal class BoardService : IBoardService
 {

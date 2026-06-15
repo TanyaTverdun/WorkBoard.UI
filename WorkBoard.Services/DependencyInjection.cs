@@ -4,8 +4,10 @@ using Microsoft.Extensions.Options;
 using Refit;
 using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction;
-using WorkBoard.Services.Auth;
-using WorkBoard.Services.Workspace;
+using WorkBoard.Services.Servises.Auth;
+using WorkBoard.Services.Servises.Board;
+using WorkBoard.Services.Servises.Workspace;
+using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.Services;
 
@@ -28,6 +30,8 @@ public static class DependencyInjection
             return handler;
         }
 
+        services.AddScoped<WorkspaceStateProvider>();
+
         services.AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
             .AddHttpMessageHandler(CreateAuthorizationHandler);
@@ -39,6 +43,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IWorkspaceService, WorkspaceService>();
+
+        services.AddRefitClient<IBoardApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<IBoardService, BoardService>();
 
         return services;
     }

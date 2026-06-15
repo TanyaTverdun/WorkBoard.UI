@@ -2,7 +2,7 @@
 using Refit;
 using WorkBoard.Services.Abstraction;
 
-namespace WorkBoard.Services.Auth;
+namespace WorkBoard.Services.Servises.Auth;
 
 internal class AuthService : IAuthService
 {
