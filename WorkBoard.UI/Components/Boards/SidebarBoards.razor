@@ -1,0 +1,76 @@
+﻿@using WorkBoard.UI.Components.Boards.Modals
+@inherits Microsoft.AspNetCore.Components.ComponentBase
+
+<div class="workspaces-section">
+    <div class="sidebar-header d-flex align-items-center justify-content-between" 
+         @onclick=@ToggleDropdown>
+        <h3 class="sidebar-title">BOARDS</h3>
+
+        <i class="bi bi-chevron-down arrow-icon @(_isDropdownOpen ? "open" : "")"></i>
+    </div>
+
+    <div class="dropdown-content @(_isDropdownOpen ? "show" : "")">
+        @if (WorkspaceId == null)
+        {
+            <div class="loading-text text-white small px-3">Select a workspace...</div>
+        }
+        else if (Boards == null)
+        {
+            <div class="loading-text text-muted small px-3">loading...</div>
+        }
+        else
+        {
+            <ul class="workspace-list list-unstyled m-0">
+                @foreach (var board in Boards)
+                {
+                    <li class="workspace-item d-flex align-items-center justify-content-between py-1 px-2 my-1 rounded @(SelectedBoardId == board.Id ? "active" : "")"
+                        @onclick="() => SelectBoard(board.Id)">
+
+                        <div class="d-flex align-items-center gap-2 text-truncate">
+                            <i class="bi bi-hash workspace-icon"></i>
+                            <span class="workspace-name text-truncate">@board.Name</span>
+                        </div>
+
+                        @if (CanManageBoards)
+                        {
+                            <div class="workspace-actions d-flex align-items-center gap-1.5" 
+                                 @onclick:stopPropagation>
+                                <button class="btn-action edit-action"
+                                        title="Edit Board"
+                                        @onclick="() => OpenEditModal(board)">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+
+                                <button class="btn-action delete-action"
+                                        title="Delete Board"
+                                        @onclick="() => OpenDeleteModal(board)">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+
+            @if (CanManageBoards)
+            {
+                <button class="btn-new-workspace d-flex align-items-center gap-2 mt-1" 
+                        @onclick=@OpenCreateModal>
+                    <i class="bi bi-plus-lg"></i>
+                    <span>New Board</span>
+                </button>
+            }
+        }
+    </div>
+</div>
+
+<BoardModal IsOpen=@_isCreateModalOpen
+            BoardId=@_boardToModify?.Id
+            InitialName=@_boardToModify?.Name
+            OnClose=@CloseCreateModal
+            OnBoardSaved=@(async (Guid boardId) => await HandleBoardSavedAsync(boardId)) />
+
+<DeleteBoardModal IsOpen=@_isDeleteModalOpen
+                  Board=@_boardToModify
+                  OnClose=@CloseDeleteModal
+                  OnBoardDeleted=@HandleBoardDeletedAsync />

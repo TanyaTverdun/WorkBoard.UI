@@ -2,7 +2,7 @@
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 
-namespace WorkBoard.Services.Workspace;
+namespace WorkBoard.Services.Servises.Workspace;
 
 internal interface IWorkspaceApi
 {

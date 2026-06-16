@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Workspaces;
 
@@ -9,6 +10,9 @@ public partial class SidebarWorkspaces
 {
     [Inject]
     private IWorkspaceService WorkspaceService { get; set; } = null!;
+
+    [Inject]
+    private WorkspaceStateProvider WorkspaceStateProvider { get; set; } = null!;
 
     protected IReadOnlyList<UserWorkspaceDto>? Workspaces { get; private set; }
 
@@ -61,6 +65,13 @@ public partial class SidebarWorkspaces
     private void SelectWorkspace(Guid id)
     {
         SelectedWorkspaceId = id;
+
+        var currentSpace = Workspaces?
+            .FirstOrDefault(w => w.Id == id);
+
+        WorkspaceStateProvider.SetActiveWorkspace(
+            id, 
+            currentSpace?.UserRole);
     }
 
     protected void OpenCreateModal()
@@ -107,6 +118,7 @@ public partial class SidebarWorkspaces
             SelectedWorkspaceId == _workspaceToModify.Id)
         {
             SelectedWorkspaceId = null;
+            WorkspaceStateProvider.SetActiveWorkspace(null, null);
         }
 
         _isDeleteModalOpen = false;
