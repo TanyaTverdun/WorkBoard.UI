@@ -6,6 +6,7 @@ using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Servises.Auth;
 using WorkBoard.Services.Servises.Board;
+using WorkBoard.Services.Servises.Section;
 using WorkBoard.Services.Servises.Workspace;
 using WorkBoard.Services.StateProviders;
 
@@ -49,6 +50,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IBoardService, BoardService>();
+
+        services.AddRefitClient<ISectionApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<ISectionService, SectionService>();
 
         return services;
     }
