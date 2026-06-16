@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 using WorkBoard.Domain.Constants;
 using WorkBoard.Domain.Options;
 using WorkBoard.Services;
@@ -41,6 +42,8 @@ public static class DependencyInjection
                 $"api://{azureOptions.BackendClientId}/" +
                 $"{ConfigConstants.AzureScopes.AccessAsUser}");
         });
+
+        builder.Services.AddMudServices();
 
         return builder;
     }
