@@ -1,0 +1,193 @@
+﻿@page "/boards/{BoardIdGuid:guid}"
+
+@using Microsoft.AspNetCore.Components
+
+<div class="d-flex flex-column">
+	<div class="d-flex align-center justify-space-between py-3 px-5 gap-3 mb-6 board-header">
+		<div class="d-flex gap-4">
+			<MudText Typo="Typo.h6" Class="font-weight-bold mr-2">
+				Q3 Product Roadmap
+			</MudText>
+
+		</div>
+
+		
+	</div>
+
+	<MudDropContainer T="KanbanTaskItem"
+					  @ref="_dropContainer"
+					  Items="@_tasks"
+					  ItemsSelector="@((item, column) => item.Status == column)"
+					  ItemDropped="TaskUpdated"
+					  Class="d-flex flex-row px-6 pr-15 flex-grow-1 kanban-container">
+		<ChildContent>
+			@foreach (var item in _sections)
+			{
+				<MudPaper Elevation="0"
+						  Width="17rem"
+						  Class="pa-4 ma-4 d-flex flex-column rounded-lg kanban-column">
+					<MudToolBar Gutters="false" Class="mb-2">
+						@if (item.IsRenaming)
+						{
+							<div class="d-flex flex-grow-1 mr-2 align-center rename-wrapper">
+								<MudTextField @bind-Value="item.EditName"
+											  Underline="false"
+											  Margin="Margin.Dense"
+											  AutoFocus="true"
+											  Class="rename-input" />
+							</div>
+
+							<MudIconButton Icon="@Icons.Material.Rounded.Check"
+										   Size="Size.Small"
+										   Color="Color.Success"
+										   OnClick="@(() => SaveRename(item))" />
+
+							<MudIconButton Icon="@Icons.Material.Rounded.Close"
+										   Size="Size.Small"
+										   OnClick="@(() => item.IsRenaming = false)" />
+						}
+						else
+						{
+							<MudText Typo="Typo.subtitle1" Class="section-title">
+								<b>@item.Name</b>
+							</MudText>
+							<MudSpacer />
+							<MudMenu Icon="@Icons.Material.Rounded.MoreHoriz"
+									 @bind-Open="item.MenuOpen"
+									 AnchorOrigin="Origin.BottomRight"
+									 TransformOrigin="Origin.TopRight"
+									 ListClass="pa-2 d-flex flex-column"
+									 PopoverClass="mud-elevation-25 rounded-lg px-2">
+
+								<div @onclick:stopPropagation="true">
+									@if (item.IsConfirmingDelete)
+									{
+										<MudButton Size="Size.Small"
+												   Color="Color.Error"
+												   Variant="Variant.Filled"
+												   DropShadow="false"
+												   Class="w-100 justify-start mb-1"
+												   StartIcon="@Icons.Material.Filled.DeleteForever"
+												   OnClick="@(() => DeleteSection(item))">
+											Confirm Delete
+										</MudButton>
+									}
+									else
+									{
+										<MudButton Size="Size.Small"
+												   Color="Color.Error"
+												   Class="w-100 justify-start mb-1"
+												   StartIcon="@Icons.Material.Outlined.Delete"
+												   OnClick="@(() => item.IsConfirmingDelete = true)">
+											Delete
+										</MudButton>
+									}
+								</div>
+
+								<MudButton Size="Size.Small"
+										   Color="Color.Default"
+										   Class="w-100 justify-start"
+										   StartIcon="@Icons.Material.Rounded.Edit"
+										   OnClick="@(() => StartRename(item))">
+									Rename
+								</MudButton>
+							</MudMenu>
+						}
+					</MudToolBar>
+
+					<MudDropZone T="KanbanTaskItem"
+								 Identifier="@item.Name"
+								 Class="flex-grow-1 pb-4 drop-zone"
+								 AllowReorder="true" />
+
+					@if (item.NewTaskOpen)
+					{
+						<MudPaper Elevation="1" Class="pa-2 rounded-lg mt-2">
+							<MudTextField @bind-Value="item.NewTaskName"
+										  Placeholder="Enter card title..."
+										  Underline="false"
+										  Margin="Margin.Dense"
+										  AutoGrow="true"
+										  Class="mx-1 mb-2">
+							</MudTextField>
+
+							<div class="d-flex align-center justify-space-between gap-1">
+								<MudButton OnClick="@(() => AddTask(item))"
+										   Variant="Variant.Filled"
+										   Size="Size.Small"
+										   Class="rounded-lg text-none px-3 btn-create">
+									Add Card
+								</MudButton>
+
+								<MudIconButton Icon="@Icons.Material.Rounded.Close"
+											   Size="Size.Small"
+											   Class="text-muted"
+											   OnClick="@(() => CloseNewTaskForm(item))" />
+							</div>
+						</MudPaper>
+					}
+					else
+					{
+						<MudButton OnClick="@(() => item.NewTaskOpen = !item.NewTaskOpen)"
+								   StartIcon="@Icons.Material.Filled.Add"
+								   FullWidth="true"
+								   Class="rounded-lg py-2 justify-start px-3 add-card-btn-empty">
+							Add Card
+						</MudButton>
+					}
+				</MudPaper>
+			}
+
+			<MudPaper Class="pa-4 add-section-wrapper"
+					  Elevation="0"
+					  Width="17rem">
+				@if (_addSectionOpen)
+				{
+					<MudPaper Elevation="0"
+							  Width="17rem"
+							  Class="pa-4 d-flex flex-column mud-background-gray rounded-lg add-section-form-wrapper">
+						<EditForm Model="@newSectionModel"
+								  OnValidSubmit="OnValidSectionSubmit"
+								  Class="add-section-form-wrapper">
+							<DataAnnotationsValidator />
+
+							<MudTextField @bind-Value="newSectionModel.Name" For="@(() => newSectionModel.Name)"
+										  Placeholder="New section"
+										  Underline="false"
+										  Class="mb-4">
+							</MudTextField>
+
+							<div class="d-flex align-center justify-space-between gap-1">
+								<MudButton ButtonType="ButtonType.Submit"
+										   Variant="Variant.Filled"
+										   Size="Size.Small"
+										   Class="rounded-lg text-none px-3 btn-create">
+									Add section
+								</MudButton>
+
+								<MudIconButton Icon="@Icons.Material.Rounded.Close"
+											   Size="Size.Small"
+											   Class="text-muted"
+											   OnClick="CloseAddNewSection" />
+							</div>
+						</EditForm>
+					</MudPaper>
+				}
+				else
+				{
+					<MudButton OnClick="OpenAddNewSection"
+							   StartIcon="@Icons.Material.Filled.Add"
+							   DisableElevation="true"
+							   Class="rounded-lg py-2 px-5 text-none add-section-btn">
+						Add Section
+					</MudButton>
+				}
+			</MudPaper>
+		</ChildContent>
+		<ItemRenderer>
+			<MudPaper Elevation="1" Class="pa-4 rounded-lg my-3 task-item">
+				@context.Name
+			</MudPaper>
+		</ItemRenderer>
+	</MudDropContainer>
+</div>

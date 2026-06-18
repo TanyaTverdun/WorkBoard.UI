@@ -1,0 +1,79 @@
+﻿.board-header {
+    background-color: #e2e8f0;
+}
+
+::deep .kanban-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    height: calc(100vh - 100px);
+}
+
+::deep .kanban-column {
+    background-color: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.rename-wrapper {
+    background-color: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 36px;
+}
+
+::deep .rename-input {
+    padding-left: 12px;
+    margin-top: 0;
+    background-color: transparent;
+}
+
+::deep .section-title {
+    word-break: break-word;
+    white-space: normal;
+    padding-right: 8px;
+}
+
+::deep .drop-zone {
+    min-height: 3rem;
+}
+
+::deep .add-card-btn-empty {
+    color: #6b778c;
+    text-transform: none !important;
+}
+
+::deep .add-section-wrapper {
+    background-color: transparent !important;
+    height: fit-content !important;
+    flex-shrink: 0 !important;
+}
+
+::deep .add-section-form-wrapper {
+    background-color: #e2e8f0 !important;
+}
+
+::deep .add-section-btn {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    text-transform: none !important;
+    font-weight: 500;
+}
+
+::deep .task-item {
+    word-break: break-word;
+}
+
+::deep .btn-create {
+    background-color: #5C6BC0 !important;
+    color: white !important;
+    text-transform: none !important;
+    transition: background-color 0.2s ease-in-out;
+}
+
+    ::deep .btn-create:hover {
+        text-transform: none !important;
+        background-color: #3949AB !important;
+    }
