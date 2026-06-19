@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
@@ -13,6 +14,9 @@ public partial class SidebarBoards : ComponentBase, IDisposable
 
     [Inject]
     private WorkspaceStateProvider WorkspaceStateProvider { get; set; } = null!;
+
+    [Inject]
+    protected NavigationManager NavigationManager { get; set; } = null!;
 
     protected bool CanManageBoards =>
             WorkspaceStateProvider.CurrentRole.HasValue &&
@@ -31,11 +35,39 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         WorkspaceStateProvider.OnWorkspaceChanged += HandleWorkspaceChanged;
+        NavigationManager.LocationChanged += HandleLocationChanged;
 
         if (WorkspaceStateProvider.SelectedWorkspaceId.HasValue)
         {
             _ = LoadBoardsAsync(WorkspaceStateProvider.SelectedWorkspaceId.Value);
         }
+
+        SyncSelectedBoardFromUrl();
+    }
+
+    private void SyncSelectedBoardFromUrl()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments.Length >= 2 && segments[0].Equals("boards", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Guid.TryParse(segments[1], out var boardId))
+            {
+                SelectedBoardId = boardId;
+                return;
+            }
+        }
+
+        SelectedBoardId = null;
+    }
+
+    private void HandleLocationChanged(
+        object? sender, 
+        LocationChangedEventArgs e)
+    {
+        SyncSelectedBoardFromUrl();
+        InvokeAsync(StateHasChanged);
     }
 
     private async void HandleWorkspaceChanged(
@@ -75,6 +107,8 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     private void SelectBoard(Guid id)
     {
         SelectedBoardId = id;
+
+        NavigationManager.NavigateTo($"/boards/{id}");
     }
 
     protected void OpenCreateModal()
@@ -131,5 +165,6 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     public void Dispose()
     {
         WorkspaceStateProvider.OnWorkspaceChanged -= HandleWorkspaceChanged;
+        NavigationManager.LocationChanged -= HandleLocationChanged;
     }
 }
