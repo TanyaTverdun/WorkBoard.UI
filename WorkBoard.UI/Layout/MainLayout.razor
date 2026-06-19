@@ -2,11 +2,12 @@
 
 @inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@_customTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
-<div class="d-flex vh-100 overflow-hidden bg-dark">
+<div class="d-flex vh-100 overflow-hidden">
     <Sidebar />
 
     <main class="flex-grow-1 overflow-auto app-main-content">
