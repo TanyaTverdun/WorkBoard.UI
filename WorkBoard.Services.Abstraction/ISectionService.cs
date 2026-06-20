@@ -24,4 +24,10 @@ public interface ISectionService
         Guid boardId, 
         Guid sectionId, 
         CancellationToken cancellationToken = default);
+
+    Task MoveSectionAsync(
+    Guid boardId,
+    Guid sectionId,
+    MoveSectionRequest request,
+    CancellationToken cancellationToken = default);
 }

@@ -29,4 +29,10 @@ internal interface ISectionApi
         Guid boardId, 
         Guid sectionId, 
         CancellationToken cancellationToken = default);
+
+    public Task MoveSectionAsync(
+        Guid boardId,
+        Guid sectionId,
+        MoveSectionRequest request,
+        CancellationToken cancellationToken = default);
 }

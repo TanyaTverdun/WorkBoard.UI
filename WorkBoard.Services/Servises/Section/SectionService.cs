@@ -33,7 +33,8 @@ internal class SectionService : ISectionService
         {
             _logger.LogError(
                 apiEx,
-                "API error occurred while fetching sections for board {BoardId}. Status: {StatusCode}",
+                "API error occurred while fetching sections " +
+                "for board {BoardId}. Status: {StatusCode}",
                 boardId,
                 apiEx.StatusCode);
             throw;
@@ -64,7 +65,8 @@ internal class SectionService : ISectionService
         {
             _logger.LogError(
                 apiEx,
-                "API error occurred while creating section '{Name}' for board {BoardId}. Status: {StatusCode}",
+                "API error occurred while creating section '{Name}' " +
+                "for board {BoardId}. Status: {StatusCode}",
                 request.Name,
                 boardId,
                 apiEx.StatusCode);
@@ -74,7 +76,8 @@ internal class SectionService : ISectionService
         {
             _logger.LogError(
                 ex,
-                "Error occurred while creating section '{Name}' for board {BoardId}",
+                "Error occurred while creating section '{Name}' " +
+                "for board {BoardId}",
                 request.Name,
                 boardId);
             throw;
@@ -99,7 +102,8 @@ internal class SectionService : ISectionService
         {
             _logger.LogError(
                 apiEx,
-                "API error occurred while renaming section {SectionId} on board {BoardId}. Status: {StatusCode}",
+                "API error occurred while renaming section {SectionId} " +
+                "on board {BoardId}. Status: {StatusCode}",
                 sectionId,
                 boardId,
                 apiEx.StatusCode);
@@ -132,7 +136,8 @@ internal class SectionService : ISectionService
         {
             _logger.LogError(
                 apiEx,
-                "API error occurred while deleting section {SectionId} from board {BoardId}. Status: {StatusCode}",
+                "API error occurred while deleting section {SectionId} " +
+                "from board {BoardId}. Status: {StatusCode}",
                 sectionId,
                 boardId,
                 apiEx.StatusCode);
@@ -142,9 +147,50 @@ internal class SectionService : ISectionService
         {
             _logger.LogError(
                 ex,
-                "Error occurred while deleting section {SectionId} from board {BoardId}",
+                "Error occurred while deleting section {SectionId} " +
+                "from board {BoardId}",
                 sectionId,
                 boardId);
+            throw;
+        }
+    }
+
+    public async Task MoveSectionAsync(
+        Guid boardId, 
+        Guid sectionId, 
+        MoveSectionRequest request, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _sectionApi.MoveSectionAsync(
+                boardId,
+                sectionId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while moving section {SectionId} " +
+                "on board {BoardId} to position {NewPosition}. " +
+                "Status: {StatusCode}",
+                sectionId,
+                boardId,
+                request.NewPosition,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while moving section {SectionId} " +
+                "on board {BoardId} to position {NewPosition}",
+                sectionId,
+                boardId,
+                request.NewPosition);
             throw;
         }
     }
