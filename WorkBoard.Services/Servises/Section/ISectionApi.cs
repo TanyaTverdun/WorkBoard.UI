@@ -30,7 +30,8 @@ internal interface ISectionApi
         Guid sectionId, 
         CancellationToken cancellationToken = default);
 
-    public Task MoveSectionAsync(
+    [Put("/api/boards/{boardId}/sections/{sectionId}/position")]
+    Task MoveSectionAsync(
         Guid boardId,
         Guid sectionId,
         MoveSectionRequest request,
