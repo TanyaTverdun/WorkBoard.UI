@@ -1,40 +1,55 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
-using System.ComponentModel.DataAnnotations;
 using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.UI.ViewModels.Board;
 
 namespace WorkBoard.UI.Pages;
 
 public partial class BoardPage
 {
     [Inject]
-    private ISectionService SectionService { get; set; }
+    private ISectionService SectionService { get; set; } = default!;
 
     [Parameter]
     public Guid BoardIdGuid { get; set; }
 
-    private MudDropContainer<KanbanTaskItem> _dropContainer;
+    private MudDropContainer<KanbanTaskViewModel> _dropContainer = default!;
     private bool _addSectionOpen;
 
-    private List<KanBanSections> _sections = new();
-    private List<KanbanTaskItem> _tasks = new();
+    private List<KanbanSectionViewModel> _sections = new();
+    private List<KanbanTaskViewModel> _tasks = new();
 
-    private KanBanNewForm newSectionModel = new KanBanNewForm();
+    private CreateSectionForm newSectionModel = new CreateSectionForm();
+
+    private bool _isReorderPopoverOpen;
+    private List<KanbanSectionViewModel> _reorderList = new();
 
     protected override async Task OnParametersSetAsync()
     {
         var sectionsFromDb = await SectionService
             .GetSectionsByBoardAsync(BoardIdGuid);
 
-        _sections = sectionsFromDb.Select(s =>
-            new KanBanSections(s.Id, s.Name, false, string.Empty)
-        ).ToList();
+        _sections = sectionsFromDb
+            .OrderBy(s => s.Position)
+            .Select(s => new KanbanSectionViewModel(
+                s.Id, 
+                s.Name, 
+                false, 
+                string.Empty)
+            {
+                Position = s.Position
+            }).ToList();
     }
 
-    private void TaskUpdated(MudItemDropInfo<KanbanTaskItem> info)
+    private void TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
     {
+        if (info.Item is null)
+        {
+            return;
+        }
+
         info.Item.Status = info.DropzoneIdentifier;
     }
 
@@ -49,11 +64,15 @@ public partial class BoardPage
             BoardIdGuid, 
             request);
 
-        var newSection = new KanBanSections(
+        double newPos = _sections.Any() ? 
+            _sections.Max(s => s.Position) + 1.0 : 1.0;
+        
+        var newSection = new KanbanSectionViewModel(
             newSectionId,
             newSectionModel.Name,
             false,
-            string.Empty);
+            string.Empty,
+            newPos);
 
         _sections.Add(newSection);
 
@@ -61,7 +80,7 @@ public partial class BoardPage
         _addSectionOpen = false;
     }
 
-    private async Task SaveRename(KanBanSections section)
+    private async Task SaveRename(KanbanSectionViewModel section)
     {
         if (string.IsNullOrWhiteSpace(section.EditName))
         {
@@ -96,19 +115,20 @@ public partial class BoardPage
         _dropContainer.Refresh();
     }
 
-    private async Task DeleteSection(KanBanSections section)
+    private async Task DeleteSection(KanbanSectionViewModel section)
     {
         await SectionService.DeleteSectionAsync(
             BoardIdGuid, 
             section.Id);
 
         _sections.Remove(section);
-        _tasks.RemoveAll(t => t.Status == section.Name);
+        _tasks.RemoveAll(
+            t => t.Status == section.Name);
 
         _dropContainer.Refresh();
     }
 
-    private void StartRename(KanBanSections section)
+    private void StartRename(KanbanSectionViewModel section)
     {
         section.EditName = section.Name;
         section.IsRenaming = true;
@@ -126,9 +146,9 @@ public partial class BoardPage
         newSectionModel.Name = string.Empty;
     }
 
-    private void AddTask(KanBanSections section)
+    private void AddTask(KanbanSectionViewModel section)
     {
-        _tasks.Add(new KanbanTaskItem(
+        _tasks.Add(new KanbanTaskViewModel(
             section.NewTaskName, 
             section.Name));
 
@@ -137,66 +157,75 @@ public partial class BoardPage
         _dropContainer.Refresh();
     }
 
-    private void CloseNewTaskForm(KanBanSections section)
+    private void CloseNewTaskForm(KanbanSectionViewModel section)
     {
         section.NewTaskOpen = false;
         section.NewTaskName = string.Empty;
     }
 
-    public class KanBanSections
+    private void OpenReorderPopover()
     {
-        public Guid Id { get; init; }
-        public string Name { get; set; }
-        public bool NewTaskOpen { get; set; }
-        public string NewTaskName { get; set; }
-        public bool IsConfirmingDelete { get; set; }
-        public bool IsRenaming { get; set; }
-        public string EditName { get; set; }
-
-        private bool _menuOpen;
-        public bool MenuOpen
-        {
-            get => _menuOpen;
-            set
-            {
-                _menuOpen = value;
-                if (!value) IsConfirmingDelete = false;
-            }
-        }
-
-        public KanBanSections(
-            Guid id, 
-            string name, 
-            bool newTaskOpen, 
-            string newTaskName)
-        {
-            Id = id;
-            Name = name;
-            NewTaskOpen = newTaskOpen;
-            NewTaskName = newTaskName;
-            IsConfirmingDelete = false;
-            IsRenaming = false;
-        }
+        _reorderList = _sections.ToList();
+        _isReorderPopoverOpen = true;
     }
 
-    public class KanbanTaskItem
+    private void CloseReorderPopover()
     {
-        public string Name { get; init; }
-        public string Status { get; set; }
-
-        public KanbanTaskItem(
-            string name, 
-            string status)
-        {
-            Name = name;
-            Status = status;
-        }
+        _isReorderPopoverOpen = false;
     }
 
-    public class KanBanNewForm
+    private void SectionDropped(
+        MudItemDropInfo<KanbanSectionViewModel> info)
     {
-        [Required]
-        [StringLength(50, ErrorMessage = "Name length can't be more than 50.")]
-        public string Name { get; set; }
+        var item = info.Item;
+
+        if (item is null)
+        {
+            return;
+        }
+
+        _reorderList.Remove(item);
+        _reorderList.Insert(info.IndexInZone, item);
+
+        double prevPos = info.IndexInZone > 0 ? 
+            _reorderList[info.IndexInZone - 1].Position : 0.0;
+
+        double nextPos = info.IndexInZone < _reorderList.Count - 1
+            ? _reorderList[info.IndexInZone + 1].Position
+            : prevPos + 1.0;
+
+        item.Position = prevPos == 0.0 ? 
+            nextPos / 2.0 : (prevPos + nextPos) / 2.0;
+
+        item.IsPositionChanged = true;
+    }
+
+    private async Task ApplySectionOrderAsync()
+    {
+        var movedSections = _reorderList
+            .Where(s => s.IsPositionChanged)
+            .ToList();
+
+        foreach (var section in movedSections)
+        {
+            var request = new MoveSectionRequest 
+            { 
+                NewPosition = section.Position 
+            };
+
+            await SectionService.MoveSectionAsync(
+                BoardIdGuid, 
+                section.Id, 
+                request);
+
+            section.IsPositionChanged = false;
+        }
+
+        _sections = _reorderList
+            .OrderBy(s => s.Position)
+            .ToList();
+
+        _isReorderPopoverOpen = false;
+        _dropContainer.Refresh();
     }
 }

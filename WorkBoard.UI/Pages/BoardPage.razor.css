@@ -77,3 +77,7 @@
         text-transform: none !important;
         background-color: #3949AB !important;
     }
+
+::deep .cancel-btn{
+    text-transform: none !important;
+}
