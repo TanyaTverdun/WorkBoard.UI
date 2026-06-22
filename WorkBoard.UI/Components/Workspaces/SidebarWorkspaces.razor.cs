@@ -6,7 +6,7 @@ using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Workspaces;
 
-public partial class SidebarWorkspaces
+public partial class SidebarWorkspaces : IDisposable
 {
     [Inject]
     private IWorkspaceService WorkspaceService { get; set; } = null!;
