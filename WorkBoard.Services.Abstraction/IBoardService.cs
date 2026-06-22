@@ -24,4 +24,9 @@ public interface IBoardService
         Guid workspaceId,
         Guid boardId,
         CancellationToken cancellationToken = default);
+
+    Task<BoardDto> GetBoardAsync(
+        Guid workspaceId, 
+        Guid boardId, 
+        CancellationToken cancellationToken = default);
 }
