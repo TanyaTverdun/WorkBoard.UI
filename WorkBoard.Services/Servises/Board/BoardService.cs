@@ -156,4 +156,39 @@ internal class BoardService : IBoardService
             throw;
         }
     }
+
+    public async Task<BoardDto> GetBoardAsync(
+        Guid workspaceId,
+        Guid boardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _boardApi.GetBoardAsync(
+                workspaceId, 
+                boardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching board {BoardId} in workspace " +
+                "{WorkspaceId}. Status: {StatusCode}",
+                boardId,
+                workspaceId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching board {BoardId} in " +
+                "workspace {WorkspaceId}",
+                boardId,
+                workspaceId);
+            throw;
+        }
+    }
 }

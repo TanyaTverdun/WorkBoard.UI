@@ -6,7 +6,7 @@ using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Workspaces;
 
-public partial class SidebarWorkspaces
+public partial class SidebarWorkspaces : IDisposable
 {
     [Inject]
     private IWorkspaceService WorkspaceService { get; set; } = null!;
@@ -30,6 +30,8 @@ public partial class SidebarWorkspaces
 
     protected override async Task OnInitializedAsync()
     {
+        WorkspaceStateProvider.OnWorkspaceChanged += HandleWorkspaceChanged;
+
         if (AuthenticationStateTask is not null)
         {
             var authState = await AuthenticationStateTask;
@@ -42,7 +44,17 @@ public partial class SidebarWorkspaces
             }
 
             await LoadWorkspacesAsync();
+
+            SelectedWorkspaceId = WorkspaceStateProvider.SelectedWorkspaceId;
         }
+    }
+
+    private void HandleWorkspaceChanged(
+        Guid? workspaceId, 
+        Domain.Enums.WorkspaceRole? role)
+    {
+        SelectedWorkspaceId = workspaceId;
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadWorkspacesAsync()
@@ -125,5 +137,10 @@ public partial class SidebarWorkspaces
         _workspaceToModify = null;
 
         await LoadWorkspacesAsync();
+    }
+
+    public void Dispose()
+    {
+        WorkspaceStateProvider.OnWorkspaceChanged -= HandleWorkspaceChanged;
     }
 }

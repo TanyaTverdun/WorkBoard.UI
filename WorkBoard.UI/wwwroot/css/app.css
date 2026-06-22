@@ -22,3 +22,16 @@ html, body {
     #blazor-error-ui.blazor-error-boundary {
         display: block !important;
     }
+
+.reorder-popover {
+    width: 20vw !important;
+}
+
+.reorder-list-container {
+    max-height: 50vh !important;
+}
+
+.reorder-item-text {
+    word-break: break-all !important;
+    max-width: 9vw !important;
+}
