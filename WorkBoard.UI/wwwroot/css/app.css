@@ -30,3 +30,8 @@ html, body {
 .reorder-list-container {
     max-height: 50vh !important;
 }
+
+.reorder-item-text {
+    word-break: break-all !important;
+    max-width: 9vw !important;
+}

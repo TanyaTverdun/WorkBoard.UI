@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.StateProviders;
 using WorkBoard.UI.ViewModels.Board;
 
 namespace WorkBoard.UI.Pages;
@@ -12,8 +13,20 @@ public partial class BoardPage
     [Inject]
     private ISectionService SectionService { get; set; } = default!;
 
+    [Inject]
+    private IBoardService BoardService { get; set; } = default!;
+
+    [Inject]
+    private BoardStateService BoardStateService { get; set; } = default!;
+
+    [Inject]
+    private WorkspaceStateProvider WorkspaceStateProvider { get; set; } = default!;
+
     [Parameter]
     public Guid BoardIdGuid { get; set; }
+
+    private Guid WorkspaceId => WorkspaceStateProvider.SelectedWorkspaceId
+                                ?? throw new InvalidOperationException("Workspace not selected");
 
     private MudDropContainer<KanbanTaskViewModel> _dropContainer = default!;
     private bool _addSectionOpen;
@@ -26,8 +39,19 @@ public partial class BoardPage
     private bool _isReorderPopoverOpen;
     private List<KanbanSectionViewModel> _reorderList = new();
 
+    protected override void OnInitialized()
+    {
+        BoardStateService.OnBoardNameChanged += StateHasChanged;
+    }
+
     protected override async Task OnParametersSetAsync()
     {
+        var board = await BoardService.GetBoardAsync(
+            WorkspaceId, 
+            BoardIdGuid);
+
+        BoardStateService.SetBoardName(board.Name);
+
         var sectionsFromDb = await SectionService
             .GetSectionsByBoardAsync(BoardIdGuid);
 

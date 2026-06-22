@@ -8,7 +8,7 @@
 		<div class="d-flex gap-4">
 			<MudText Typo=@Typo.h6
 					 Class="font-weight-bold mr-2">
-				Q3 Product Roadmap
+				@BoardStateService.CurrentBoardName
 			</MudText>
 
 		</div>
@@ -32,59 +32,70 @@
 								   OnClick=@CloseReorderPopover />
 				</div>
 
-				<MudText Typo=@Typo.body2
-						 Class="text-muted mb-4">
-							Drag rows to change the order of sections
-				</MudText>
+				@if (_reorderList.Any())
+				{
+					<MudText Typo=@Typo.body2
+							 Class="text-muted mb-4">
+								Drag rows to change the order of sections
+					</MudText>
 
-				<MudDropContainer T=@KanbanSectionViewModel
-								  Items=@_reorderList
-								  ItemsSelector=@((item, zone) => true)
-								  ItemDropped=@SectionDropped
-								  Class="d-flex flex-column mb-4 overflow-y-auto pe-2 reorder-list-container">
-					<ChildContent>
-						<MudDropZone T=@KanbanSectionViewModel
-								     Identifier="reorder-zone"
-									 AllowReorder="true"
-									 Class="d-flex flex-column gap-2" />
-					</ChildContent>
-					<ItemRenderer>
-						<MudPaper Elevation="0" 
-								  Class="pa-2 px-3 d-flex align-center border-solid border-2 mud-border-lines-default rounded-lg">
-							<MudIcon Icon=@Icons.Material.Rounded.DragIndicator
-									 Size=@Size.Small
-									 Class="text-muted mr-3" />
+				
+					<MudDropContainer T=@KanbanSectionViewModel
+									  Items=@_reorderList
+									  ItemsSelector=@((item, zone) => true)
+									  ItemDropped=@SectionDropped
+									  Class="d-flex flex-column mb-4 overflow-y-auto pe-2 reorder-list-container">
+						<ChildContent>
+							<MudDropZone T=@KanbanSectionViewModel
+										 Identifier="reorder-zone"
+										 AllowReorder="true"
+										 Class="d-flex flex-column gap-2" />
+						</ChildContent>
+						<ItemRenderer>
+							<MudPaper Elevation="0"
+									  Class="pa-2 px-3 d-flex align-center border-solid border-2 mud-border-lines-default rounded-lg">
+								<MudIcon Icon=@Icons.Material.Rounded.DragIndicator
+										 Size=@Size.Small
+										 Class="text-muted mr-3" />
 
-							<MudText Typo=@Typo.body2
-									 Class="font-weight-medium">@context.Name</MudText>
-							<MudSpacer />
+								<MudText Typo=@Typo.body2
+										 Class="font-weight-medium reorder-item-text">@context.Name</MudText>
+								<MudSpacer /> 
 
-							<MudText Typo=@Typo.caption
-									 Class="text-muted">
-								@(_tasks.Count(t => t.Status == context.Name)) cards
-							</MudText>
-						</MudPaper>
-					</ItemRenderer>
-				</MudDropContainer>
+								<MudText Typo=@Typo.caption
+										 Class="text-muted">
+									@(_tasks.Count(t => t.Status == context.Name)) cards
+								</MudText>
+							</MudPaper>
+						</ItemRenderer>
+					</MudDropContainer>
 
-				<div class="d-flex gap-2">
-					<MudButton Variant=@Variant.Filled
-							   Color=@Color.Primary
-							   FullWidth="true"
-							   Class="rounded-lg text-none btn-create"
-							   OnClick=@ApplySectionOrderAsync>
-						Apply Order
-					</MudButton>
+					<div class="d-flex gap-2">
+						<MudButton Variant=@Variant.Filled
+								   Color=@Color.Primary
+								   FullWidth="true"
+								   Class="rounded-lg text-none btn-create"
+								   OnClick=@ApplySectionOrderAsync>
+							Apply Order
+						</MudButton>
 
-					<MudButton Variant=@Variant.Filled
-							   Color=@Color.Surface
-							   FullWidth="true"
-							   Class="rounded-lg text-none cancel-btn"
-							   DropShadow="false" 
-							   OnClick=@CloseReorderPopover>
-						Cancel
-					</MudButton>
-				</div>
+						<MudButton Variant=@Variant.Filled
+								   Color=@Color.Surface
+								   FullWidth="true"
+								   Class="rounded-lg text-none cancel-btn"
+								   DropShadow="false"
+								   OnClick=@CloseReorderPopover>
+							Cancel
+						</MudButton>
+					</div>
+				}
+				else
+				{
+					<div class="d-flex flex-column align-center justify-center py-8 text-muted">
+						<MudIcon Icon=@Icons.Material.Rounded.ViewList Size=@Size.Large Class="mb-2" />
+						<MudText Typo=@Typo.body2>No sections yet. Create one to get started!</MudText>
+					</div>
+				}
 			</MudPopover>
 		</div>
 

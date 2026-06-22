@@ -16,6 +16,9 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     private WorkspaceStateProvider WorkspaceStateProvider { get; set; } = null!;
 
     [Inject]
+    private BoardStateService BoardStateService { get; set; } = default!;
+
+    [Inject]
     protected NavigationManager NavigationManager { get; set; } = null!;
 
     protected bool CanManageBoards =>
@@ -107,6 +110,12 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     private void SelectBoard(Guid id)
     {
         SelectedBoardId = id;
+
+        var board = Boards?.FirstOrDefault(b => b.Id == id);
+        if (board != null)
+        {
+            BoardStateService.SetBoardName(board.Name);
+        }
 
         NavigationManager.NavigateTo($"/boards/{id}");
     }
