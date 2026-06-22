@@ -32,6 +32,7 @@ public static class DependencyInjection
         }
 
         services.AddScoped<WorkspaceStateProvider>();
+        services.AddSingleton<BoardStateService>();
 
         services.AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
