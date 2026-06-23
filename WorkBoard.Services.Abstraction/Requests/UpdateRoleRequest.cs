@@ -3,4 +3,4 @@
 namespace WorkBoard.Services.Abstraction.Requests;
 
 public record UpdateRoleRequest(
-    BoardRole NewRole);
+    int NewRole);
