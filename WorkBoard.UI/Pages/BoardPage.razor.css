@@ -78,6 +78,90 @@
         background-color: #3949AB !important;
     }
 
-::deep .cancel-btn{
+::deep .cancel-btn {
     text-transform: none !important;
+}
+
+::deep .hover-error-btn:hover .mud-icon-root {
+    fill: var(--mud-palette-error) !important;
+}
+
+::deep .custom-role-menu > .mud-button-root {
+    background-color: #EDFCF5 !important;
+    color: seagreen !important;
+    border-color: seagreen !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 0 8px !important;
+    text-transform: none !important;
+}
+
+    ::deep .custom-role-menu > .mud-button-root .mud-icon-root {
+        color: seagreen !important;
+        fill: seagreen !important;
+    }
+
+.menu-wrapper ::deep .mud-icon-root {
+    transition: transform 0.2s ease-in-out !important;
+    transform-origin: center !important;
+}
+
+.menu-wrapper.is-open ::deep .mud-icon-root {
+    transform: rotate(180deg) !important;
+}
+
+.member-list-divider {
+    border-left: 2px solid var(--mud-palette-lines-default) !important;
+}
+
+.members-scroll-area {
+    height: 30vh;
+}
+
+::deep .member-avatar-small {
+    height: 32px !important;
+    width: 32px !important;
+}
+
+::deep .caption-small {
+    line-height: 1.2 !important;
+    font-size: 10px !important;
+}
+
+::deep .member-actions-wrapper {
+    height: 2px !important;
+}
+
+::deep .btn-remove-small {
+    text-transform: none !important;
+    height: 24px !important;
+    min-width: 100px !important;
+}
+
+::deep .add-member-header {
+    letter-spacing: 0.5px !important;
+}
+
+::deep .add-member-icon {
+    font-size: 16px !important;
+}
+
+::deep .avatar-tiny {
+    height: 24px !important;
+    width: 24px !important;
+    font-size: 10px !important;
+}
+
+::deep .text-xs-tight {
+    font-size: 10px !important;
+    line-height: 1 !important;
+}
+
+::deep .btn-add-compact {
+    text-transform: none !important;
+    height: 32px !important;
+    min-width: 80px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
 }
