@@ -26,8 +26,8 @@ public interface ISectionService
         CancellationToken cancellationToken = default);
 
     Task MoveSectionAsync(
-    Guid boardId,
-    Guid sectionId,
-    MoveSectionRequest request,
-    CancellationToken cancellationToken = default);
+        Guid boardId,
+        Guid sectionId,
+        MoveSectionRequest request,
+        CancellationToken cancellationToken = default);
 }
