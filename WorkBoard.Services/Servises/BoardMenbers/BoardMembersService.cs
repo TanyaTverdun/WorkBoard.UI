@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
+using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 
 namespace WorkBoard.Services.Servises.BoardMenbers;
 
-internal class BoardMembersService
+internal class BoardMembersService : IBoardMembersService
 {
     private readonly IBoardMembersApi _boardMembersApi;
     private readonly ILogger<BoardMembersService> _logger;
