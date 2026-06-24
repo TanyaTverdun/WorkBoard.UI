@@ -35,3 +35,70 @@ html, body {
     word-break: break-all !important;
     max-width: 9vw !important;
 }
+
+.custom-dropdown-popover {
+    border-radius: 12px !important;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+    background-color: var(--mud-palette-surface) !important;
+}
+
+    .custom-dropdown-popover .mud-input-outlined-border {
+        border-radius: 8px !important;
+    }
+
+    .custom-dropdown-popover .mud-input-control {
+        border-radius: 8px !important;
+    }
+
+.compact-input .mud-input-outlined {
+    height: 32px !important;
+    min-height: 32px !important;
+}
+
+.compact-input .mud-input-slot {
+    height: 32px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-size: 13px !important;
+}
+
+.compact-input .mud-input-adornment-end {
+    margin-top: 0 !important;
+    align-self: center !important;
+}
+
+.role-select .mud-input-outlined {
+    height: 28px !important;
+    min-height: 28px !important;
+}
+
+.role-select .mud-input-outlined-border {
+    border-radius: 6px !important;
+}
+
+.role-select .mud-input-slot {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.seagreen .mud-input-outlined-border {
+    border-color: seagreen !important;
+}
+
+.seagreen .mud-input-outlined {
+    background-color: #EDFCF5 !important;
+}
+
+.member-row-delete {
+    background-color: #fff5f5 !important;
+    border-radius: 8px;
+}
+
+.members-popover {
+    width: 360px !important;
+}

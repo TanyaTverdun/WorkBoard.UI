@@ -46,6 +46,11 @@ public partial class SidebarWorkspaces : IDisposable
             await LoadWorkspacesAsync();
 
             SelectedWorkspaceId = WorkspaceStateProvider.SelectedWorkspaceId;
+
+            if (SelectedWorkspaceId == null && Workspaces != null && Workspaces.Any())
+            {
+                SelectWorkspace(Workspaces.First().Id);
+            }
         }
     }
 

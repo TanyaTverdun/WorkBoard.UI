@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction;
+using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.StateProviders;
 using WorkBoard.UI.ViewModels.Board;
@@ -17,40 +20,85 @@ public partial class BoardPage
     private IBoardService BoardService { get; set; } = default!;
 
     [Inject]
+    private IBoardMembersService BoardMembersService { get; set; } = default!;
+
+    [Inject]
+    private IUserService UserService { get; set; } = default!;
+
+    [Inject]
     private BoardStateService BoardStateService { get; set; } = default!;
 
     [Inject]
     private WorkspaceStateProvider WorkspaceStateProvider { get; set; } = default!;
 
+    [Inject]
+    private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
     [Parameter]
     public Guid BoardIdGuid { get; set; }
 
-    private Guid WorkspaceId => WorkspaceStateProvider.SelectedWorkspaceId
-                                ?? throw new InvalidOperationException("Workspace not selected");
+    private Guid? WorkspaceId => WorkspaceStateProvider.SelectedWorkspaceId;
 
     private MudDropContainer<KanbanTaskViewModel> _dropContainer = default!;
     private bool _addSectionOpen;
 
     private List<KanbanSectionViewModel> _sections = new();
     private List<KanbanTaskViewModel> _tasks = new();
+    private List<BoardMemberViewModel>? _boardMembers = new();
 
     private CreateSectionForm newSectionModel = new CreateSectionForm();
 
     private bool _isReorderPopoverOpen;
     private List<KanbanSectionViewModel> _reorderList = new();
 
-    protected override void OnInitialized()
+    private bool _isMembersPopoverOpen;
+    private BoardRole _newMemberRole = BoardRole.Member;
+
+    private Guid? _currentUserId;
+    private UserSearchDto? _selectedUserToAdd;
+    private bool IsCurrentUserObserver =>
+        _boardMembers?.FirstOrDefault(m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
+
+    protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        var userIdString = authState.User.FindFirst(c =>
+            c.Type == "oid" ||
+            c.Type == "sub" ||
+            c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (Guid.TryParse(userIdString, out var parsedId))
+        {
+            _currentUserId = parsedId;
+        }
+
         BoardStateService.OnBoardNameChanged += StateHasChanged;
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        if (WorkspaceId == null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         var board = await BoardService.GetBoardAsync(
-            WorkspaceId, 
+            WorkspaceId.Value,
             BoardIdGuid);
 
         BoardStateService.SetBoardName(board.Name);
+
+        var dtos = await BoardMembersService.GetBoardMembersAsync(
+            WorkspaceId.Value,
+            BoardIdGuid);
+        _boardMembers = dtos
+            .Select(dto => new BoardMemberViewModel(dto))
+            .ToList();
 
         var sectionsFromDb = await SectionService
             .GetSectionsByBoardAsync(BoardIdGuid);
@@ -58,9 +106,9 @@ public partial class BoardPage
         _sections = sectionsFromDb
             .OrderBy(s => s.Position)
             .Select(s => new KanbanSectionViewModel(
-                s.Id, 
-                s.Name, 
-                false, 
+                s.Id,
+                s.Name,
+                false,
                 string.Empty)
             {
                 Position = s.Position
@@ -79,18 +127,18 @@ public partial class BoardPage
 
     private async Task OnValidSectionSubmit(EditContext context)
     {
-        var request = new CreateSectionRequest 
-        { 
-            Name = newSectionModel.Name 
+        var request = new CreateSectionRequest
+        {
+            Name = newSectionModel.Name
         };
 
         var newSectionId = await SectionService.CreateSectionAsync(
-            BoardIdGuid, 
+            BoardIdGuid,
             request);
 
-        double newPos = _sections.Any() ? 
+        double newPos = _sections.Any() ?
             _sections.Max(s => s.Position) + 1.0 : 1.0;
-        
+
         var newSection = new KanbanSectionViewModel(
             newSectionId,
             newSectionModel.Name,
@@ -113,14 +161,14 @@ public partial class BoardPage
         }
 
         var newName = section.EditName.Trim();
-        var request = new UpdateSectionNameRequest 
-        { 
-            Name = newName 
+        var request = new UpdateSectionNameRequest
+        {
+            Name = newName
         };
 
         await SectionService.RenameSectionAsync(
-            BoardIdGuid, 
-            section.Id, 
+            BoardIdGuid,
+            section.Id,
             request);
 
         string oldName = section.Name;
@@ -142,7 +190,7 @@ public partial class BoardPage
     private async Task DeleteSection(KanbanSectionViewModel section)
     {
         await SectionService.DeleteSectionAsync(
-            BoardIdGuid, 
+            BoardIdGuid,
             section.Id);
 
         _sections.Remove(section);
@@ -173,7 +221,7 @@ public partial class BoardPage
     private void AddTask(KanbanSectionViewModel section)
     {
         _tasks.Add(new KanbanTaskViewModel(
-            section.NewTaskName, 
+            section.NewTaskName,
             section.Name));
 
         section.NewTaskName = string.Empty;
@@ -211,14 +259,14 @@ public partial class BoardPage
         _reorderList.Remove(item);
         _reorderList.Insert(info.IndexInZone, item);
 
-        double prevPos = info.IndexInZone > 0 ? 
+        double prevPos = info.IndexInZone > 0 ?
             _reorderList[info.IndexInZone - 1].Position : 0.0;
 
         double nextPos = info.IndexInZone < _reorderList.Count - 1
             ? _reorderList[info.IndexInZone + 1].Position
             : prevPos + 1.0;
 
-        item.Position = prevPos == 0.0 ? 
+        item.Position = prevPos == 0.0 ?
             nextPos / 2.0 : (prevPos + nextPos) / 2.0;
 
         item.IsPositionChanged = true;
@@ -232,14 +280,14 @@ public partial class BoardPage
 
         foreach (var section in movedSections)
         {
-            var request = new MoveSectionRequest 
-            { 
-                NewPosition = section.Position 
+            var request = new MoveSectionRequest
+            {
+                NewPosition = section.Position
             };
 
             await SectionService.MoveSectionAsync(
-                BoardIdGuid, 
-                section.Id, 
+                BoardIdGuid,
+                section.Id,
                 request);
 
             section.IsPositionChanged = false;
@@ -251,5 +299,118 @@ public partial class BoardPage
 
         _isReorderPopoverOpen = false;
         _dropContainer.Refresh();
+    }
+
+    private void OpenManageMembersDialog()
+    {
+        _isMembersPopoverOpen = true;
+    }
+
+    private void CloseManageMembersDialog()
+    {
+        _isMembersPopoverOpen = false;
+        _newMemberRole = BoardRole.Member;
+    }
+
+    private async Task UpdateRoleAsync(BoardMemberViewModel member, BoardRole newRole)
+    {
+        if (member.Dto.UserRole == newRole)
+        {
+            return;
+        }
+
+        var request = new UpdateRoleRequest((int)newRole);
+
+        await BoardMembersService.UpdateMemberRoleAsync(
+            WorkspaceId.Value,
+            BoardIdGuid,
+            member.Dto.UserId,
+            request);
+
+        var updatedMembers = _boardMembers!.ToList();
+        var index = updatedMembers.FindIndex(m => m.Dto.UserId == member.Dto.UserId);
+
+        if (index != -1)
+        {
+            updatedMembers[index] = new BoardMemberViewModel(member.Dto with
+            {
+                UserRole = newRole
+            });
+            _boardMembers = updatedMembers;
+        }
+    }
+
+    private async Task RemoveMemberAsync(BoardMemberViewModel member)
+    {
+        await BoardMembersService.RemoveBoardMemberAsync(
+            WorkspaceId.Value,
+            BoardIdGuid,
+            member.Dto.UserId);
+
+        _boardMembers = _boardMembers!
+            .Where(m => m.Dto.UserId != member.Dto.UserId)
+            .ToList();
+    }
+
+    private async Task AddMemberAsync()
+    {
+        if (_selectedUserToAdd == null || WorkspaceId == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var request = new AddMemberRequest(
+                _selectedUserToAdd.UserId,
+                (int)_newMemberRole);
+
+            await BoardMembersService.AddBoardMemberAsync(
+                WorkspaceId.Value,
+                BoardIdGuid,
+                request);
+
+            var dtos = await BoardMembersService.GetBoardMembersAsync(
+                WorkspaceId.Value,
+                BoardIdGuid);
+            _boardMembers = dtos
+                .Select(dto => new BoardMemberViewModel(dto))
+                .ToList();
+
+            _selectedUserToAdd = null;
+            _newMemberRole = BoardRole.Member;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding member: {ex.Message}");
+        }
+    }
+
+    private async Task<IEnumerable<UserSearchDto>> SearchUsersAsync(
+        string value,
+        CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value) ||
+            value.Length < 2 ||
+            WorkspaceId == null)
+        {
+            return new List<UserSearchDto>();
+        }
+
+        try
+        {
+            var result = await UserService.SearchAssignableUsersAsync(
+                BoardIdGuid,
+                value);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Search failed: {ex.Message}");
+            return new List<UserSearchDto>();
+        }
     }
 }

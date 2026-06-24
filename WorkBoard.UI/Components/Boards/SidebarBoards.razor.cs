@@ -79,12 +79,14 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     {
         if (newWorkspaceId.HasValue)
         {
+            SelectedBoardId = null;
             await LoadBoardsAsync(newWorkspaceId.Value);
         }
         else
         {
             Boards = null;
             SelectedBoardId = null;
+            NavigationManager.NavigateTo("/");
         }
 
         await InvokeAsync(StateHasChanged);
@@ -95,6 +97,11 @@ public partial class SidebarBoards : ComponentBase, IDisposable
         try
         {
             Boards = await BoardService.GetWorkspaceBoardsAsync(workspaceId);
+
+            if (SelectedBoardId == null && Boards != null && Boards.Any())
+            {
+                SelectBoard(Boards.First().Id);
+            }
         }
         catch (Exception)
         {
