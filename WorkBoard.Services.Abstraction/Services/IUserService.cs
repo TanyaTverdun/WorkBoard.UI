@@ -1,6 +1,6 @@
 ﻿using WorkBoard.Services.Abstraction.DTOs;
 
-namespace WorkBoard.Services.Abstraction;
+namespace WorkBoard.Services.Abstraction.Services;
 
 public interface IUserService
 {

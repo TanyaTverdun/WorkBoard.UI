@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
-using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Boards.Modals;

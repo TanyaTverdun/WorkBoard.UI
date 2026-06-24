@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using WorkBoard.Domain.Enums;
-using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 using WorkBoard.UI.ViewModels.Board;
 

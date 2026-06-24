@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using WorkBoard.Domain.Enums;
-using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Boards;
