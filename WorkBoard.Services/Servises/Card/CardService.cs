@@ -19,6 +19,36 @@ internal class CardService : ICardService
         _logger = logger;
     }
 
+    public async Task<IReadOnlyList<CardDto>> GetCardsByBoardAsync(
+        Guid boardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _cardApi.GetCardsByBoardAsync(
+                boardId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching cards " +
+                "for board {BoardId}. Status: {StatusCode}",
+                boardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching cards for board {BoardId}",
+                boardId);
+            throw;
+        }
+    }
+
     public async Task<CardDto> CreateCardAsync(
         Guid sectionId,
         CreateCardRequest request,

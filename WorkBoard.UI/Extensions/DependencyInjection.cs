@@ -23,6 +23,7 @@ public static class DependencyInjection
                 $"{ConfigConstants.AzureAdSectionName} section is missing.");
 
         builder.Services.Configure<AzureAdOptions>(azureAdSection);
+        builder.Services.Configure<WorkBoardUiOptions>(builder.Configuration);
 
         builder.Services
             .AddInfrastructureServices(uiOptions.BackendBaseUrl);

@@ -3,10 +3,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
 using WorkBoard.Domain.Options;
-using WorkBoard.Services.Abstraction;
+using WorkBoard.Services.Abstraction.Hubs;
+using WorkBoard.Services.Abstraction.Services;
+using WorkBoard.Services.Hubs;
 using WorkBoard.Services.Servises.Auth;
 using WorkBoard.Services.Servises.Board;
 using WorkBoard.Services.Servises.BoardMenbers;
+using WorkBoard.Services.Servises.Card;
 using WorkBoard.Services.Servises.Section;
 using WorkBoard.Services.Servises.Users;
 using WorkBoard.Services.Servises.Workspace;
@@ -35,6 +38,8 @@ public static class DependencyInjection
 
         services.AddScoped<WorkspaceStateProvider>();
         services.AddSingleton<BoardStateService>();
+
+        services.AddScoped<IBoardHubService, BoardHubService>();
 
         services.AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
@@ -71,6 +76,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IUserService, UserService>();
+
+        services.AddRefitClient<ICardApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<ICardService, CardService>();
 
         return services;
     }

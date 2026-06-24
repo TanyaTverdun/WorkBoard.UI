@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Options;
 using MudBlazor;
 using WorkBoard.Domain.Enums;
+using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
@@ -36,6 +39,18 @@ public partial class BoardPage
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private ICardService CardService { get; set; } = default!;
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    private IOptions<WorkBoardUiOptions> UiOptions { get; set; } = default!;
 
     [Parameter]
     public Guid BoardIdGuid { get; set; }
@@ -77,6 +92,23 @@ public partial class BoardPage
         }
 
         BoardStateService.OnBoardNameChanged += StateHasChanged;
+
+        BoardHubService.OnCardCreated += HandleCardCreated;
+        BoardHubService.OnSectionCreated += HandleSectionCreated;
+
+        try
+        {
+            var backendUrl = UiOptions.Value.BackendBaseUrl;
+
+            Console.WriteLine($"URL {backendUrl}");
+
+            await BoardHubService.StartConnectionAsync(backendUrl, BoardIdGuid);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR Error: {ex.Message}");
+            Snackbar.Add("Працюємо в офлайн-режимі. Живі оновлення недоступні.", Severity.Warning);
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -113,6 +145,16 @@ public partial class BoardPage
             {
                 Position = s.Position
             }).ToList();
+
+        var cardsFromDb = await CardService.GetCardsByBoardAsync(BoardIdGuid);
+
+        _tasks = cardsFromDb.Select(c =>
+        {
+            var sectionName = _sections.FirstOrDefault(s => s.Id == c.SectionId)?.Name ?? string.Empty;
+
+            return new KanbanTaskViewModel(c.Id, c.Title, sectionName);
+
+        }).ToList();
     }
 
     private void TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
@@ -132,24 +174,18 @@ public partial class BoardPage
             Name = newSectionModel.Name
         };
 
-        var newSectionId = await SectionService.CreateSectionAsync(
-            BoardIdGuid,
-            request);
+        try
+        {
+            await SectionService.CreateSectionAsync(BoardIdGuid, request);
 
-        double newPos = _sections.Any() ?
-            _sections.Max(s => s.Position) + 1.0 : 1.0;
+            newSectionModel.Name = string.Empty;
+            _addSectionOpen = false;
 
-        var newSection = new KanbanSectionViewModel(
-            newSectionId,
-            newSectionModel.Name,
-            false,
-            string.Empty,
-            newPos);
-
-        _sections.Add(newSection);
-
-        newSectionModel.Name = string.Empty;
-        _addSectionOpen = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Не вдалося створити секцію", Severity.Error);
+        }
     }
 
     private async Task SaveRename(KanbanSectionViewModel section)
@@ -218,15 +254,34 @@ public partial class BoardPage
         newSectionModel.Name = string.Empty;
     }
 
-    private void AddTask(KanbanSectionViewModel section)
+    private async Task AddTask(KanbanSectionViewModel section)
     {
-        _tasks.Add(new KanbanTaskViewModel(
-            section.NewTaskName,
-            section.Name));
+        if (string.IsNullOrWhiteSpace(section.NewTaskName))
+        {
+            return;
+        }
 
-        section.NewTaskName = string.Empty;
-        section.NewTaskOpen = false;
-        _dropContainer.Refresh();
+        var currentCardsInSection = _tasks.Where(t => t.Status == section.Name).ToList();
+        double nextPosition = currentCardsInSection.Count > 0
+            ? currentCardsInSection.Count + 1.0
+            : 1.0;
+
+        var request = new CreateCardRequest(
+            section.NewTaskName,
+            nextPosition
+        );
+
+        try
+        {
+            await CardService.CreateCardAsync(section.Id, request);
+
+            section.NewTaskName = string.Empty;
+            section.NewTaskOpen = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Не вдалося створити картку", Severity.Error);
+        }
     }
 
     private void CloseNewTaskForm(KanbanSectionViewModel section)
@@ -312,7 +367,9 @@ public partial class BoardPage
         _newMemberRole = BoardRole.Member;
     }
 
-    private async Task UpdateRoleAsync(BoardMemberViewModel member, BoardRole newRole)
+    private async Task UpdateRoleAsync(
+        BoardMemberViewModel member, 
+        BoardRole newRole)
     {
         if (member.Dto.UserRole == newRole)
         {
@@ -413,4 +470,64 @@ public partial class BoardPage
             return new List<UserSearchDto>();
         }
     }
+
+    private void HandleCardCreated(CardDto newCard)
+    {
+        if (_tasks.Any(t => t.Id == newCard.Id))
+        {
+            return;
+        }
+
+        var targetSection = _sections.FirstOrDefault(
+            s => s.Id == newCard.SectionId);
+
+        if (targetSection != null)
+        {
+            var newTask = new KanbanTaskViewModel(
+                newCard.Id, 
+                newCard.Title, 
+                targetSection.Name);
+
+            _tasks.Add(newTask);
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleSectionCreated(SectionDto newSection)
+    {
+        if (_sections.Any(s => s.Id == newSection.Id))
+        {
+            return;
+        }
+
+        _sections.Add(new KanbanSectionViewModel(
+            newSection.Id,
+            newSection.Name,
+            false,
+            string.Empty)
+        {
+            Position = newSection.Position
+        });
+
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+            _dropContainer.Refresh();
+        });
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        BoardStateService.OnBoardNameChanged -= StateHasChanged;
+        BoardHubService.OnCardCreated -= HandleCardCreated;
+        BoardHubService.OnSectionCreated -= HandleSectionCreated;
+
+        await BoardHubService.StopConnectionAsync(BoardIdGuid);
+    }
+
 }
