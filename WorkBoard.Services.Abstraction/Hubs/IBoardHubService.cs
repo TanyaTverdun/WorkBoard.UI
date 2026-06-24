@@ -8,6 +8,9 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<SectionDto>? OnSectionCreated;
 
+    event Action<SectionRenameDto>? OnSectionRenamed;
+
+
     Task StartConnectionAsync(
         string backendUrl,
         Guid boardId,

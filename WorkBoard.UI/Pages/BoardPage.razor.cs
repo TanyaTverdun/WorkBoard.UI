@@ -95,6 +95,7 @@ public partial class BoardPage
 
         BoardHubService.OnCardCreated += HandleCardCreated;
         BoardHubService.OnSectionCreated += HandleSectionCreated;
+        BoardHubService.OnSectionRenamed += HandleSectionRenamed;
 
         try
         {
@@ -107,7 +108,7 @@ public partial class BoardPage
         catch (Exception ex)
         {
             Console.WriteLine($"SignalR Error: {ex.Message}");
-            Snackbar.Add("Працюємо в офлайн-режимі. Живі оновлення недоступні.", Severity.Warning);
+            Snackbar.Add("Working in offline mode. Live updates are unavailable", Severity.Warning);
         }
     }
 
@@ -184,7 +185,7 @@ public partial class BoardPage
         }
         catch (Exception)
         {
-            Snackbar.Add("Не вдалося створити секцію", Severity.Error);
+            Snackbar.Add("Failed to create sectionю", Severity.Error);
         }
     }
 
@@ -197,30 +198,31 @@ public partial class BoardPage
         }
 
         var newName = section.EditName.Trim();
+
+        if (newName == section.Name)
+        {
+            section.IsRenaming = false;
+            return;
+        }
+
         var request = new UpdateSectionNameRequest
         {
             Name = newName
         };
 
-        await SectionService.RenameSectionAsync(
-            BoardIdGuid,
-            section.Id,
-            request);
-
-        string oldName = section.Name;
-        section.Name = newName;
-
-        var tasksToUpdate = _tasks
-            .Where(t => t.Status == oldName)
-            .ToList();
-
-        foreach (var t in tasksToUpdate)
+        try
         {
-            t.Status = newName;
-        }
+            await SectionService.RenameSectionAsync(
+                BoardIdGuid,
+                section.Id,
+                request);
 
-        section.IsRenaming = false;
-        _dropContainer.Refresh();
+            section.IsRenaming = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to rename section", Severity.Error);
+        }
     }
 
     private async Task DeleteSection(KanbanSectionViewModel section)
@@ -280,7 +282,7 @@ public partial class BoardPage
         }
         catch (Exception)
         {
-            Snackbar.Add("Не вдалося створити картку", Severity.Error);
+            Snackbar.Add("Failed to create task", Severity.Error);
         }
     }
 
@@ -521,11 +523,35 @@ public partial class BoardPage
         });
     }
 
+    private void HandleSectionRenamed(SectionRenameDto data)
+    {
+        var section = _sections.FirstOrDefault(s => s.Id == data.SectionId);
+
+        if (section != null && section.Name != data.NewName)
+        {
+            string oldName = section.Name;
+            section.Name = data.NewName;
+
+            var tasksToUpdate = _tasks.Where(t => t.Status == oldName).ToList();
+            foreach (var t in tasksToUpdate)
+            {
+                t.Status = data.NewName;
+            }
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
         BoardHubService.OnCardCreated -= HandleCardCreated;
         BoardHubService.OnSectionCreated -= HandleSectionCreated;
+        BoardHubService.OnSectionRenamed -= HandleSectionRenamed;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

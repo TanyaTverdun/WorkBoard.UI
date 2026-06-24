@@ -14,6 +14,7 @@ internal class BoardHubService : IBoardHubService
 
     public event Action<CardDto>? OnCardCreated;
     public event Action<SectionDto>? OnSectionCreated;
+    public event Action<SectionRenameDto>? OnSectionRenamed;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -61,6 +62,16 @@ internal class BoardHubService : IBoardHubService
                 _logger.LogInformation(
                     "Received new section via SignalR: {Name}", section.Name);
                 OnSectionCreated?.Invoke(section);
+            });
+
+            _hubConnection.On<SectionRenameDto>("SectionRenamed", (section) =>
+            {
+                _logger.LogInformation(
+                    "Section renamed: {NewName} (ID: {SectionId})", 
+                    section.NewName, 
+                    section.SectionId);
+
+                OnSectionRenamed?.Invoke(section);
             });
 
             await _hubConnection.StartAsync(cancellationToken);
