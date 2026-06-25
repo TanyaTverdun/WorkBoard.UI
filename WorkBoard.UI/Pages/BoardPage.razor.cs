@@ -96,6 +96,7 @@ public partial class BoardPage
         BoardHubService.OnCardCreated += HandleCardCreated;
         BoardHubService.OnSectionCreated += HandleSectionCreated;
         BoardHubService.OnSectionRenamed += HandleSectionRenamed;
+        BoardHubService.OnSectionDeleted += HandleSectionDeleted;
 
         try
         {
@@ -227,15 +228,16 @@ public partial class BoardPage
 
     private async Task DeleteSection(KanbanSectionViewModel section)
     {
-        await SectionService.DeleteSectionAsync(
-            BoardIdGuid,
-            section.Id);
-
-        _sections.Remove(section);
-        _tasks.RemoveAll(
-            t => t.Status == section.Name);
-
-        _dropContainer.Refresh();
+        try
+        {
+            await SectionService.DeleteSectionAsync(
+                BoardIdGuid, 
+                section.Id);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to delete section", Severity.Error);
+        }
     }
 
     private void StartRename(KanbanSectionViewModel section)
@@ -546,12 +548,30 @@ public partial class BoardPage
         }
     }
 
+    private void HandleSectionDeleted(Guid sectionId)
+    {
+        var section = _sections.FirstOrDefault(s => s.Id == sectionId);
+
+        if (section != null)
+        {
+            _sections.Remove(section);
+            _tasks.RemoveAll(t => t.Status == section.Name);
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
         BoardHubService.OnCardCreated -= HandleCardCreated;
         BoardHubService.OnSectionCreated -= HandleSectionCreated;
         BoardHubService.OnSectionRenamed -= HandleSectionRenamed;
+        BoardHubService.OnSectionDeleted -= HandleSectionDeleted;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

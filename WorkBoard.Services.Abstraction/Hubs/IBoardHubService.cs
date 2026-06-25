@@ -10,6 +10,7 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<SectionRenameDto>? OnSectionRenamed;
 
+    event Action<Guid>? OnSectionDeleted;
 
     Task StartConnectionAsync(
         string backendUrl,

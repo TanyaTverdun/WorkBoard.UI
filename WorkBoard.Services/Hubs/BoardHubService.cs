@@ -15,6 +15,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<CardDto>? OnCardCreated;
     public event Action<SectionDto>? OnSectionCreated;
     public event Action<SectionRenameDto>? OnSectionRenamed;
+    public event Action<Guid>? OnSectionDeleted;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -72,6 +73,12 @@ internal class BoardHubService : IBoardHubService
                     section.SectionId);
 
                 OnSectionRenamed?.Invoke(section);
+            });
+
+            _hubConnection.On<Guid>("SectionDeleted", (sectionId) =>
+            {
+                _logger.LogInformation("Section deleted: {SectionId}", sectionId);
+                OnSectionDeleted?.Invoke(sectionId);
             });
 
             await _hubConnection.StartAsync(cancellationToken);
