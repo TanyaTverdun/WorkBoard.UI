@@ -106,6 +106,7 @@ public partial class BoardPage
         BoardHubService.OnSectionDeleted += HandleSectionDeleted;
         BoardHubService.OnSectionMoved += HandleSectionMoved;
         BoardHubService.OnMemberRoleUpdated += HandleMemberRoleUpdated;
+        BoardHubService.OnMemberRemoved += HandleMemberRemoved;
 
         try
         {
@@ -440,14 +441,18 @@ public partial class BoardPage
 
     private async Task RemoveMemberAsync(BoardMemberViewModel member)
     {
-        await BoardMembersService.RemoveBoardMemberAsync(
-            WorkspaceId.Value,
-            BoardIdGuid,
-            member.Dto.UserId);
+        try
+        {
+            await BoardMembersService.RemoveBoardMemberAsync(
+                WorkspaceId.Value,
+                BoardIdGuid,
+                member.Dto.UserId);
 
-        _boardMembers = _boardMembers!
-            .Where(m => m.Dto.UserId != member.Dto.UserId)
-            .ToList();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to remove member", Severity.Error);
+        }
     }
 
     private async Task AddMemberAsync()
@@ -641,6 +646,36 @@ public partial class BoardPage
         }
     }
 
+    private void HandleMemberRemoved(Guid userId)
+    {
+        if (_currentUserId == userId)
+        {
+            var boardName = BoardStateService.CurrentBoardName;
+            var message = string.IsNullOrWhiteSpace(boardName)
+                ? "You have been removed from this board."
+                : $"You have been removed from '{boardName}'.";
+
+            InvokeAsync(() =>
+            {
+                Snackbar.Add(message, Severity.Warning);
+                BoardStateService.NotifyBoardsListChanged();
+                NavigationManager.NavigateTo("/");
+            });
+            return;
+        }
+
+        if (_boardMembers != null)
+        {
+            var memberToRemove = _boardMembers.FirstOrDefault(m => m.Dto.UserId == userId);
+
+            if (memberToRemove != null)
+            {
+                _boardMembers.Remove(memberToRemove);
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -650,6 +685,7 @@ public partial class BoardPage
         BoardHubService.OnSectionDeleted -= HandleSectionDeleted;
         BoardHubService.OnSectionMoved -= HandleSectionMoved;
         BoardHubService.OnMemberRoleUpdated -= HandleMemberRoleUpdated;
+        BoardHubService.OnMemberRemoved -= HandleMemberRemoved;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

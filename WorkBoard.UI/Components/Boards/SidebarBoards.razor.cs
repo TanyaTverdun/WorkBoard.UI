@@ -39,6 +39,7 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     {
         WorkspaceStateProvider.OnWorkspaceChanged += HandleWorkspaceChanged;
         NavigationManager.LocationChanged += HandleLocationChanged;
+        BoardStateService.OnBoardsListChanged += HandleBoardsListChanged;
 
         if (WorkspaceStateProvider.SelectedWorkspaceId.HasValue)
         {
@@ -63,6 +64,15 @@ public partial class SidebarBoards : ComponentBase, IDisposable
         }
 
         SelectedBoardId = null;
+    }
+
+    private async void HandleBoardsListChanged()
+    {
+        if (WorkspaceId.HasValue)
+        {
+            await LoadBoardsAsync(WorkspaceId.Value);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private void HandleLocationChanged(
@@ -183,5 +193,6 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     {
         WorkspaceStateProvider.OnWorkspaceChanged -= HandleWorkspaceChanged;
         NavigationManager.LocationChanged -= HandleLocationChanged;
+        BoardStateService.OnBoardsListChanged -= HandleBoardsListChanged;
     }
 }

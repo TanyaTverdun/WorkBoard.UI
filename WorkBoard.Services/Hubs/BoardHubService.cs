@@ -19,6 +19,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<Guid>? OnSectionDeleted;
     public event Action<Guid, double>? OnSectionMoved;
     public event Action<Guid, BoardRole>? OnMemberRoleUpdated;
+    public event Action<Guid>? OnMemberRemoved;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -102,6 +103,12 @@ internal class BoardHubService : IBoardHubService
                     data.NewRole);
 
                 OnMemberRoleUpdated?.Invoke(data.UserId, data.NewRole);
+            });
+
+            _hubConnection.On<Guid>("MemberRemoved", (userId) =>
+            {
+                _logger.LogInformation("Member removed from board: {UserId}", userId);
+                OnMemberRemoved?.Invoke(userId);
             });
 
             await _hubConnection.StartAsync(cancellationToken);
