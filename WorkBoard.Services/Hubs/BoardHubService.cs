@@ -16,6 +16,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<SectionDto>? OnSectionCreated;
     public event Action<SectionRenameDto>? OnSectionRenamed;
     public event Action<Guid>? OnSectionDeleted;
+    public event Action<Guid, double>? OnSectionMoved;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -79,6 +80,16 @@ internal class BoardHubService : IBoardHubService
             {
                 _logger.LogInformation("Section deleted: {SectionId}", sectionId);
                 OnSectionDeleted?.Invoke(sectionId);
+            });
+
+            _hubConnection.On<SectionMoveDto>("SectionMoved", (data) =>
+            {
+                _logger.LogInformation(
+                    "Section moved: {SectionId} to {NewPosition}", 
+                    data.SectionId, 
+                    data.NewPosition);
+
+                OnSectionMoved?.Invoke(data.SectionId, data.NewPosition);
             });
 
             await _hubConnection.StartAsync(cancellationToken);

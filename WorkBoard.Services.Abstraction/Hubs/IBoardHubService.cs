@@ -12,6 +12,8 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<Guid>? OnSectionDeleted;
 
+    public event Action<Guid, double>? OnSectionMoved;
+
     Task StartConnectionAsync(
         string backendUrl,
         Guid boardId,

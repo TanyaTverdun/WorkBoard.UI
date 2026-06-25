@@ -97,6 +97,7 @@ public partial class BoardPage
         BoardHubService.OnSectionCreated += HandleSectionCreated;
         BoardHubService.OnSectionRenamed += HandleSectionRenamed;
         BoardHubService.OnSectionDeleted += HandleSectionDeleted;
+        BoardHubService.OnSectionMoved += HandleSectionMoved;
 
         try
         {
@@ -339,25 +340,27 @@ public partial class BoardPage
 
         foreach (var section in movedSections)
         {
-            var request = new MoveSectionRequest
-            {
-                NewPosition = section.Position
+            var request = new MoveSectionRequest 
+            { 
+                NewPosition = section.Position 
             };
 
-            await SectionService.MoveSectionAsync(
-                BoardIdGuid,
-                section.Id,
-                request);
+            try
+            {
+                await SectionService.MoveSectionAsync(
+                    BoardIdGuid, 
+                    section.Id, 
+                    request);
 
-            section.IsPositionChanged = false;
+                section.IsPositionChanged = false;
+            }
+            catch (Exception)
+            {
+                Snackbar.Add("Failed to save section order", Severity.Error);
+            }
         }
 
-        _sections = _reorderList
-            .OrderBy(s => s.Position)
-            .ToList();
-
         _isReorderPopoverOpen = false;
-        _dropContainer.Refresh();
     }
 
     private void OpenManageMembersDialog()
@@ -565,6 +568,24 @@ public partial class BoardPage
         }
     }
 
+    private void HandleSectionMoved(Guid sectionId, double newPosition)
+    {
+        var section = _sections.FirstOrDefault(s => s.Id == sectionId);
+
+        if (section != null)
+        {
+            section.Position = newPosition;
+
+            _sections = _sections.OrderBy(s => s.Position).ToList();
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -572,6 +593,7 @@ public partial class BoardPage
         BoardHubService.OnSectionCreated -= HandleSectionCreated;
         BoardHubService.OnSectionRenamed -= HandleSectionRenamed;
         BoardHubService.OnSectionDeleted -= HandleSectionDeleted;
+        BoardHubService.OnSectionMoved -= HandleSectionMoved;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }
