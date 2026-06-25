@@ -20,6 +20,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<Guid, double>? OnSectionMoved;
     public event Action<Guid, BoardRole>? OnMemberRoleUpdated;
     public event Action<Guid>? OnMemberRemoved;
+    public event Action<Guid, Guid, double>? OnCardMoved;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -109,6 +110,17 @@ internal class BoardHubService : IBoardHubService
             {
                 _logger.LogInformation("Member removed from board: {UserId}", userId);
                 OnMemberRemoved?.Invoke(userId);
+            });
+
+            _hubConnection.On<Guid, Guid, double>("CardMoved", (cardId, newSectionId, newPosition) =>
+            {
+                _logger.LogInformation(
+                    "Card moved: {CardId} to section {NewSectionId} at {NewPosition}",
+                    cardId,
+                    newSectionId,
+                    newPosition);
+
+                OnCardMoved?.Invoke(cardId, newSectionId, newPosition);
             });
 
             await _hubConnection.StartAsync(cancellationToken);

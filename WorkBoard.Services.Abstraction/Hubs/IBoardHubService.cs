@@ -19,6 +19,8 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<Guid>? OnMemberRemoved;
 
+    event Action<Guid, Guid, double>? OnCardMoved;
+
     Task StartConnectionAsync(
         string backendUrl,
         Guid boardId,

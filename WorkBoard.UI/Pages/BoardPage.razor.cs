@@ -8,6 +8,7 @@ using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requestsж;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 using WorkBoard.UI.ViewModels.Board;
@@ -107,6 +108,7 @@ public partial class BoardPage
         BoardHubService.OnSectionMoved += HandleSectionMoved;
         BoardHubService.OnMemberRoleUpdated += HandleMemberRoleUpdated;
         BoardHubService.OnMemberRemoved += HandleMemberRemoved;
+        BoardHubService.OnCardMoved += HandleCardMoved;
 
         try
         {
@@ -167,11 +169,12 @@ public partial class BoardPage
                     s => s.Id == c.SectionId)?.Name ?? string.Empty;
 
                 return new KanbanTaskViewModel(
-                    c.Id, 
-                    c.Title, 
-                    sectionName);
+                    c.Id,
+                    c.Title,
+                    sectionName,
+                    c.Position);
 
-            }).ToList();
+            }).OrderBy(t => t.Position).ToList();
         }
         catch (Exception ex)
         {
@@ -183,14 +186,67 @@ public partial class BoardPage
         }
     }
 
-    private void TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
+    private async Task TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
     {
         if (info.Item is null)
         {
             return;
         }
 
+        var oldSectionName = info.Item.Status;
         info.Item.Status = info.DropzoneIdentifier;
+
+        var targetSection = _sections.FirstOrDefault(
+            s => s.Name == info.DropzoneIdentifier);
+
+        if (targetSection == null)
+        {
+            return;
+        }
+
+        var cardsInSection = _tasks
+            .Where(t => t.Status == targetSection.Name && t.Id != info.Item.Id)
+            .OrderBy(t => t.Position)
+            .ToList();
+
+        double newPosition;
+
+        if (cardsInSection.Count == 0)
+        {
+            newPosition = 1.0;
+        }
+        else if (info.IndexInZone <= 0)
+        {
+            newPosition = cardsInSection.First().Position / 2.0;
+        }
+        else if (info.IndexInZone >= cardsInSection.Count)
+        {
+            newPosition = cardsInSection.Last().Position + 1.0;
+        }
+        else
+        {
+            double prevPos = cardsInSection[info.IndexInZone - 1].Position;
+            double nextPos = cardsInSection[info.IndexInZone].Position;
+            newPosition = (prevPos + nextPos) / 2.0;
+        }
+
+        info.Item.Position = newPosition;
+        _tasks = _tasks.OrderBy(t => t.Position).ToList();
+
+        var request = new MoveCardRequest(targetSection.Id, newPosition);
+
+        try
+        {
+            await CardService.MoveCardAsync(BoardIdGuid, info.Item.Id, request);
+        }
+        catch (Exception)
+        {
+            info.Item.Status = oldSectionName;
+            Snackbar.Add("Failed to move card", Severity.Error);
+
+            StateHasChanged();
+            _dropContainer.Refresh();
+        }
     }
 
     private async Task OnValidSectionSubmit(EditContext context)
@@ -519,22 +575,21 @@ public partial class BoardPage
 
     private void HandleCardCreated(CardDto newCard)
     {
-        if (_tasks.Any(t => t.Id == newCard.Id))
-        {
-            return;
-        }
+        if (_tasks.Any(t => t.Id == newCard.Id)) return;
 
-        var targetSection = _sections.FirstOrDefault(
-            s => s.Id == newCard.SectionId);
+        var targetSection = _sections.FirstOrDefault(s => s.Id == newCard.SectionId);
 
         if (targetSection != null)
         {
             var newTask = new KanbanTaskViewModel(
-                newCard.Id, 
-                newCard.Title, 
-                targetSection.Name);
+                newCard.Id,
+                newCard.Title,
+                targetSection.Name,
+                newCard.Position);
 
             _tasks.Add(newTask);
+
+            _tasks = _tasks.OrderBy(t => t.Position).ToList();
 
             InvokeAsync(() =>
             {
@@ -676,6 +731,29 @@ public partial class BoardPage
         }
     }
 
+    private void HandleCardMoved(
+        Guid cardId,
+        Guid newSectionId, 
+        double newPosition)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == cardId);
+        var targetSection = _sections.FirstOrDefault(s => s.Id == newSectionId);
+
+        if (task != null && targetSection != null)
+        {
+            task.Status = targetSection.Name;
+            task.Position = newPosition;
+
+            _tasks = _tasks.OrderBy(t => t.Position).ToList();
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -686,6 +764,7 @@ public partial class BoardPage
         BoardHubService.OnSectionMoved -= HandleSectionMoved;
         BoardHubService.OnMemberRoleUpdated -= HandleMemberRoleUpdated;
         BoardHubService.OnMemberRemoved -= HandleMemberRemoved;
+        BoardHubService.OnCardMoved -= HandleCardMoved;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }
