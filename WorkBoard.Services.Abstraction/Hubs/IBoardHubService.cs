@@ -1,4 +1,5 @@
-﻿using WorkBoard.Services.Abstraction.DTOs;
+﻿using WorkBoard.Domain.Enums;
+using WorkBoard.Services.Abstraction.DTOs;
 
 namespace WorkBoard.Services.Abstraction.Hubs;
 
@@ -13,6 +14,8 @@ public interface IBoardHubService : IAsyncDisposable
     event Action<Guid>? OnSectionDeleted;
 
     public event Action<Guid, double>? OnSectionMoved;
+
+    event Action<Guid, BoardRole>? OnMemberRoleUpdated;
 
     Task StartConnectionAsync(
         string backendUrl,

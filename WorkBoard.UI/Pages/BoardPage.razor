@@ -113,7 +113,7 @@
 														   Value=@member.Dto.UserRole
 														   ValueChanged=@(async (r) => await UpdateRoleAsync(member, r))
 														   Dense="true"
-														   Disabled=@(member.Dto.UserId == _currentUserId || IsCurrentUserObserver)
+														   Disabled=@(member.Dto.UserId == _currentUserId || IsWorkspaceObserver)
 														   Variant=@Variant.Outlined
 														   Margin=@Margin.Dense
 														   Class="role-select seagreen"
@@ -126,7 +126,7 @@
 
 											<MudIconButton Icon=@Icons.Material.Rounded.PersonRemove
 														   Size=@Size.Small
-														   Disabled=@(member.Dto.UserId == _currentUserId || IsCurrentUserObserver)
+														   Disabled=@(member.Dto.UserId == _currentUserId || IsWorkspaceObserver)
 														   Class="text-muted hover-error-btn"
 														   OnClick=@(() => member.IsConfirmingDelete = true) />
 										}
@@ -136,66 +136,69 @@
 						}
 					</div>
 
-					<MudDivider Class="mb-3" />
+					@if (!IsWorkspaceObserver)
+					{
+						<MudDivider Class="mb-3" />
 
-					<MudText Typo=@Typo.caption
-							 Class="text-muted font-weight-bold d-flex align-center gap-1 mb-2 add-member-header">
-						<MudIcon Icon=@Icons.Material.Outlined.Email
-								 Size=@Size.Small
-								 Class="add-member-icon" /> ADD MEMBER BY EMAIL
-					</MudText>
+						<MudText Typo=@Typo.caption
+								 Class="text-muted font-weight-bold d-flex align-center gap-1 mb-2 add-member-header">
+							<MudIcon Icon=@Icons.Material.Outlined.Email
+									 Size=@Size.Small
+									 Class="add-member-icon" /> ADD MEMBER BY EMAIL
+						</MudText>
 
-					<div class="d-flex flex-column gap-2">
-						<MudAutocomplete T=@UserSearchDto
-										 @bind-Value=@_selectedUserToAdd
-										 AdornmentIcon=@Icons.Material.Filled.Close
-										 IconSize=@Size.Small
-										 SearchFunc=@SearchUsersAsync
-										 ToStringFunc=@(user => user == null ? null : user.Email)
-										 Placeholder="Type email..."
-										 Variant=@Variant.Outlined
-										 Margin=@Margin.Dense
-										 Class="compact-input"
-										 ResetValueOnEmptyText="true"
-										 MinCharacters="2"
-										 ShowProgressIndicator="true">
-							<ItemTemplate Context="user">
-								<div class="d-flex align-center gap-3 py-1">
-									<MudAvatar Color=@Color.Primary
-											   Size=@Size.Small
-											   Class="avatar-tiny">
-										@(user.FullName?.FirstOrDefault())
-									</MudAvatar>
-									<div class="d-flex flex-column">
-										<MudText Typo=@Typo.body2
-												 Class="font-weight-medium">@user.FullName</MudText>
+						<div class="d-flex flex-column gap-2">
+							<MudAutocomplete T=@UserSearchDto
+											 @bind-Value=@_selectedUserToAdd
+											 AdornmentIcon=@Icons.Material.Filled.Close
+											 IconSize=@Size.Small
+											 SearchFunc=@SearchUsersAsync
+											 ToStringFunc=@(user => user == null ? null : user.Email)
+											 Placeholder="Type email..."
+											 Variant=@Variant.Outlined
+											 Margin=@Margin.Dense
+											 Class="compact-input"
+											 ResetValueOnEmptyText="true"
+											 MinCharacters="2"
+											 ShowProgressIndicator="true">
+								<ItemTemplate Context="user">
+									<div class="d-flex align-center gap-3 py-1">
+										<MudAvatar Color=@Color.Primary
+												   Size=@Size.Small
+												   Class="avatar-tiny">
+											@(user.FullName?.FirstOrDefault())
+										</MudAvatar>
+										<div class="d-flex flex-column">
+											<MudText Typo=@Typo.body2
+													 Class="font-weight-medium">@user.FullName</MudText>
 
-										<MudText Typo=@Typo.caption
-												 Class="text-muted text-xs-tight">@user.Email</MudText>
+											<MudText Typo=@Typo.caption
+													 Class="text-muted text-xs-tight">@user.Email</MudText>
+										</div>
 									</div>
-								</div>
-							</ItemTemplate>
-						</MudAutocomplete>
+								</ItemTemplate>
+							</MudAutocomplete>
 
-						<div class="d-flex gap-3 align-center">
-							<MudSelect T=@BoardRole @bind-Value=@_newMemberRole
-									   Dense="true"
-									   Variant=@Variant.Outlined
-									   Margin=@Margin.Dense
-									   Class="flex-grow-1 compact-input role-select"
-									   PopoverClass="custom-dropdown-popover">
-								<MudSelectItem Value=@BoardRole.Member>Member</MudSelectItem>
-								<MudSelectItem Value=@BoardRole.Observer>Observer</MudSelectItem>
-							</MudSelect>
+							<div class="d-flex gap-3 align-center">
+								<MudSelect T=@BoardRole @bind-Value=@_newMemberRole
+										   Dense="true"
+										   Variant=@Variant.Outlined
+										   Margin=@Margin.Dense
+										   Class="flex-grow-1 compact-input role-select"
+										   PopoverClass="custom-dropdown-popover">
+									<MudSelectItem Value=@BoardRole.Member>Member</MudSelectItem>
+									<MudSelectItem Value=@BoardRole.Observer>Observer</MudSelectItem>
+								</MudSelect>
 
-							<MudButton Variant=@Variant.Filled
-									   Color=@Color.Primary
-									   OnClick=@AddMemberAsync
-									   Class="btn-create rounded-lg btn-add-compact">
-								Add
-							</MudButton>
+								<MudButton Variant=@Variant.Filled
+										   Color=@Color.Primary
+										   OnClick=@AddMemberAsync
+										   Class="btn-create rounded-lg btn-add-compact">
+									Add
+								</MudButton>
+							</div>
 						</div>
-					</div>
+					}
 				</MudPopover>
 			</div>
 		</div>
@@ -228,7 +231,6 @@
 							Drag rows to change the order of sections
 						</MudText>
 
-				
 						<MudDropContainer T=@KanbanSectionViewModel
 										  Items=@_reorderList
 										  ItemsSelector=@((item, zone) => true)
@@ -474,7 +476,7 @@
 			</MudPaper>
 		</ChildContent>
 		<ItemRenderer>
-			<MudPaper Elevation="1" \
+			<MudPaper Elevation="1"
 					  Class="pa-4 rounded-lg my-3 task-item">
 				@context.Name
 			</MudPaper>

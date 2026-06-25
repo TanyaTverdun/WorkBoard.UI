@@ -98,9 +98,10 @@ public partial class SidebarBoards : ComponentBase, IDisposable
         {
             Boards = await BoardService.GetWorkspaceBoardsAsync(workspaceId);
 
-            if (SelectedBoardId == null && Boards != null && Boards.Any())
+            if (SelectedBoardId.HasValue && !Boards.Any(b => b.Id == SelectedBoardId.Value))
             {
-                SelectBoard(Boards.First().Id);
+                SelectedBoardId = null;
+                NavigationManager.NavigateTo("/");
             }
         }
         catch (Exception)

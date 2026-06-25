@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Hubs;
 
@@ -17,6 +18,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<SectionRenameDto>? OnSectionRenamed;
     public event Action<Guid>? OnSectionDeleted;
     public event Action<Guid, double>? OnSectionMoved;
+    public event Action<Guid, BoardRole>? OnMemberRoleUpdated;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -90,6 +92,16 @@ internal class BoardHubService : IBoardHubService
                     data.NewPosition);
 
                 OnSectionMoved?.Invoke(data.SectionId, data.NewPosition);
+            });
+
+            _hubConnection.On<MemberRoleUpdatedDto>("MemberRoleUpdated", (data) =>
+            {
+                _logger.LogInformation(
+                    "Member role updated: {UserId} to {NewRole}", 
+                    data.UserId, 
+                    data.NewRole);
+
+                OnMemberRoleUpdated?.Invoke(data.UserId, data.NewRole);
             });
 
             await _hubConnection.StartAsync(cancellationToken);

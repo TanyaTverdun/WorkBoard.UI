@@ -74,17 +74,24 @@ public partial class BoardPage
 
     private Guid? _currentUserId;
     private UserSearchDto? _selectedUserToAdd;
+
+    private bool IsWorkspaceObserver =>
+        WorkspaceStateProvider.CurrentRole == WorkspaceRole.Observer;
     private bool IsCurrentUserObserver =>
-        _boardMembers?.FirstOrDefault(m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
+        _boardMembers?.FirstOrDefault(
+            m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
 
-        var userIdString = authState.User.FindFirst(c =>
-            c.Type == "oid" ||
-            c.Type == "sub" ||
-            c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userIdString = authState.User.FindFirst(c => c.Type == "oid")?.Value;
+
+        if (string.IsNullOrEmpty(userIdString))
+        {
+            userIdString = authState.User.FindFirst(c => 
+                c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        }
 
         if (Guid.TryParse(userIdString, out var parsedId))
         {
@@ -98,19 +105,19 @@ public partial class BoardPage
         BoardHubService.OnSectionRenamed += HandleSectionRenamed;
         BoardHubService.OnSectionDeleted += HandleSectionDeleted;
         BoardHubService.OnSectionMoved += HandleSectionMoved;
+        BoardHubService.OnMemberRoleUpdated += HandleMemberRoleUpdated;
 
         try
         {
             var backendUrl = UiOptions.Value.BackendBaseUrl;
 
-            Console.WriteLine($"URL {backendUrl}");
-
             await BoardHubService.StartConnectionAsync(backendUrl, BoardIdGuid);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"SignalR Error: {ex.Message}");
-            Snackbar.Add("Working in offline mode. Live updates are unavailable", Severity.Warning);
+            Snackbar.Add(
+                "Working in offline mode. Live updates are unavailable", 
+                Severity.Warning);
         }
     }
 
@@ -122,42 +129,57 @@ public partial class BoardPage
             return;
         }
 
-        var board = await BoardService.GetBoardAsync(
-            WorkspaceId.Value,
-            BoardIdGuid);
-
-        BoardStateService.SetBoardName(board.Name);
-
-        var dtos = await BoardMembersService.GetBoardMembersAsync(
-            WorkspaceId.Value,
-            BoardIdGuid);
-        _boardMembers = dtos
-            .Select(dto => new BoardMemberViewModel(dto))
-            .ToList();
-
-        var sectionsFromDb = await SectionService
-            .GetSectionsByBoardAsync(BoardIdGuid);
-
-        _sections = sectionsFromDb
-            .OrderBy(s => s.Position)
-            .Select(s => new KanbanSectionViewModel(
-                s.Id,
-                s.Name,
-                false,
-                string.Empty)
-            {
-                Position = s.Position
-            }).ToList();
-
-        var cardsFromDb = await CardService.GetCardsByBoardAsync(BoardIdGuid);
-
-        _tasks = cardsFromDb.Select(c =>
+        try
         {
-            var sectionName = _sections.FirstOrDefault(s => s.Id == c.SectionId)?.Name ?? string.Empty;
+            var board = await BoardService.GetBoardAsync(
+                WorkspaceId.Value,
+                BoardIdGuid);
 
-            return new KanbanTaskViewModel(c.Id, c.Title, sectionName);
+            BoardStateService.SetBoardName(board.Name);
 
-        }).ToList();
+            var dtos = await BoardMembersService.GetBoardMembersAsync(
+                WorkspaceId.Value,
+                BoardIdGuid);
+            _boardMembers = dtos
+                .Select(dto => new BoardMemberViewModel(dto))
+                .ToList();
+
+            var sectionsFromDb = await SectionService
+                .GetSectionsByBoardAsync(BoardIdGuid);
+
+            _sections = sectionsFromDb
+                .OrderBy(s => s.Position)
+                .Select(s => new KanbanSectionViewModel(
+                    s.Id,
+                    s.Name,
+                    false,
+                    string.Empty)
+                {
+                    Position = s.Position
+                }).ToList();
+
+            var cardsFromDb = await CardService.GetCardsByBoardAsync(BoardIdGuid);
+
+            _tasks = cardsFromDb.Select(c =>
+            {
+                var sectionName = _sections.FirstOrDefault(
+                    s => s.Id == c.SectionId)?.Name ?? string.Empty;
+
+                return new KanbanTaskViewModel(
+                    c.Id, 
+                    c.Title, 
+                    sectionName);
+
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                "You don't have access to this board anymore.", 
+                Severity.Warning);
+
+            NavigationManager.NavigateTo("/");
+        }
     }
 
     private void TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
@@ -383,16 +405,9 @@ public partial class BoardPage
             return;
         }
 
-        var request = new UpdateRoleRequest((int)newRole);
-
-        await BoardMembersService.UpdateMemberRoleAsync(
-            WorkspaceId.Value,
-            BoardIdGuid,
-            member.Dto.UserId,
-            request);
-
         var updatedMembers = _boardMembers!.ToList();
-        var index = updatedMembers.FindIndex(m => m.Dto.UserId == member.Dto.UserId);
+        var index = updatedMembers.FindIndex(
+            m => m.Dto.UserId == member.Dto.UserId);
 
         if (index != -1)
         {
@@ -400,7 +415,26 @@ public partial class BoardPage
             {
                 UserRole = newRole
             });
+
             _boardMembers = updatedMembers;
+        }
+
+        var request = new UpdateRoleRequest((int)newRole);
+
+        try
+        {
+            if (WorkspaceId != null)
+            {
+                await BoardMembersService.UpdateMemberRoleAsync(
+                    WorkspaceId.Value,
+                    BoardIdGuid,
+                    member.Dto.UserId,
+                    request);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to update role", Severity.Error);
         }
     }
 
@@ -586,6 +620,27 @@ public partial class BoardPage
         }
     }
 
+    private void HandleMemberRoleUpdated(Guid userId, BoardRole newRole)
+    {
+        if (_boardMembers == null) return;
+
+        var index = _boardMembers.FindIndex(m => m.Dto.UserId == userId);
+
+        if (index != -1 && _boardMembers[index].Dto.UserRole != newRole)
+        {
+            var updatedMembers = _boardMembers.ToList();
+            updatedMembers[index] = new BoardMemberViewModel(
+                _boardMembers[index].Dto with
+                {
+                    UserRole = newRole
+                });
+
+            _boardMembers = updatedMembers;
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -594,6 +649,7 @@ public partial class BoardPage
         BoardHubService.OnSectionRenamed -= HandleSectionRenamed;
         BoardHubService.OnSectionDeleted -= HandleSectionDeleted;
         BoardHubService.OnSectionMoved -= HandleSectionMoved;
+        BoardHubService.OnMemberRoleUpdated -= HandleMemberRoleUpdated;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }
