@@ -2,6 +2,7 @@
 using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requestsж;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.Services.Servises.Card;
@@ -80,6 +81,45 @@ internal class CardService : ICardService
                 "in section {SectionId}",
                 request.Title,
                 sectionId);
+            throw;
+        }
+    }
+
+    public async Task MoveCardAsync(
+        Guid boardId,
+        Guid cardId,
+        MoveCardRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.MoveCardAsync(
+                boardId,
+                cardId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while moving card {CardId} " +
+                "to section {SectionId} on board {BoardId}. Status: {StatusCode}",
+                cardId,
+                request.NewSectionId,
+                boardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while moving card {CardId} " +
+                "to section {SectionId} on board {BoardId}",
+                cardId,
+                request.NewSectionId,
+                boardId);
             throw;
         }
     }

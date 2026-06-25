@@ -32,7 +32,7 @@ internal interface IBoardApi
 
     [Get("/api/workspaces/{workspaceId}/boards/{boardId}")]
     Task<BoardDto> GetBoardAsync(
-    Guid workspaceId,
-    Guid boardId,
-    CancellationToken cancellationToken = default);
+        Guid workspaceId,
+        Guid boardId,
+        CancellationToken cancellationToken = default);
 }

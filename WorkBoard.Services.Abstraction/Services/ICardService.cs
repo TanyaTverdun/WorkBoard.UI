@@ -1,5 +1,6 @@
 ﻿using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requestsж;
 
 namespace WorkBoard.Services.Abstraction.Services;
 
@@ -12,5 +13,11 @@ public interface ICardService
     Task<CardDto> CreateCardAsync(
         Guid sectionId,
         CreateCardRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task MoveCardAsync(
+        Guid boardId,
+        Guid cardId,
+        MoveCardRequest request,
         CancellationToken cancellationToken = default);
 }

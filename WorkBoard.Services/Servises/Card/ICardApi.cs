@@ -1,6 +1,7 @@
 ﻿using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requestsж;
 
 namespace WorkBoard.Services.Servises.Card;
 
@@ -15,5 +16,12 @@ internal interface ICardApi
     Task<CardDto> CreateCardAsync(
         Guid sectionId,
         [Body] CreateCardRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Patch("/api/boards/{boardId}/cards/{cardId}/move")]
+    Task MoveCardAsync(
+        Guid boardId,
+        Guid cardId,
+        [Body] MoveCardRequest request,
         CancellationToken cancellationToken = default);
 }
