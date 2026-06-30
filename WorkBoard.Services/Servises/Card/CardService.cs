@@ -123,4 +123,66 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task UpdateCardTitleAsync(
+        Guid boardId,
+        Guid cardId,
+        UpdateCardTitleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.UpdateCardTitleAsync(
+                boardId, 
+                cardId, 
+                request, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating title for card {CardId} " +
+                "on board {BoardId}. Status: {StatusCode}",
+                cardId, boardId, apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating title for card " +
+                "{CardId} on board {BoardId}", cardId, boardId);
+            throw;
+        }
+    }
+
+    public async Task UpdateCardDescriptionAsync(
+        Guid boardId,
+        Guid cardId,
+        UpdateCardDescriptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.UpdateCardDescriptionAsync(
+                boardId, 
+                cardId, 
+                request, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating description for card {CardId} " +
+                "on board {BoardId}. Status: {StatusCode}",
+                cardId, boardId, apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating description " +
+                "for card {CardId} on board {BoardId}", cardId, boardId);
+            throw;
+        }
+    }
 }

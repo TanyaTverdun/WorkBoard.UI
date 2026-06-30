@@ -20,4 +20,16 @@ public interface ICardService
         Guid cardId,
         MoveCardRequest request,
         CancellationToken cancellationToken = default);
+
+    Task UpdateCardTitleAsync(
+        Guid boardId,
+        Guid cardId,
+        UpdateCardTitleRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateCardDescriptionAsync(
+        Guid boardId,
+        Guid cardId,
+        UpdateCardDescriptionRequest request,
+        CancellationToken cancellationToken = default);
 }
