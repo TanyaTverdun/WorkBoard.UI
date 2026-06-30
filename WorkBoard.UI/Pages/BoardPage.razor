@@ -393,7 +393,7 @@
 										  Placeholder="Enter card title..."
 										  Underline="false"
 										  Margin=@Margin.Dense
-										  AutoGrow="true"
+										  MaxLength="100"
 										  Class="mx-1 mb-2">
 							</MudTextField>
 
@@ -477,7 +477,8 @@
 		</ChildContent>
 		<ItemRenderer>
 			<MudPaper Elevation="1"
-					  Class="pa-4 rounded-lg my-3 task-item">
+					  Class="pa-4 rounded-lg my-3 task-item cursor-pointer hover-effect"
+					  @onclick="@(() => OpenCardDetails(context))">
 				@context.Name
 			</MudPaper>
 		</ItemRenderer>

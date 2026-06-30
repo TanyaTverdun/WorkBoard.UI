@@ -11,6 +11,7 @@ using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Requestsж;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
+using WorkBoard.UI.Components.Boards;
 using WorkBoard.UI.ViewModels.Board;
 
 namespace WorkBoard.UI.Pages;
@@ -52,6 +53,9 @@ public partial class BoardPage
 
     [Inject]
     private IOptions<WorkBoardUiOptions> UiOptions { get; set; } = default!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
 
     [Parameter]
     public Guid BoardIdGuid { get; set; }
@@ -172,7 +176,9 @@ public partial class BoardPage
                     c.Id,
                     c.Title,
                     sectionName,
-                    c.Position);
+                    c.Position,
+                    BoardIdGuid,
+                    c.Description);
 
             }).OrderBy(t => t.Position).ToList();
         }
@@ -573,6 +579,24 @@ public partial class BoardPage
         }
     }
 
+    private async Task OpenCardDetails(KanbanTaskViewModel card)
+    {
+        var parameters = new DialogParameters<CardDetails>
+    {
+        { x => x.Card, card }
+    };
+
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        await DialogService.ShowAsync<CardDetails>(string.Empty, parameters, options);
+    }
+
     private void HandleCardCreated(CardDto newCard)
     {
         if (_tasks.Any(t => t.Id == newCard.Id)) return;
@@ -585,7 +609,9 @@ public partial class BoardPage
                 newCard.Id,
                 newCard.Title,
                 targetSection.Name,
-                newCard.Position);
+                newCard.Position,
+                BoardIdGuid,
+                newCard.Description);
 
             _tasks.Add(newTask);
 
