@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using WorkBoard.Domain.Enums;
-using WorkBoard.Services.Abstraction;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Boards;
@@ -39,6 +39,7 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     {
         WorkspaceStateProvider.OnWorkspaceChanged += HandleWorkspaceChanged;
         NavigationManager.LocationChanged += HandleLocationChanged;
+        BoardStateService.OnBoardsListChanged += HandleBoardsListChanged;
 
         if (WorkspaceStateProvider.SelectedWorkspaceId.HasValue)
         {
@@ -63,6 +64,15 @@ public partial class SidebarBoards : ComponentBase, IDisposable
         }
 
         SelectedBoardId = null;
+    }
+
+    private async void HandleBoardsListChanged()
+    {
+        if (WorkspaceId.HasValue)
+        {
+            await LoadBoardsAsync(WorkspaceId.Value);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private void HandleLocationChanged(
@@ -98,9 +108,10 @@ public partial class SidebarBoards : ComponentBase, IDisposable
         {
             Boards = await BoardService.GetWorkspaceBoardsAsync(workspaceId);
 
-            if (SelectedBoardId == null && Boards != null && Boards.Any())
+            if (SelectedBoardId.HasValue && !Boards.Any(b => b.Id == SelectedBoardId.Value))
             {
-                SelectBoard(Boards.First().Id);
+                SelectedBoardId = null;
+                NavigationManager.NavigateTo("/");
             }
         }
         catch (Exception)
@@ -182,5 +193,6 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     {
         WorkspaceStateProvider.OnWorkspaceChanged -= HandleWorkspaceChanged;
         NavigationManager.LocationChanged -= HandleLocationChanged;
+        BoardStateService.OnBoardsListChanged -= HandleBoardsListChanged;
     }
 }

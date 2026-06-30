@@ -1,0 +1,615 @@
+﻿@using MudBlazor
+
+<MudDialog DefaultFocus="DefaultFocus.None"
+           Class="rounded-xl"
+           ContentClass="pa-0 py-0 overflow-hidden d-flex flex-column"
+           Style="height: 85vh; max-height: 900px;">
+    <DialogContent>
+        <div class="px-6 pt-6 pb-2 flex-shrink-0">
+            <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                           OnClick="Close"
+                           Size="Size.Small"
+                           Class="position-absolute text-muted"
+                           Style="top: 16px; right: 16px;" />
+
+            <div class="d-flex align-center gap-2 mb-0">
+                <MudText Typo="Typo.caption" 
+                         Class="text-muted font-weight-bold">SECTION:</MudText>
+
+                <MudChip Value="@("Status")"
+                         Size="Size.Small"
+                         Color="Color.Info"
+                         Variant="Variant.Text"
+                         Class="font-weight-bold border-solid border mud-border-info">
+                    @Card.Status
+                </MudChip>
+            </div>
+            <div class="mb-3 pr-8">
+                <MudTextField @bind-Value="_editedTitle"
+                              Placeholder="Task name..."
+                              Class="@($"task-title-input mt-0 pa-0 {(!_isEditingTitle ? "hide-underline" : "")}")"
+                              MaxLength="100"
+                              @onfocus="@(() => _isEditingTitle = true)"
+                              @onclick="@(() => _isEditingTitle = true)"
+                              @onblur="OnTitleBlurAsync"
+                              Immediate="true" />
+
+                @if (_isEditingTitle)
+                {
+                    <div class="d-flex gap-2 mt-2 justify-start">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   Class="rounded-lg text-none btn-create popover-action-btn"
+                                   OnClick="SaveTitleAsync"
+                                   Disabled="@string.IsNullOrWhiteSpace(_editedTitle)">
+                            Save
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Surface"
+                                   Size="Size.Small"
+                                   Class="rounded-lg text-none cancel-btn popover-action-btn"
+                                   DropShadow="false"
+                                   OnClick="DiscardTitleChanges">
+                            Cancel
+                        </MudButton>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex gap-2 align-center">
+                @foreach (var label in _labels)
+                {
+                    <MudChip @key="@label.Name" 
+                             Value="@label.Name"
+                             Size="Size.Small"
+                             Color="@label.Color"
+                             Variant="Variant.Text"
+                             Class="font-weight-bold"
+                             Style="@($"background-color: var(--mud-palette-{label.Color.ToString().ToLower()}-hover); border: 1px solid var(--mud-palette-{label.Color.ToString().ToLower()});")">
+                        @label.Name
+                    </MudChip>
+
+                }
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         Class="border-dashed text-muted cursor-pointer"
+                         OnClick="@(() => _isLabelPopoverOpen = !_isLabelPopoverOpen)">
+                    <MudIcon Icon="@Icons.Material.Rounded.Add" Size="Size.Small" Class="mr-1" /> Label
+                </MudChip>
+
+                <MudPopover Open="@_isLabelPopoverOpen"
+                            AnchorOrigin="Origin.BottomLeft"
+                            TransformOrigin="Origin.TopLeft"
+                            Class="pa-3 mud-elevation-4 rounded-lg mt-1"
+                            Style="width: 260px; z-index: 9999;">
+
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <MudText Typo="Typo.caption" 
+                                 Class="text-muted font-weight-bold">LABELS</MudText>
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => _isLabelPopoverOpen = false)" />
+                    </div>
+
+                    <MudTextField @bind-Value="_labelSearchText"
+                                  Placeholder="Search labels..."
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Size="Size.Small"
+                                  Class="mb-2 bg-white rounded-lg compact-input"
+                                  Immediate="true" />
+
+                    <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar label-list-scroll">
+                        @foreach (var label in FilteredLabels)
+                        {
+                            var isAlreadyAdded = _labels.Any(l => l.Name == label.Name);
+                            var isPendingDelete = _pendingDeleteLabelName == label.Name;
+
+                            <div @key="@label.Name" class="mb-1">
+                                @if (isPendingDelete)
+                                {
+                                    <div class="d-flex align-center justify-space-between pa-2 rounded-lg label-confirm-delete-box gap-1">
+                                        <MudText Typo="Typo.body2" 
+                                                 Color="Color.Error" 
+                                                 Class="font-weight-medium">
+                                            Delete "@label.Name"?
+                                        </MudText>
+
+                                        <div class="d-flex align-center gap-1">
+                                            <MudButton Size="Size.Small"
+                                                       Color="Color.Error"
+                                                       Variant="Variant.Filled"
+                                                       OnClick="@(() => ConfirmDeleteLabel(label))"
+                                                       Class="rounded px-2 py-0 text-none"
+                                                       Style="min-width: auto; height: 3vh; box-shadow: none; font-size: 0.7rem">
+                                                Delete
+                                            </MudButton>
+
+                                            <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                                                           Size="Size.Small"
+                                                           OnClick="CancelDeleteLabel"
+                                                           Class="text-muted pa-1" />
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-center pa-2 rounded-lg cursor-pointer mud-ripple label-row"
+                                         @onclick="() => ToggleLabel(label)">
+
+                                        <MudIcon Icon="@Icons.Material.Filled.Label" 
+                                                 Color="@label.Color" 
+                                                 Size="Size.Small" 
+                                                 Class="mr-2" />
+
+                                        <MudText Typo="Typo.body2" 
+                                                 Class="flex-grow-1 font-weight-medium">@label.Name</MudText>
+
+                                        @if (isAlreadyAdded)
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Check" 
+                                                     Size="Size.Small" 
+                                                     Color="Color.Success" 
+                                                     Class="mr-2" />
+                                        }
+
+                                        <div class="d-flex gap-1" @onclick:stopPropagation="true">
+                                            <MudIconButton Icon="@Icons.Material.Outlined.Edit"
+                                                           Size="Size.Small"
+                                                           Color="Color.Info"
+                                                           Class="pa-1 rounded label-action-edit"
+                                                           OnClick="@(() => EditLabel(label))" />
+
+                                            <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
+                                                           Size="Size.Small"
+                                                           Color="Color.Error"
+                                                           Class="pa-1 rounded label-action-delete"
+                                                           OnClick="@(() => InitiateDeleteLabel(label.Name))" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (!FilteredLabels.Any())
+                        {
+                            <MudText Typo="Typo.caption" 
+                                     Class="text-muted text-center py-2">No labels found</MudText>
+                        }
+                    </div>
+
+                    <div class="mt-2 pt-2">
+                        @if (!_isCreatingNewLabel)
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Class="border-dashed text-muted w-100 rounded-lg text-none font-weight-medium btn-dashed-add"
+                                       StartIcon="@Icons.Material.Rounded.Add"
+                                       OnClick="ShowCreateLabelForm">
+                                New Label
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-column gap-2 mt-1">
+                                <MudTextField @bind-Value="_newLabelName"
+                                              Placeholder="Label name..."
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="custom-input"
+                                              Style="font-size: 0.9rem"
+                                              Immediate="true" />
+
+                                <div class="d-flex gap-2">
+                                    <MudButton Variant=@Variant.Filled
+                                               Color=@Color.Primary
+                                               FullWidth="true"
+                                               Class="rounded-lg text-none btn-create popover-action-btn"
+                                               OnClick="CreateNewLabel"
+                                               Disabled="@string.IsNullOrWhiteSpace(_newLabelName)">
+                                        Create
+                                    </MudButton>
+
+                                    <MudButton Variant=@Variant.Filled
+                                               Color=@Color.Surface
+                                               FullWidth="true"
+                                               Class="rounded-lg text-none cancel-btn popover-action-btn"
+                                               DropShadow="false"
+                                               OnClick="HideCreateLabelForm">
+                                        Cancel
+                                    </MudButton>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </MudPopover>
+
+            <MudOverlay Visible="@_isLabelPopoverOpen"
+                        OnClick="@(() => _isLabelPopoverOpen = false)"
+                        AutoClose="true"
+                        ZIndex="9998" />
+            </div>
+        </div>
+
+        <MudDivider Class="mx-0" />
+
+        <div class="flex-grow-1 d-flex overflow-hidden">
+            <div class="mud-background-gray flex-grow-1 overflow-y-auto custom-scrollbar pl-6 pr-6 pb-6 pt-2 bg-white card-main-content">
+                <div class="mb-6 mt-2">
+                    <div class="d-flex align-center gap-2 mb-2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Description"
+                                 Size="Size.Small" 
+                                 Class="text-muted" />
+
+                        <MudText Typo="Typo.subtitle2" 
+                                 Class="font-weight-bold text-muted">Description</MudText>
+                    </div>
+
+                    <div>
+                        <MudTextField @bind-Value="_editedDescription"
+                                      Variant="Variant.Outlined"
+                                      MultiLine="true"
+                                      Lines="4"
+                                      Placeholder="Add a more detailed description..."
+                                      Class="custom-input"
+                                      @onfocus="@(() => _isEditingDescription = true)"
+                                      @onclick="@(() => _isEditingDescription = true)"
+                                      @onblur="OnDescriptionBlurAsync"
+                                      Immediate="true" />
+
+                        @if (_isEditingDescription)
+                        {
+                            <div class="d-flex gap-2 mt-2 justify-start">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           Class="rounded-lg text-none btn-create popover-action-btn"
+                                           @onmousedown="SaveDescriptionAsync">
+                                    Save
+                                </MudButton>
+
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Surface"
+                                           Size="Size.Small"
+                                           Class="rounded-lg text-none cancel-btn popover-action-btn"
+                                           DropShadow="false"
+                                           @onmousedown="DiscardDescriptionChanges">
+                                    Cancel
+                                </MudButton>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="d-flex align-center gap-2 mb-2">
+                        <MudIcon Icon="@Icons.Material.Outlined.People" 
+                                 Size="Size.Small" 
+                                 Class="text-muted" />
+
+                        <MudText Typo="Typo.subtitle2" 
+                                 Class="font-weight-bold text-muted">Assignees</MudText>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 position-relative">
+
+                        @foreach (var assignee in _assignees)
+                        {
+                            <MudChip @key="assignee.Email"
+                                     T="string"
+                                     Size="Size.Small"
+                                     Variant="Variant.Outlined"
+                                     Class="rounded-pill px-4 py-4"
+                                     OnClose="() => RemoveAssignee(assignee)">
+
+                                <div class="d-flex align-center gap-1">
+                                    <MudAvatar Size="Size.Small" 
+                                               Color="@assignee.AvatarColor">@assignee.Initials</MudAvatar>
+
+                                    <MudText Typo="Typo.body2" 
+                                             Class="mr-1">@assignee.FullName</MudText>
+                                </div>
+                            </MudChip>
+                        }
+
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined"
+                                 Class="rounded-pill border-dashed text-muted cursor-pointer px-4 py-4"
+                                 OnClick="@(() => _isAssigneePopoverOpen = !_isAssigneePopoverOpen)">
+
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Rounded.Add" 
+                                         Size="Size.Small" 
+                                         Class="mr-1" /> Add member
+                            </div>
+                        </MudChip>
+
+                        <MudPopover Open="@_isAssigneePopoverOpen"
+                                    AnchorOrigin="Origin.BottomLeft"
+                                    TransformOrigin="Origin.TopLeft"
+                                    Class="pa-3 mud-elevation-4 rounded-lg mt-1"
+                                    Style="width: 280px; z-index: 9999;">
+
+                            <div class="d-flex justify-space-between align-center mb-3">
+                                <MudText Typo="Typo.caption" 
+                                         Class="text-muted font-weight-bold text-uppercase">Assign Member</MudText>
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Close" 
+                                               Size="Size.Small" 
+                                               OnClick="@(() => _isAssigneePopoverOpen = false)" 
+                                               Class="pa-0" />
+                            </div>
+
+                            <MudTextField @bind-Value="_assigneeSearchText"
+                                          Placeholder="Search by email or name..."
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          Size="Size.Small"
+                                          Class="mb-2 bg-white rounded-lg compact-input"
+                                          Immediate="true" />
+
+                            <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar assignee-list-scroll">
+                                @foreach (var member in FilteredAssignees)
+                                {
+                                    var isAssigned = _assignees.Any(a => a.Email == member.Email);
+
+                                    <div @key="member.Email"
+                                         class="d-flex align-center gap-3 pa-2 rounded-lg cursor-pointer mud-ripple assignee-row"
+                                         @onclick="() => ToggleAssignee(member)">
+
+                                        <MudAvatar Size="Size.Medium" 
+                                                   Color="@member.AvatarColor" 
+                                                   Class="assignee-avatar">
+                                            @member.Initials
+                                        </MudAvatar>
+
+                                        <div class="d-flex flex-column flex-grow-1">
+                                            <MudText Typo="Typo.body2" 
+                                                     Class="font-weight-medium assignee-name">@member.FullName</MudText>
+
+                                            <MudText Typo="Typo.caption" 
+                                                     Class="text-muted font-weight-medium">@member.Role</MudText>
+                                        </div>
+
+                                        @if (isAssigned)
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Rounded.Check" 
+                                                     Size="Size.Small" 
+                                                     Color="Color.Info" 
+                                                     Class="mr-1" />
+                                        }
+                                    </div>
+                                }
+
+                                @if (!FilteredAssignees.Any())
+                                {
+                                    <MudText Typo="Typo.caption" 
+                                             Class="text-muted text-center py-3">No members found</MudText>
+                                }
+                            </div>
+                        </MudPopover>
+
+                        <MudOverlay Visible="@_isAssigneePopoverOpen"
+                                    OnClick="@(() => _isAssigneePopoverOpen = false)"
+                                    AutoClose="true"
+                                    ZIndex="9998" />
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="d-flex align-center justify-space-between mb-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Outlined.CheckBox" 
+                                     Size="Size.Small" 
+                                     Class="text-muted" />
+
+                            <MudText Typo="Typo.subtitle2" 
+                                     Class="font-weight-bold text-muted">Checklist</MudText>
+                        </div>
+
+                        <MudText Typo="Typo.caption" 
+                                 Class="text-muted font-weight-bold">
+                            @CompletedChecklistItems/@TotalChecklistItems — @ChecklistProgress%
+                        </MudText>
+                    </div>
+
+                    <MudProgressLinear Color="Color.Primary" 
+                                       Value="@ChecklistProgress" 
+                                       Class="mb-4 rounded-lg" 
+                                       Size="Size.Small" />
+
+                    <div class="d-flex flex-column gap-2 mb-2">
+                        @foreach (var item in _checklist)
+                        {
+                            <MudCheckBox @bind-Value="item.IsCompleted"
+                                         Label="@item.Title"
+                                         Color="Color.Success"
+                                         Dense="true"
+                                         Class="mud-background-gray rounded px-2" />
+                        }
+                    </div>
+
+                    @if (!_isAddingChecklistItem)
+                    {
+                        <MudButton Variant="Variant.Text"
+                                   StartIcon="@Icons.Material.Rounded.Add"
+                                   Size="Size.Small"
+                                   Class="text-muted text-none mt-1"
+                                   OnClick="ShowAddChecklistItemForm">
+                            Add item
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" 
+                                  Class="d-flex align-center pa-2 mt-2 border-solid border mud-border-info rounded add-item-container">
+                            <MudIcon Icon="@Icons.Material.Outlined.CheckBoxOutlineBlank" 
+                                     Size="Size.Small" 
+                                     Class="text-muted mr-2 checklist-icon-placeholder" />
+
+                            <MudTextField @bind-Value="_newChecklistItemTitle"
+                                          Placeholder="Add item..."
+                                          DisableUnderLine="true"
+                                          Margin="Margin.None"
+                                          Class="flex-grow-1 mt-0 add-item-input"
+                                          Immediate="true" />
+
+                            <div class="d-flex align-center gap-1 ml-2">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           Class="rounded text-none font-weight-bold px-3 btn-create"
+                                           Disabled="@string.IsNullOrWhiteSpace(_newChecklistItemTitle)"
+                                           OnClick="AddChecklistItem">
+                                    Add
+                                </MudButton>
+
+                                <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                                               Size="Size.Small"
+                                               Class="text-muted pa-1"
+                                               OnClick="CancelAddChecklistItem" />
+                            </div>
+                        </MudPaper>
+                    }
+                </div>
+
+                <div class="mt-8 mb-2">
+                    <MudTabs Elevation="0" 
+                             Color="Color.Transparent" 
+                             SliderColor="Color.Primary" 
+                             Class="clean-tabs" 
+                             PanelClass="pt-4">
+
+                        <MudTabPanel Text="Comments (2)" 
+                                     Class="tab-title-text" 
+                                     Icon="@Icons.Material.Outlined.ChatBubbleOutline">
+
+                            <div class="d-flex flex-column gap-4 mt-3">
+                                @foreach (var comment in _comments)
+                                {
+                                    <div class="d-flex gap-3">
+                                        <MudAvatar Color="@comment.AvatarColor" 
+                                                   Size="Size.Small" 
+                                                   Class="mt-1">@comment.Initials</MudAvatar>
+
+                                        <MudPaper Elevation="0" 
+                                                  Class="pa-3 border-solid border-2 mud-border-lines-default rounded-lg flex-grow-1">
+                                            <div class="d-flex justify-space-between align-center mb-2">
+                                                <MudText Typo="Typo.body2" 
+                                                         Class="font-weight-bold">@comment.AuthorName</MudText>
+
+                                                <MudText Typo="Typo.caption" 
+                                                         Class="text-muted">@comment.Date.ToString("dd MMM yyyy, HH:mm")</MudText>
+                                            </div>
+
+                                            <MudText Typo="Typo.body2">@comment.Text</MudText>
+                                        </MudPaper>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="d-flex gap-3 align-end mt-4">
+                                <MudAvatar Color="Color.Info" 
+                                           Size="Size.Small" 
+                                           Class="mb-1">AP</MudAvatar>
+
+                                <MudTextField @bind-Value="_newComment"
+                                              Placeholder="Write a comment..."
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="flex-grow-1 bg-white rounded-lg" />
+
+                                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                               Color="Color.Primary"
+                                               Variant="Variant.Filled"
+                                               Size="Size.Small"
+                                               Class="rounded-lg mb-1" />
+                            </div>
+                        </MudTabPanel>
+
+                        <MudTabPanel Text="Activity Log" 
+                                     Class="tab-title-text" 
+                                     Icon="@Icons.Material.Outlined.ShowChart">
+
+                            <MudText Typo="Typo.body2" 
+                                     Class="text-muted mt-4">Activity history will appear here.</MudText>
+                        </MudTabPanel>
+
+                    </MudTabs>
+                </div>
+
+            </div>
+
+            <div class="mud-background-gray d-flex flex-column overflow-hidden pl-6 pr-6 pb-6 pt-2 border-l-solid border-l-2 mud-border-lines-default card-sidebar">
+
+                <div class="mb-6 mt-2 flex-shrink-0">
+                    <MudText Typo="Typo.body2" 
+                             Class="text-muted d-flex align-center gap-2 mb-1">
+                        <MudIcon Icon="@Icons.Material.Outlined.CalendarToday" 
+                                 Size="Size.Small" /> Due Date
+                    </MudText>
+
+                    <MudDatePicker @bind-Date="_dueDate"
+                                   ShowToolbar="false"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   DateFormat="dd MMM yyyy"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Outlined.AccessTime"
+                                   Class="@($"custom-date-picker {(_dueDate < DateTime.Now ? "due-date-error" : "due-date-warning")}")" />
+                </div>
+
+                <div class="mb-4 flex-grow-1 d-flex flex-column overflow-hidden">
+                    <MudText Typo="Typo.body2" 
+                             Class="text-muted d-flex align-center gap-2 mb-2 flex-shrink-0">
+                        <MudIcon Icon="@Icons.Material.Outlined.AttachFile" 
+                                 Size="Size.Small" /> Attachments
+                    </MudText>
+
+                    <div class="flex-grow-1 overflow-y-auto custom-scrollbar pr-1">
+                        @foreach (var file in _attachments)
+                        {
+                            <MudPaper Elevation="0" 
+                                      Class="pa-2 mb-2 border-solid border-2 mud-border-lines-default rounded-lg d-flex align-center gap-3">
+                                <MudIcon Icon="@file.Icon" 
+                                         Color="@file.IconColor" />
+
+                                <div class="overflow-hidden">
+                                    <MudText Typo="Typo.body2" 
+                                             Class="text-truncate font-weight-bold">@file.FileName</MudText>
+
+                                    <MudText Typo="Typo.caption" 
+                                             Class="text-muted">@file.FileSize</MudText>
+                                </div>
+                            </MudPaper>
+                        }
+                    </div>
+
+                    <MudButton Variant="Variant.Outlined" 
+                               Size="Size.Small" 
+                               StartIcon="@Icons.Material.Rounded.Add" 
+                               Class="w-100 border-dashed text-muted rounded-lg mt-1 flex-shrink-0">
+                        Upload file
+                    </MudButton>
+                </div>
+
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Error" 
+                           StartIcon="@Icons.Material.Outlined.Delete" 
+                           Class="w-100 rounded-lg mt-4 flex-shrink-0">
+                    Delete Card
+                </MudButton>
+
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>

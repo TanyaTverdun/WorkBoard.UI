@@ -1,12 +1,17 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Options;
 using MudBlazor;
 using WorkBoard.Domain.Enums;
-using WorkBoard.Services.Abstraction;
+using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requestsж;
+using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
+using WorkBoard.UI.Components.Boards;
 using WorkBoard.UI.ViewModels.Board;
 
 namespace WorkBoard.UI.Pages;
@@ -37,6 +42,21 @@ public partial class BoardPage
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
 
+    [Inject]
+    private ICardService CardService { get; set; } = default!;
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    private IOptions<WorkBoardUiOptions> UiOptions { get; set; } = default!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
+
     [Parameter]
     public Guid BoardIdGuid { get; set; }
 
@@ -59,17 +79,24 @@ public partial class BoardPage
 
     private Guid? _currentUserId;
     private UserSearchDto? _selectedUserToAdd;
+
+    private bool IsWorkspaceObserver =>
+        WorkspaceStateProvider.CurrentRole == WorkspaceRole.Observer;
     private bool IsCurrentUserObserver =>
-        _boardMembers?.FirstOrDefault(m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
+        _boardMembers?.FirstOrDefault(
+            m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
 
-        var userIdString = authState.User.FindFirst(c =>
-            c.Type == "oid" ||
-            c.Type == "sub" ||
-            c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userIdString = authState.User.FindFirst(c => c.Type == "oid")?.Value;
+
+        if (string.IsNullOrEmpty(userIdString))
+        {
+            userIdString = authState.User.FindFirst(c => 
+                c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        }
 
         if (Guid.TryParse(userIdString, out var parsedId))
         {
@@ -77,6 +104,28 @@ public partial class BoardPage
         }
 
         BoardStateService.OnBoardNameChanged += StateHasChanged;
+
+        BoardHubService.OnCardCreated += HandleCardCreated;
+        BoardHubService.OnSectionCreated += HandleSectionCreated;
+        BoardHubService.OnSectionRenamed += HandleSectionRenamed;
+        BoardHubService.OnSectionDeleted += HandleSectionDeleted;
+        BoardHubService.OnSectionMoved += HandleSectionMoved;
+        BoardHubService.OnMemberRoleUpdated += HandleMemberRoleUpdated;
+        BoardHubService.OnMemberRemoved += HandleMemberRemoved;
+        BoardHubService.OnCardMoved += HandleCardMoved;
+
+        try
+        {
+            var backendUrl = UiOptions.Value.BackendBaseUrl;
+
+            await BoardHubService.StartConnectionAsync(backendUrl, BoardIdGuid);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                "Working in offline mode. Live updates are unavailable", 
+                Severity.Warning);
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -87,42 +136,123 @@ public partial class BoardPage
             return;
         }
 
-        var board = await BoardService.GetBoardAsync(
-            WorkspaceId.Value,
-            BoardIdGuid);
+        try
+        {
+            var board = await BoardService.GetBoardAsync(
+                WorkspaceId.Value,
+                BoardIdGuid);
 
-        BoardStateService.SetBoardName(board.Name);
+            BoardStateService.SetBoardName(board.Name);
 
-        var dtos = await BoardMembersService.GetBoardMembersAsync(
-            WorkspaceId.Value,
-            BoardIdGuid);
-        _boardMembers = dtos
-            .Select(dto => new BoardMemberViewModel(dto))
-            .ToList();
+            var dtos = await BoardMembersService.GetBoardMembersAsync(
+                WorkspaceId.Value,
+                BoardIdGuid);
+            _boardMembers = dtos
+                .Select(dto => new BoardMemberViewModel(dto))
+                .ToList();
 
-        var sectionsFromDb = await SectionService
-            .GetSectionsByBoardAsync(BoardIdGuid);
+            var sectionsFromDb = await SectionService
+                .GetSectionsByBoardAsync(BoardIdGuid);
 
-        _sections = sectionsFromDb
-            .OrderBy(s => s.Position)
-            .Select(s => new KanbanSectionViewModel(
-                s.Id,
-                s.Name,
-                false,
-                string.Empty)
+            _sections = sectionsFromDb
+                .OrderBy(s => s.Position)
+                .Select(s => new KanbanSectionViewModel(
+                    s.Id,
+                    s.Name,
+                    false,
+                    string.Empty)
+                {
+                    Position = s.Position
+                }).ToList();
+
+            var cardsFromDb = await CardService.GetCardsByBoardAsync(BoardIdGuid);
+
+            _tasks = cardsFromDb.Select(c =>
             {
-                Position = s.Position
-            }).ToList();
+                var sectionName = _sections.FirstOrDefault(
+                    s => s.Id == c.SectionId)?.Name ?? string.Empty;
+
+                return new KanbanTaskViewModel(
+                    c.Id,
+                    c.Title,
+                    sectionName,
+                    c.Position,
+                    BoardIdGuid,
+                    c.Description);
+
+            }).OrderBy(t => t.Position).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                "You don't have access to this board anymore.", 
+                Severity.Warning);
+
+            NavigationManager.NavigateTo("/");
+        }
     }
 
-    private void TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
+    private async Task TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
     {
         if (info.Item is null)
         {
             return;
         }
 
+        var oldSectionName = info.Item.Status;
         info.Item.Status = info.DropzoneIdentifier;
+
+        var targetSection = _sections.FirstOrDefault(
+            s => s.Name == info.DropzoneIdentifier);
+
+        if (targetSection == null)
+        {
+            return;
+        }
+
+        var cardsInSection = _tasks
+            .Where(t => t.Status == targetSection.Name && t.Id != info.Item.Id)
+            .OrderBy(t => t.Position)
+            .ToList();
+
+        double newPosition;
+
+        if (cardsInSection.Count == 0)
+        {
+            newPosition = 1.0;
+        }
+        else if (info.IndexInZone <= 0)
+        {
+            newPosition = cardsInSection.First().Position / 2.0;
+        }
+        else if (info.IndexInZone >= cardsInSection.Count)
+        {
+            newPosition = cardsInSection.Last().Position + 1.0;
+        }
+        else
+        {
+            double prevPos = cardsInSection[info.IndexInZone - 1].Position;
+            double nextPos = cardsInSection[info.IndexInZone].Position;
+            newPosition = (prevPos + nextPos) / 2.0;
+        }
+
+        info.Item.Position = newPosition;
+        _tasks = _tasks.OrderBy(t => t.Position).ToList();
+
+        var request = new MoveCardRequest(targetSection.Id, newPosition);
+
+        try
+        {
+            await CardService.MoveCardAsync(BoardIdGuid, info.Item.Id, request);
+        }
+        catch (Exception)
+        {
+            info.Item.Status = oldSectionName;
+            Snackbar.Add("Failed to move card", Severity.Error);
+
+            StateHasChanged();
+            _dropContainer.Refresh();
+        }
     }
 
     private async Task OnValidSectionSubmit(EditContext context)
@@ -132,24 +262,18 @@ public partial class BoardPage
             Name = newSectionModel.Name
         };
 
-        var newSectionId = await SectionService.CreateSectionAsync(
-            BoardIdGuid,
-            request);
+        try
+        {
+            await SectionService.CreateSectionAsync(BoardIdGuid, request);
 
-        double newPos = _sections.Any() ?
-            _sections.Max(s => s.Position) + 1.0 : 1.0;
+            newSectionModel.Name = string.Empty;
+            _addSectionOpen = false;
 
-        var newSection = new KanbanSectionViewModel(
-            newSectionId,
-            newSectionModel.Name,
-            false,
-            string.Empty,
-            newPos);
-
-        _sections.Add(newSection);
-
-        newSectionModel.Name = string.Empty;
-        _addSectionOpen = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to create sectionю", Severity.Error);
+        }
     }
 
     private async Task SaveRename(KanbanSectionViewModel section)
@@ -161,43 +285,45 @@ public partial class BoardPage
         }
 
         var newName = section.EditName.Trim();
+
+        if (newName == section.Name)
+        {
+            section.IsRenaming = false;
+            return;
+        }
+
         var request = new UpdateSectionNameRequest
         {
             Name = newName
         };
 
-        await SectionService.RenameSectionAsync(
-            BoardIdGuid,
-            section.Id,
-            request);
-
-        string oldName = section.Name;
-        section.Name = newName;
-
-        var tasksToUpdate = _tasks
-            .Where(t => t.Status == oldName)
-            .ToList();
-
-        foreach (var t in tasksToUpdate)
+        try
         {
-            t.Status = newName;
-        }
+            await SectionService.RenameSectionAsync(
+                BoardIdGuid,
+                section.Id,
+                request);
 
-        section.IsRenaming = false;
-        _dropContainer.Refresh();
+            section.IsRenaming = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to rename section", Severity.Error);
+        }
     }
 
     private async Task DeleteSection(KanbanSectionViewModel section)
     {
-        await SectionService.DeleteSectionAsync(
-            BoardIdGuid,
-            section.Id);
-
-        _sections.Remove(section);
-        _tasks.RemoveAll(
-            t => t.Status == section.Name);
-
-        _dropContainer.Refresh();
+        try
+        {
+            await SectionService.DeleteSectionAsync(
+                BoardIdGuid, 
+                section.Id);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to delete section", Severity.Error);
+        }
     }
 
     private void StartRename(KanbanSectionViewModel section)
@@ -218,15 +344,34 @@ public partial class BoardPage
         newSectionModel.Name = string.Empty;
     }
 
-    private void AddTask(KanbanSectionViewModel section)
+    private async Task AddTask(KanbanSectionViewModel section)
     {
-        _tasks.Add(new KanbanTaskViewModel(
-            section.NewTaskName,
-            section.Name));
+        if (string.IsNullOrWhiteSpace(section.NewTaskName))
+        {
+            return;
+        }
 
-        section.NewTaskName = string.Empty;
-        section.NewTaskOpen = false;
-        _dropContainer.Refresh();
+        var currentCardsInSection = _tasks.Where(t => t.Status == section.Name).ToList();
+        double nextPosition = currentCardsInSection.Count > 0
+            ? currentCardsInSection.Count + 1.0
+            : 1.0;
+
+        var request = new CreateCardRequest(
+            section.NewTaskName,
+            nextPosition
+        );
+
+        try
+        {
+            await CardService.CreateCardAsync(section.Id, request);
+
+            section.NewTaskName = string.Empty;
+            section.NewTaskOpen = false;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to create task", Severity.Error);
+        }
     }
 
     private void CloseNewTaskForm(KanbanSectionViewModel section)
@@ -280,25 +425,27 @@ public partial class BoardPage
 
         foreach (var section in movedSections)
         {
-            var request = new MoveSectionRequest
-            {
-                NewPosition = section.Position
+            var request = new MoveSectionRequest 
+            { 
+                NewPosition = section.Position 
             };
 
-            await SectionService.MoveSectionAsync(
-                BoardIdGuid,
-                section.Id,
-                request);
+            try
+            {
+                await SectionService.MoveSectionAsync(
+                    BoardIdGuid, 
+                    section.Id, 
+                    request);
 
-            section.IsPositionChanged = false;
+                section.IsPositionChanged = false;
+            }
+            catch (Exception)
+            {
+                Snackbar.Add("Failed to save section order", Severity.Error);
+            }
         }
 
-        _sections = _reorderList
-            .OrderBy(s => s.Position)
-            .ToList();
-
         _isReorderPopoverOpen = false;
-        _dropContainer.Refresh();
     }
 
     private void OpenManageMembersDialog()
@@ -312,23 +459,18 @@ public partial class BoardPage
         _newMemberRole = BoardRole.Member;
     }
 
-    private async Task UpdateRoleAsync(BoardMemberViewModel member, BoardRole newRole)
+    private async Task UpdateRoleAsync(
+        BoardMemberViewModel member, 
+        BoardRole newRole)
     {
         if (member.Dto.UserRole == newRole)
         {
             return;
         }
 
-        var request = new UpdateRoleRequest((int)newRole);
-
-        await BoardMembersService.UpdateMemberRoleAsync(
-            WorkspaceId.Value,
-            BoardIdGuid,
-            member.Dto.UserId,
-            request);
-
         var updatedMembers = _boardMembers!.ToList();
-        var index = updatedMembers.FindIndex(m => m.Dto.UserId == member.Dto.UserId);
+        var index = updatedMembers.FindIndex(
+            m => m.Dto.UserId == member.Dto.UserId);
 
         if (index != -1)
         {
@@ -336,20 +478,43 @@ public partial class BoardPage
             {
                 UserRole = newRole
             });
+
             _boardMembers = updatedMembers;
+        }
+
+        var request = new UpdateRoleRequest((int)newRole);
+
+        try
+        {
+            if (WorkspaceId != null)
+            {
+                await BoardMembersService.UpdateMemberRoleAsync(
+                    WorkspaceId.Value,
+                    BoardIdGuid,
+                    member.Dto.UserId,
+                    request);
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to update role", Severity.Error);
         }
     }
 
     private async Task RemoveMemberAsync(BoardMemberViewModel member)
     {
-        await BoardMembersService.RemoveBoardMemberAsync(
-            WorkspaceId.Value,
-            BoardIdGuid,
-            member.Dto.UserId);
+        try
+        {
+            await BoardMembersService.RemoveBoardMemberAsync(
+                WorkspaceId.Value,
+                BoardIdGuid,
+                member.Dto.UserId);
 
-        _boardMembers = _boardMembers!
-            .Where(m => m.Dto.UserId != member.Dto.UserId)
-            .ToList();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to remove member", Severity.Error);
+        }
     }
 
     private async Task AddMemberAsync()
@@ -413,4 +578,221 @@ public partial class BoardPage
             return new List<UserSearchDto>();
         }
     }
+
+    private async Task OpenCardDetails(KanbanTaskViewModel card)
+    {
+        var parameters = new DialogParameters<CardDetails>
+    {
+        { x => x.Card, card }
+    };
+
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        await DialogService.ShowAsync<CardDetails>(string.Empty, parameters, options);
+    }
+
+    private void HandleCardCreated(CardDto newCard)
+    {
+        if (_tasks.Any(t => t.Id == newCard.Id)) return;
+
+        var targetSection = _sections.FirstOrDefault(s => s.Id == newCard.SectionId);
+
+        if (targetSection != null)
+        {
+            var newTask = new KanbanTaskViewModel(
+                newCard.Id,
+                newCard.Title,
+                targetSection.Name,
+                newCard.Position,
+                BoardIdGuid,
+                newCard.Description);
+
+            _tasks.Add(newTask);
+
+            _tasks = _tasks.OrderBy(t => t.Position).ToList();
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleSectionCreated(SectionDto newSection)
+    {
+        if (_sections.Any(s => s.Id == newSection.Id))
+        {
+            return;
+        }
+
+        _sections.Add(new KanbanSectionViewModel(
+            newSection.Id,
+            newSection.Name,
+            false,
+            string.Empty)
+        {
+            Position = newSection.Position
+        });
+
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+            _dropContainer.Refresh();
+        });
+    }
+
+    private void HandleSectionRenamed(SectionRenameDto data)
+    {
+        var section = _sections.FirstOrDefault(s => s.Id == data.SectionId);
+
+        if (section != null && section.Name != data.NewName)
+        {
+            string oldName = section.Name;
+            section.Name = data.NewName;
+
+            var tasksToUpdate = _tasks.Where(t => t.Status == oldName).ToList();
+            foreach (var t in tasksToUpdate)
+            {
+                t.Status = data.NewName;
+            }
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleSectionDeleted(Guid sectionId)
+    {
+        var section = _sections.FirstOrDefault(s => s.Id == sectionId);
+
+        if (section != null)
+        {
+            _sections.Remove(section);
+            _tasks.RemoveAll(t => t.Status == section.Name);
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleSectionMoved(Guid sectionId, double newPosition)
+    {
+        var section = _sections.FirstOrDefault(s => s.Id == sectionId);
+
+        if (section != null)
+        {
+            section.Position = newPosition;
+
+            _sections = _sections.OrderBy(s => s.Position).ToList();
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleMemberRoleUpdated(Guid userId, BoardRole newRole)
+    {
+        if (_boardMembers == null) return;
+
+        var index = _boardMembers.FindIndex(m => m.Dto.UserId == userId);
+
+        if (index != -1 && _boardMembers[index].Dto.UserRole != newRole)
+        {
+            var updatedMembers = _boardMembers.ToList();
+            updatedMembers[index] = new BoardMemberViewModel(
+                _boardMembers[index].Dto with
+                {
+                    UserRole = newRole
+                });
+
+            _boardMembers = updatedMembers;
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleMemberRemoved(Guid userId)
+    {
+        if (_currentUserId == userId)
+        {
+            var boardName = BoardStateService.CurrentBoardName;
+            var message = string.IsNullOrWhiteSpace(boardName)
+                ? "You have been removed from this board."
+                : $"You have been removed from '{boardName}'.";
+
+            InvokeAsync(() =>
+            {
+                Snackbar.Add(message, Severity.Warning);
+                BoardStateService.NotifyBoardsListChanged();
+                NavigationManager.NavigateTo("/");
+            });
+            return;
+        }
+
+        if (_boardMembers != null)
+        {
+            var memberToRemove = _boardMembers.FirstOrDefault(m => m.Dto.UserId == userId);
+
+            if (memberToRemove != null)
+            {
+                _boardMembers.Remove(memberToRemove);
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleCardMoved(
+        Guid cardId,
+        Guid newSectionId, 
+        double newPosition)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == cardId);
+        var targetSection = _sections.FirstOrDefault(s => s.Id == newSectionId);
+
+        if (task != null && targetSection != null)
+        {
+            task.Status = targetSection.Name;
+            task.Position = newPosition;
+
+            _tasks = _tasks.OrderBy(t => t.Position).ToList();
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        BoardStateService.OnBoardNameChanged -= StateHasChanged;
+        BoardHubService.OnCardCreated -= HandleCardCreated;
+        BoardHubService.OnSectionCreated -= HandleSectionCreated;
+        BoardHubService.OnSectionRenamed -= HandleSectionRenamed;
+        BoardHubService.OnSectionDeleted -= HandleSectionDeleted;
+        BoardHubService.OnSectionMoved -= HandleSectionMoved;
+        BoardHubService.OnMemberRoleUpdated -= HandleMemberRoleUpdated;
+        BoardHubService.OnMemberRemoved -= HandleMemberRemoved;
+        BoardHubService.OnCardMoved -= HandleCardMoved;
+
+        await BoardHubService.StopConnectionAsync(BoardIdGuid);
+    }
+
 }

@@ -102,3 +102,42 @@ html, body {
 .members-popover {
     width: 360px !important;
 }
+
+custom-date-picker .mud-input-slot {
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    font-size: 0.7rem !important;
+}
+
+.due-date-warning .mud-input-outlined {
+    background-color: #fff4e5 !important;
+}
+
+.due-date-warning .mud-input-outlined-border {
+    border-color: #ffb74d !important;
+    border-radius: 10px !important;
+}
+
+.due-date-warning .mud-input-slot,
+.due-date-warning .mud-icon-root {
+    color: #d84315 !important;
+}
+
+.due-date-error .mud-input-outlined {
+    background-color: #ffebee !important;
+}
+
+.due-date-error .mud-input-outlined-border {
+    border-color: #ef5350 !important;
+    border-radius: 10px !important;
+}
+
+.due-date-error .mud-input-slot,
+.due-date-error .mud-icon-root {
+    color: #c62828 !important;
+}
+
+.hide-underline .mud-input-underline::before,
+.hide-underline .mud-input-underline::after {
+    display: none !important;
+}
