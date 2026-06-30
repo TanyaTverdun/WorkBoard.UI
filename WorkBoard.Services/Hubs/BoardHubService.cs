@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using WorkBoard.Domain.Constants;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Hubs;
@@ -56,21 +57,21 @@ internal class BoardHubService : IBoardHubService
                 .WithAutomaticReconnect()
                 .Build();
 
-            _hubConnection.On<CardDto>("CardCreated", (card) =>
+            _hubConnection.On<CardDto>(BoardHubEvents.CardCreated, (card) =>
             {
                 _logger.LogInformation(
                     "Received new card via SignalR: {Title}", card.Title);
                 OnCardCreated?.Invoke(card);
             });
 
-            _hubConnection.On<SectionDto>("SectionCreated", (section) =>
+            _hubConnection.On<SectionDto>(BoardHubEvents.SectionCreated, (section) =>
             {
                 _logger.LogInformation(
                     "Received new section via SignalR: {Name}", section.Name);
                 OnSectionCreated?.Invoke(section);
             });
 
-            _hubConnection.On<SectionRenameDto>("SectionRenamed", (section) =>
+            _hubConnection.On<SectionRenameDto>(BoardHubEvents.SectionRenamed, (section) =>
             {
                 _logger.LogInformation(
                     "Section renamed: {NewName} (ID: {SectionId})", 
@@ -80,13 +81,13 @@ internal class BoardHubService : IBoardHubService
                 OnSectionRenamed?.Invoke(section);
             });
 
-            _hubConnection.On<Guid>("SectionDeleted", (sectionId) =>
+            _hubConnection.On<Guid>(BoardHubEvents.SectionDeleted, (sectionId) =>
             {
                 _logger.LogInformation("Section deleted: {SectionId}", sectionId);
                 OnSectionDeleted?.Invoke(sectionId);
             });
 
-            _hubConnection.On<SectionMoveDto>("SectionMoved", (data) =>
+            _hubConnection.On<SectionMoveDto>(BoardHubEvents.SectionMoved, (data) =>
             {
                 _logger.LogInformation(
                     "Section moved: {SectionId} to {NewPosition}", 
@@ -96,7 +97,7 @@ internal class BoardHubService : IBoardHubService
                 OnSectionMoved?.Invoke(data.SectionId, data.NewPosition);
             });
 
-            _hubConnection.On<MemberRoleUpdatedDto>("MemberRoleUpdated", (data) =>
+            _hubConnection.On<MemberRoleUpdatedDto>(BoardHubEvents.MemberRoleUpdated, (data) =>
             {
                 _logger.LogInformation(
                     "Member role updated: {UserId} to {NewRole}", 
@@ -106,13 +107,13 @@ internal class BoardHubService : IBoardHubService
                 OnMemberRoleUpdated?.Invoke(data.UserId, data.NewRole);
             });
 
-            _hubConnection.On<Guid>("MemberRemoved", (userId) =>
+            _hubConnection.On<Guid>(BoardHubEvents.MemberRemoved, (userId) =>
             {
                 _logger.LogInformation("Member removed from board: {UserId}", userId);
                 OnMemberRemoved?.Invoke(userId);
             });
 
-            _hubConnection.On<Guid, Guid, double>("CardMoved", (cardId, newSectionId, newPosition) =>
+            _hubConnection.On<Guid, Guid, double>(BoardHubEvents.CardMoved, (cardId, newSectionId, newPosition) =>
             {
                 _logger.LogInformation(
                     "Card moved: {CardId} to section {NewSectionId} at {NewPosition}",
@@ -149,7 +150,7 @@ internal class BoardHubService : IBoardHubService
         if (_hubConnection is not null)
         {
             await _hubConnection.InvokeAsync(
-                "LeaveBoard",
+                BoardHubEvents.LeaveBoard,
                 boardId.ToString(),
                 cancellationToken);
 
