@@ -24,4 +24,18 @@ internal interface ICardApi
         Guid cardId,
         [Body] MoveCardRequest request,
         CancellationToken cancellationToken = default);
+
+    [Put("/api/boards/{boardId}/cards/{cardId}/title")]
+    Task UpdateCardTitleAsync(
+        Guid boardId,
+        Guid cardId,
+        [Body] UpdateCardTitleRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Put("/api/boards/{boardId}/cards/{cardId}/description")]
+    Task UpdateCardDescriptionAsync(
+        Guid boardId,
+        Guid cardId,
+        [Body] UpdateCardDescriptionRequest request,
+        CancellationToken cancellationToken = default);
 }
