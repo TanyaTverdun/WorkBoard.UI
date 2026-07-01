@@ -37,4 +37,8 @@ public interface ICardService
         Guid boardId,
         Guid cardId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CardAssigneeDto>> GetCardAssigneesAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default);
 }

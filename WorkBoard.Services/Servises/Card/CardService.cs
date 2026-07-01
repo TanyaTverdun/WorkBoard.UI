@@ -220,4 +220,34 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<CardAssigneeDto>> GetCardAssigneesAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _cardApi.GetCardAssigneesAsync(
+                cardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching assignees " +
+                "for card {CardId}. Status: {StatusCode}",
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching assignees for card {CardId}",
+                cardId);
+            throw;
+        }
+    }
 }

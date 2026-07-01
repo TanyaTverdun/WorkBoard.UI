@@ -44,4 +44,9 @@ internal interface ICardApi
         Guid boardId,
         Guid cardId,
         CancellationToken cancellationToken = default);
+
+    [Get("/api/cards/{cardId}/assignees")]
+    Task<IReadOnlyList<CardAssigneeDto>> GetCardAssigneesAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default);
 }
