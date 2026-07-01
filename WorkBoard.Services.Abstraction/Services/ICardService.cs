@@ -32,4 +32,9 @@ public interface ICardService
         Guid cardId,
         UpdateCardDescriptionRequest request,
         CancellationToken cancellationToken = default);
+
+    Task DeleteCardAsync(
+        Guid boardId,
+        Guid cardId,
+        CancellationToken cancellationToken = default);
 }

@@ -30,34 +30,7 @@
     border-color: #9e9e9e !important;
 }
 
-.label-action-edit:hover {
-    background-color: #e3f2fd !important;
-}
 
-.label-action-delete:hover {
-    background-color: #ffebee !important;
-}
-
-.label-confirm-delete-box {
-    background-color: #ffebee;
-    border: 1px solid #ffcdd2;
-}
-
-::deep .cancel-btn {
-    text-transform: none !important;
-}
-
-::deep .btn-create {
-    background-color: #5C6BC0 !important;
-    color: white !important;
-    text-transform: none !important;
-    transition: background-color 0.2s ease-in-out;
-}
-
-    ::deep .btn-create:hover {
-        text-transform: none !important;
-        background-color: #3949AB !important;
-    }
 
 ::deep .clean-tabs .mud-tabs-tabbar {
     background-color: transparent !important;

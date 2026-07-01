@@ -19,8 +19,8 @@ public partial class CardDetails
     [Inject] 
     private ICardService CardService { get; set; } = default!;
 
-    [Inject]
-    private ILabelService LabelService { get; set; } = default!;
+
+    private bool _isPendingDeleteCard = false;
 
     private bool _isEditingTitle = false;
     private string _editedTitle = string.Empty;
@@ -31,205 +31,26 @@ public partial class CardDetails
     private string _editedDescription = string.Empty;
     private bool _isSavingDescription = false;
 
-    private List<LabelDto> _allAvailableLabels = new();
-    private List<LabelDto> _labels = new();
-    private MudColor _newLabelColor = new("#4a4388ff");
+   
 
-    private bool _isLabelPopoverOpen = false;
-    private string _labelSearchText = string.Empty;
-    private bool _isCreatingNewLabel = false;
-    private string _newLabelName = string.Empty;
-    private Guid? _pendingDeleteLabelId = null;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         base.OnInitialized();
         _editedTitle = Card.Name;
         _editedDescription = Card.Description ?? string.Empty;
-        await LoadLabelsAsync();
-
-        try
-        {
-            var cardLabels = await LabelService.GetLabelsByCardAsync(Card.Id);
-            _labels = cardLabels.ToList();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading card labels: {ex.Message}");
-        }
     }
 
-    private async Task LoadLabelsAsync()
+    private async Task ConfirmDeleteCardAsync()
     {
         try
         {
-            var labels = await LabelService.GetLabelsByBoardAsync(Card.BoardId);
-            _allAvailableLabels = labels.ToList();
+            await CardService.DeleteCardAsync(Card.BoardId, Card.Id);
+
+            MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading labels: {ex.Message}");
-        }
-    }
-
-    private async Task ToggleLabelAsync(LabelDto label)
-    {
-        var existingLabel = _labels.FirstOrDefault(x => x.Id == label.Id);
-        if (existingLabel != null)
-        {
-            try
-            {
-                await LabelService.RemoveLabelFromCardAsync(Card.Id, label.Id);
-                _labels.Remove(existingLabel);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error removing label: {ex.Message}");
-            }
-        }
-        else
-        {
-            try
-            {
-                await LabelService.AddLabelToCardAsync(Card.Id, label.Id);
-                _labels.Add(label);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error attaching label: {ex.Message}");
-            }
-        }
-        StateHasChanged();
-    }
-
-    private IEnumerable<LabelDto> FilteredLabels =>
-        string.IsNullOrWhiteSpace(_labelSearchText)
-            ? _allAvailableLabels
-            : _allAvailableLabels.Where(l => l.Name.Contains(
-                _labelSearchText, StringComparison.OrdinalIgnoreCase));
-
-    private void InitiateDeleteLabel(Guid labelId)
-    {
-        _pendingDeleteLabelId = labelId;
-    }
-
-    private void CancelDeleteLabel()
-    {
-        _pendingDeleteLabelId = null;
-    }
-
-    private async Task ConfirmDeleteLabelAsync(LabelDto label)
-    {
-        try
-        {
-            await LabelService.DeleteLabelAsync(label.Id);
-
-            _allAvailableLabels.RemoveAll(l => l.Id == label.Id);
-            _labels.RemoveAll(l => l.Id == label.Id);
-
-            _pendingDeleteLabelId = null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting label: {ex.Message}");
-        }
-        finally
-        {
-            StateHasChanged();
-        }
-    }
-
-    private Guid? _editingLabelId = null;
-    private string _editingLabelName = string.Empty;
-    private MudColor _editingLabelColor = new("#4a4388ff");
-
-    private void EditLabel(LabelDto label)
-    {
-        _editingLabelId = label.Id;
-        _editingLabelName = label.Name;
-        _editingLabelColor = new MudColor(label.Color ?? "#4a4388ff");
-    }
-
-    private void CancelEditLabel()
-    {
-        _editingLabelId = null;
-    }
-
-    private async Task SaveEditLabelAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_editingLabelName) || _editingLabelId == null) return;
-
-        try
-        {
-            var request = new UpdateLabelRequest(_editingLabelName, _editingLabelColor.Value);
-
-            await LabelService.UpdateLabelAsync(_editingLabelId.Value, request);
-
-            var label = _allAvailableLabels.FirstOrDefault(l => l.Id == _editingLabelId);
-            if (label != null)
-            {
-                label.Name = _editingLabelName;
-                label.Color = _editingLabelColor.Value;
-            }
-
-            _editingLabelId = null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error updating label: {ex.Message}");
-        }
-    }
-
-    private void ShowCreateLabelForm()
-    {
-        _isCreatingNewLabel = true;
-        _newLabelName = string.Empty;
-        _newLabelColor = new("#4a4388ff");
-    }
-
-    private void HideCreateLabelForm()
-    {
-        _isCreatingNewLabel = false;
-        _newLabelName = string.Empty;
-    }
-
-    private async Task CreateNewLabelAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_newLabelName)) return;
-
-        var trimmedName = _newLabelName.Trim();
-
-        if (_allAvailableLabels.Any(
-            l => l.Name.Equals(trimmedName, StringComparison.OrdinalIgnoreCase)))
-        {
-            HideCreateLabelForm();
-            return;
-        }
-
-        try
-        {
-            var request = new CreateLabelRequest
-            {
-                Name = trimmedName,
-                Color = _newLabelColor.Value
-            };
-
-            var newLabel = await LabelService.CreateLabelAsync(
-                Card.Id, 
-                request);
-
-            _allAvailableLabels.Add(newLabel);
-            _labels.Add(newLabel);
-
-            HideCreateLabelForm();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error creating label: {ex.Message}");
-        }
-        finally
-        {
-            StateHasChanged();
+            Console.WriteLine($"Error deleting card: {ex.Message}");
         }
     }
 
@@ -451,12 +272,7 @@ public partial class CardDetails
 
     private void Close() => MudDialog.Cancel();
 
-    
-
-    
-    
-
-    
+  
     private bool _isAssigneePopoverOpen = false;
     private string _assigneeSearchText = string.Empty;
 
@@ -507,4 +323,5 @@ public partial class CardDetails
 
         StateHasChanged();
     }
+
 }

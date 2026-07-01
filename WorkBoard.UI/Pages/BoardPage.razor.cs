@@ -113,6 +113,8 @@ public partial class BoardPage
         BoardHubService.OnMemberRoleUpdated += HandleMemberRoleUpdated;
         BoardHubService.OnMemberRemoved += HandleMemberRemoved;
         BoardHubService.OnCardMoved += HandleCardMoved;
+        BoardHubService.OnCardDeleted += HandleCardDeleted;
+        BoardHubService.OnCardRenamed += HandleCardRenamed;
 
         try
         {
@@ -780,6 +782,38 @@ public partial class BoardPage
         }
     }
 
+    private void HandleCardDeleted(Guid cardId)
+    {
+        var taskToRemove = _tasks.FirstOrDefault(t => t.Id == cardId);
+
+        if (taskToRemove != null)
+        {
+            _tasks.Remove(taskToRemove);
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleCardRenamed(CardRenameDto data)
+    {
+        var taskToUpdate = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+
+        if (taskToUpdate != null)
+        {
+            taskToUpdate.Name = data.NewTitle; 
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer?.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -791,6 +825,8 @@ public partial class BoardPage
         BoardHubService.OnMemberRoleUpdated -= HandleMemberRoleUpdated;
         BoardHubService.OnMemberRemoved -= HandleMemberRemoved;
         BoardHubService.OnCardMoved -= HandleCardMoved;
+        BoardHubService.OnCardDeleted -= HandleCardDeleted;
+        BoardHubService.OnCardRenamed -= HandleCardRenamed;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

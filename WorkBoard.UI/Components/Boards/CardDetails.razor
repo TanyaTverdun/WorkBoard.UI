@@ -58,220 +58,7 @@
                 }
             </div>
 
-            <div class="d-flex gap-2 align-center">
-                @foreach (var label in _labels)
-                {
-                    var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
-
-                    var chipStyle = $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1);";
-
-                    <MudChip @key="@label.Id"
-                             Value="@label.Name"
-                             Size="Size.Small"
-                             Variant="Variant.Text"
-                             Class="font-weight-bold custom-chip-close"
-                             Style=@chipStyle
-                             CloseIcon="@Icons.Material.Rounded.Close"
-                             OnClose="@(async (MudChip<string> chip) => await ToggleLabelAsync(label))">
-                        @label.Name
-                    </MudChip>
-
-                }
-
-                <MudChip T="string"
-                         Size="Size.Small"
-                         Variant="Variant.Outlined"
-                         Class="border-dashed text-muted cursor-pointer"
-                         OnClick="@(() => _isLabelPopoverOpen = !_isLabelPopoverOpen)">
-                    <MudIcon Icon="@Icons.Material.Rounded.Add" Size="Size.Small" Class="mr-1" /> Label
-                </MudChip>
-
-                <MudPopover Open="@_isLabelPopoverOpen"
-                            AnchorOrigin="Origin.BottomLeft"
-                            TransformOrigin="Origin.TopLeft"
-                            Class="pa-3 mud-elevation-4 rounded-lg mt-1"
-                            Style="width: 260px; z-index: 9999;">
-
-                    <div class="d-flex justify-space-between align-center mb-2">
-                        <MudText Typo="Typo.caption" 
-                                 Class="text-muted font-weight-bold">LABELS</MudText>
-
-                        <MudIconButton Icon="@Icons.Material.Filled.Close" 
-                                       Size="Size.Small" 
-                                       OnClick="@(() => _isLabelPopoverOpen = false)" />
-                    </div>
-
-                    <MudTextField @bind-Value="_labelSearchText"
-                                  Placeholder="Search labels..."
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  Size="Size.Small"
-                                  Class="mb-2 bg-white rounded-lg compact-input"
-                                  Immediate="true" />
-
-                    <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar label-list-scroll">
-                        @foreach (var label in FilteredLabels)
-                        {
-                            @if (_editingLabelId == label.Id)
-                            {
-                                <div class="pa-2 border-solid border mud-border-info rounded-lg mb-1">
-                                    <MudTextField @bind-Value="_editingLabelName" 
-                                                  Margin="Margin.Dense" 
-                                                  Variant="Variant.Outlined" 
-                                                  Class="mb-1" />
-
-                                    <MudColorPicker @bind-Value="_editingLabelColor" 
-                                                    ShowToolbar="true" 
-                                                    PickerVariant="PickerVariant.Dialog" 
-                                                    Margin="Margin.Dense" 
-                                                    Variant="Variant.Outlined" 
-                                                    Class="mb-1" />
-
-                                    <div class="d-flex gap-2">
-                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="SaveEditLabelAsync">Save</MudButton>
-                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Surface" FullWidth="true" OnClick="CancelEditLabel">Cancel</MudButton>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                var isAlreadyAdded = _labels.Any(l => l.Id == label.Id);
-                                var isPendingDelete = _pendingDeleteLabelId == label.Id;
-
-                                <div @key="@label.Name" class="mb-1">
-                                    @if (isPendingDelete)
-                                    {
-                                        <div class="d-flex align-center justify-space-between pa-2 rounded-lg label-confirm-delete-box gap-1">
-                                            <MudText Typo="Typo.body2"
-                                                     Color="Color.Error"
-                                                     Class="font-weight-medium">
-                                                Delete "@label.Name"?
-                                            </MudText>
-
-                                            <div class="d-flex align-center gap-1">
-                                                <MudButton Size="Size.Small"
-                                                           Color="Color.Error"
-                                                           Variant="Variant.Filled"
-                                                           OnClick="@(() => ConfirmDeleteLabelAsync(label))"
-                                                           Class="rounded px-2 py-0 text-none"
-                                                           Style="min-width: auto; height: 3vh; box-shadow: none; font-size: 0.7rem">
-                                                    Delete
-                                                </MudButton>
-
-                                                <MudIconButton Icon="@Icons.Material.Rounded.Close"
-                                                               Size="Size.Small"
-                                                               OnClick="CancelDeleteLabel"
-                                                               Class="text-muted pa-1" />
-                                            </div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="d-flex align-center pa-2 rounded-lg cursor-pointer mud-ripple label-row"
-                                             @onclick="() => ToggleLabelAsync(label)">
-
-                                            <MudIcon Icon="@Icons.Material.Filled.Label"
-                                                     Style="@($"color: {label.Color};")"
-                                                     Size="Size.Small"
-                                                     Class="mr-2" />
-
-                                            <MudText Typo="Typo.body2"
-                                                     Class="flex-grow-1 font-weight-medium">@label.Name</MudText>
-
-                                            @if (isAlreadyAdded)
-                                            {
-                                                <MudIcon Icon="@Icons.Material.Filled.Check"
-                                                         Size="Size.Small"
-                                                         Color="Color.Success"
-                                                         Class="mr-2" />
-                                            }
-
-                                            <div class="d-flex gap-1" @onclick:stopPropagation="true">
-                                                <MudIconButton Icon="@Icons.Material.Outlined.Edit"
-                                                               Size="Size.Small"
-                                                               Color="Color.Info"
-                                                               Class="pa-1 rounded label-action-edit"
-                                                               OnClick="@(() => EditLabel(label))" />
-
-                                                <MudIconButton Icon="@Icons.Material.Outlined.DeleteOutline"
-                                                               Size="Size.Small"
-                                                               Color="Color.Error"
-                                                               Class="pa-1 rounded label-action-delete"
-                                                               OnClick="@(() => InitiateDeleteLabel(label.Id))" />
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        }
-
-                        @if (!FilteredLabels.Any())
-                        {
-                            <MudText Typo="Typo.caption" 
-                                     Class="text-muted text-center py-2">No labels found</MudText>
-                        }
-                    </div>
-
-                    <div class="mt-2 pt-2">
-                        @if (!_isCreatingNewLabel)
-                        {
-                            <MudButton Variant="Variant.Outlined"
-                                       Class="border-dashed text-muted w-100 rounded-lg text-none font-weight-medium btn-dashed-add"
-                                       StartIcon="@Icons.Material.Rounded.Add"
-                                       OnClick="ShowCreateLabelForm">
-                                New Label
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <div class="d-flex flex-column gap-2 mt-1">
-                                <MudTextField @bind-Value="_newLabelName"
-                                              Placeholder="Label name..."
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="custom-input"
-                                              Style="font-size: 0.9rem"
-                                              Immediate="true" />
-
-                                <MudColorPicker @bind-Value="_newLabelColor"
-                                                ShowToolbar="true"
-                                                Label="Label Color"
-                                                PickerVariant="PickerVariant.Dialog"
-                                                Margin="Margin.Dense"
-                                                Variant="Variant.Outlined"
-                                                Class="mb-1" />
-
-                                <div class="d-flex gap-2">
-                                    <MudButton Variant=@Variant.Filled
-                                               Color=@Color.Primary
-                                               FullWidth="true"
-                                               Class="rounded-lg text-none btn-create popover-action-btn"
-                                               OnClick="CreateNewLabelAsync"
-                                               Disabled="@string.IsNullOrWhiteSpace(_newLabelName)">
-                                        Create
-                                    </MudButton>
-
-                                    <MudButton Variant=@Variant.Filled
-                                               Color=@Color.Surface
-                                               FullWidth="true"
-                                               Class="rounded-lg text-none cancel-btn popover-action-btn"
-                                               DropShadow="false"
-                                               OnClick="HideCreateLabelForm">
-                                        Cancel
-                                    </MudButton>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </MudPopover>
-
-            <MudOverlay Visible="@_isLabelPopoverOpen"
-                        OnClick="@(() => _isLabelPopoverOpen = false)"
-                        AutoClose="true"
-                        ZIndex="9998" />
-            </div>
+            <CardLabelsSection CardId="Card.Id" BoardId="Card.BoardId" />
         </div>
 
         <MudDivider Class="mx-0" />
@@ -524,6 +311,7 @@
                              Color="Color.Transparent" 
                              SliderColor="Color.Primary" 
                              Class="clean-tabs" 
+                             KeepPanelsAlive="false"
                              PanelClass="pt-4">
 
                         <MudTabPanel Text="Comments (2)" 
@@ -639,11 +427,12 @@
                     </MudButton>
                 </div>
 
-                <MudButton Variant="Variant.Outlined" 
-                           Color="Color.Error" 
-                           StartIcon="@Icons.Material.Outlined.Delete" 
-                           Class="w-100 rounded-lg mt-4 flex-shrink-0">
-                    Delete Card
+                <MudButton Variant="@(_isPendingDeleteCard ? Variant.Filled : Variant.Outlined)"
+                           Color="Color.Error"
+                           StartIcon="@(_isPendingDeleteCard ? Icons.Material.Filled.DeleteForever : Icons.Material.Outlined.Delete)"
+                           Class="w-100 rounded-lg mt-4 flex-shrink-0 transition-all"
+                           OnClick="@(async () => { if (_isPendingDeleteCard) await ConfirmDeleteCardAsync(); else _isPendingDeleteCard = true; })" @onmouseleave="() => _isPendingDeleteCard = false">
+                    @(_isPendingDeleteCard ? "Confirm Delete?" : "Delete Card")
                 </MudButton>
 
             </div>
