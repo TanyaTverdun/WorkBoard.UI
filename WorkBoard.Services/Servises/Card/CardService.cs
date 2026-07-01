@@ -284,4 +284,35 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<UserSearchDto>> GetAssignableUsersAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _cardApi.GetAssignableUsersAsync(
+                cardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching assignable users " +
+                "for card {CardId}. Status: {StatusCode}",
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching assignable users " +
+                "for card {CardId}",
+                cardId);
+            throw;
+        }
+    }
 }

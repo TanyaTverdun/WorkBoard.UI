@@ -55,4 +55,9 @@ internal interface ICardApi
         Guid cardId,
         [Body] AddCardAssigneeRequest request,
         CancellationToken cancellationToken = default);
+
+    [Get("/api/cards/{cardId}/assignable-users")]
+    Task<IReadOnlyList<UserSearchDto>> GetAssignableUsersAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default);
 }

@@ -46,4 +46,8 @@ public interface ICardService
         Guid cardId,
         AddCardAssigneeRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<UserSearchDto>> GetAssignableUsersAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default);
 }
