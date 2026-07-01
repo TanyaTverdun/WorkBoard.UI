@@ -22,6 +22,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<Guid, BoardRole>? OnMemberRoleUpdated;
     public event Action<Guid>? OnMemberRemoved;
     public event Action<Guid, Guid, double>? OnCardMoved;
+    public event Action<Guid>? OnCardDeleted;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -122,6 +123,12 @@ internal class BoardHubService : IBoardHubService
                     newPosition);
 
                 OnCardMoved?.Invoke(cardId, newSectionId, newPosition);
+            });
+
+            _hubConnection.On<Guid>(BoardHubEvents.CardDeleted, (cardId) =>
+            {
+                _logger.LogInformation("Card deleted via SignalR: {CardId}", cardId);
+                OnCardDeleted?.Invoke(cardId);
             });
 
             await _hubConnection.StartAsync(cancellationToken);

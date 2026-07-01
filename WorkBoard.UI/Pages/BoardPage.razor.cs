@@ -113,6 +113,7 @@ public partial class BoardPage
         BoardHubService.OnMemberRoleUpdated += HandleMemberRoleUpdated;
         BoardHubService.OnMemberRemoved += HandleMemberRemoved;
         BoardHubService.OnCardMoved += HandleCardMoved;
+        BoardHubService.OnCardDeleted += HandleCardDeleted;
 
         try
         {
@@ -780,6 +781,22 @@ public partial class BoardPage
         }
     }
 
+    private void HandleCardDeleted(Guid cardId)
+    {
+        var taskToRemove = _tasks.FirstOrDefault(t => t.Id == cardId);
+
+        if (taskToRemove != null)
+        {
+            _tasks.Remove(taskToRemove);
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -791,6 +808,7 @@ public partial class BoardPage
         BoardHubService.OnMemberRoleUpdated -= HandleMemberRoleUpdated;
         BoardHubService.OnMemberRemoved -= HandleMemberRemoved;
         BoardHubService.OnCardMoved -= HandleCardMoved;
+        BoardHubService.OnCardDeleted -= HandleCardDeleted;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }
