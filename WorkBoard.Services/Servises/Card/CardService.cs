@@ -185,4 +185,39 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task DeleteCardAsync(
+        Guid boardId,
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.DeleteCardAsync(
+                boardId, 
+                cardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while deleting card {CardId} " +
+                "on board {BoardId}. Status: {StatusCode}",
+                cardId,
+                boardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while deleting card {CardId} " +
+                "on board {BoardId}",
+                cardId,
+                boardId);
+            throw;
+        }
+    }
 }

@@ -38,4 +38,10 @@ internal interface ICardApi
         Guid cardId,
         [Body] UpdateCardDescriptionRequest request,
         CancellationToken cancellationToken = default);
+
+    [Delete("/api/boards/{boardId}/cards/{cardId}")]
+    Task DeleteCardAsync(
+        Guid boardId,
+        Guid cardId,
+        CancellationToken cancellationToken = default);
 }
