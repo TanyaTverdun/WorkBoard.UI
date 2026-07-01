@@ -82,4 +82,163 @@ internal class LabelService : ILabelService
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<LabelDto>> GetLabelsByCardAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _labelApi.GetLabelsByCardAsync(
+                cardId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching labels " +
+                "for card {CardId}. Status: {StatusCode}",
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching labels for card {CardId}",
+                cardId);
+            throw;
+        }
+    }
+
+    public async Task AddLabelToCardAsync(
+        Guid cardId,
+        Guid labelId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _labelApi.AddLabelToCardAsync(
+                cardId,
+                labelId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while attaching label {LabelId} " +
+                "to card {CardId}. Status: {StatusCode}",
+                labelId,
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while attaching label {LabelId} " +
+                "to card {CardId}",
+                labelId,
+                cardId);
+            throw;
+        }
+    }
+
+    public async Task RemoveLabelFromCardAsync(
+        Guid cardId,
+        Guid labelId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _labelApi.RemoveLabelFromCardAsync(
+                cardId,
+                labelId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while removing label {LabelId} " +
+                "from card {CardId}. Status: {StatusCode}",
+                labelId,
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while removing label {LabelId} " +
+                "from card {CardId}",
+                labelId,
+                cardId);
+            throw;
+        }
+    }
+
+    public async Task<LabelDto> UpdateLabelAsync(
+        Guid labelId,
+        UpdateLabelRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _labelApi.UpdateLabelAsync(
+                labelId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating label {LabelId}. Status: {StatusCode}",
+                labelId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while updating label {LabelId}",
+                labelId);
+            throw;
+        }
+    }
+
+    public async Task DeleteLabelAsync(
+        Guid labelId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _labelApi.DeleteLabelAsync(labelId, cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while deleting label {LabelId}. " +
+                "Status: {StatusCode}",
+                labelId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while deleting label {LabelId}",
+                labelId);
+            throw;
+        }
+    }
 }

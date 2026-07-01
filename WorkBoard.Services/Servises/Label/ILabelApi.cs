@@ -15,4 +15,32 @@ internal interface ILabelApi
         Guid cardId,
         [Body] CreateLabelRequest request,
         CancellationToken cancellationToken = default);
+
+    [Get("/api/cards/{cardId}/labels")]
+    Task<IReadOnlyList<LabelDto>> GetLabelsByCardAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default);
+
+    [Post("/api/cards/{cardId}/labels/{labelId}")]
+    Task AddLabelToCardAsync(
+        Guid cardId,
+        Guid labelId,
+        CancellationToken cancellationToken = default);
+
+    [Delete("/api/cards/{cardId}/labels/{labelId}")]
+    Task RemoveLabelFromCardAsync(
+        Guid cardId,
+        Guid labelId,
+        CancellationToken cancellationToken = default);
+
+    [Put("/api/labels/{labelId}")]
+    Task<LabelDto> UpdateLabelAsync(
+        Guid labelId,
+        [Body] UpdateLabelRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Delete("/api/labels/{labelId}")]
+    Task DeleteLabelAsync(
+        Guid labelId,
+        CancellationToken cancellationToken = default);
 }
