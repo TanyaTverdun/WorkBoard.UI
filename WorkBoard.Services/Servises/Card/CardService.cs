@@ -250,4 +250,38 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task AddCardAssigneeAsync(
+        Guid cardId,
+        AddCardAssigneeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.AddCardAssigneeAsync(
+                cardId, 
+                request, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while assigning user {UserId} " +
+                "to card {CardId}. Status: {StatusCode}",
+                request.UserId,
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while assigning user {UserId} to card {CardId}",
+                request.UserId,
+                cardId);
+            throw;
+        }
+    }
 }

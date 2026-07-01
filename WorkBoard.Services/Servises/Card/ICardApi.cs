@@ -49,4 +49,10 @@ internal interface ICardApi
     Task<IReadOnlyList<CardAssigneeDto>> GetCardAssigneesAsync(
         Guid cardId,
         CancellationToken cancellationToken = default);
+
+    [Post("/api/cards/{cardId}/assignees")]
+    Task AddCardAssigneeAsync(
+        Guid cardId,
+        [Body] AddCardAssigneeRequest request,
+        CancellationToken cancellationToken = default);
 }
