@@ -10,6 +10,7 @@ using WorkBoard.Services.Servises.Auth;
 using WorkBoard.Services.Servises.Board;
 using WorkBoard.Services.Servises.BoardMenbers;
 using WorkBoard.Services.Servises.Card;
+using WorkBoard.Services.Servises.Label;
 using WorkBoard.Services.Servises.Section;
 using WorkBoard.Services.Servises.Users;
 using WorkBoard.Services.Servises.Workspace;
@@ -82,6 +83,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<ICardService, CardService>();
+
+        services.AddRefitClient<ILabelApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<ILabelService, LabelService>();
 
         return services;
     }

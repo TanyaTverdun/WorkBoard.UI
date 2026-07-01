@@ -141,3 +141,14 @@ custom-date-picker .mud-input-slot {
 .hide-underline .mud-input-underline::after {
     display: none !important;
 }
+
+.kanban-column {
+    max-height: calc(100vh - 150px);
+    display: flex;
+    flex-direction: column;
+}
+
+.drop-zone {
+    overflow-y: auto;
+    flex-grow: 1;
+}
