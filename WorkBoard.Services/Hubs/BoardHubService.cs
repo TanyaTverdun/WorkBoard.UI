@@ -23,6 +23,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<Guid>? OnMemberRemoved;
     public event Action<Guid, Guid, double>? OnCardMoved;
     public event Action<Guid>? OnCardDeleted;
+    public event Action<CardRenameDto>? OnCardRenamed;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -129,6 +130,16 @@ internal class BoardHubService : IBoardHubService
             {
                 _logger.LogInformation("Card deleted via SignalR: {CardId}", cardId);
                 OnCardDeleted?.Invoke(cardId);
+            });
+
+            _hubConnection.On<CardRenameDto>(BoardHubEvents.CardRenamed, (data) =>
+            {
+                _logger.LogInformation(
+                    "Card renamed: {NewTitle} (ID: {CardId})", 
+                    data.NewTitle, 
+                    data.CardId);
+
+                OnCardRenamed?.Invoke(data);
             });
 
             await _hubConnection.StartAsync(cancellationToken);
