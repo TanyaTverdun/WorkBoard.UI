@@ -4,7 +4,7 @@ namespace WorkBoard.Services.Abstraction.Services;
 
 public interface IChecklistService
 {
-    Task<IReadOnlyList<ChecklistDto>> GetChecklistsByCardAsync(
+    Task<ChecklistDto> GetChecklistByCardAsync(
         Guid cardId,
         CancellationToken cancellationToken = default);
 

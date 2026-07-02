@@ -18,15 +18,24 @@ internal class ChecklistService : IChecklistService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<ChecklistDto>> GetChecklistsByCardAsync(
+    public async Task<ChecklistDto> GetChecklistByCardAsync(
         Guid cardId,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _checklistApi.GetChecklistsByCardAsync(
+            var response = await _checklistApi.GetChecklistByCardAsync(
                 cardId,
                 cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return null;
+            }
+
+            await response.EnsureSuccessStatusCodeAsync();
+
+            return response.Content;
         }
         catch (ApiException apiEx)
         {
