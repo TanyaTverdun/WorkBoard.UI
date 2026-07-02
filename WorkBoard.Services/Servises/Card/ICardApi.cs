@@ -60,4 +60,10 @@ internal interface ICardApi
     Task<IReadOnlyList<UserSearchDto>> GetAssignableUsersAsync(
         Guid cardId,
         CancellationToken cancellationToken = default);
+
+    [Delete("/api/cards/{cardId}/assignees/{userId}")]
+    Task RemoveAssigneeAsync(
+        Guid cardId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

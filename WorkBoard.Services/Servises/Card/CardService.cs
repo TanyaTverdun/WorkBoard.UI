@@ -315,4 +315,39 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task RemoveAssigneeAsync(
+        Guid cardId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.RemoveAssigneeAsync(
+                cardId,
+                userId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while removing assignee {UserId} " +
+                "from card {CardId}. Status: {StatusCode}",
+                userId,
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while removing assignee {UserId} " +
+                "from card {CardId}",
+                userId,
+                cardId);
+            throw;
+        }
+    }
 }
