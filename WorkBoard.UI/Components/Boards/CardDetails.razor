@@ -17,6 +17,7 @@
                          Class="text-muted font-weight-bold">SECTION:</MudText>
 
                 <MudChip Value="@("Status")"
+                         T="string"
                          Size="Size.Small"
                          Color="Color.Info"
                          Variant="Variant.Text"
@@ -125,16 +126,16 @@
 
                         @foreach (var assignee in _assignees)
                         {
-                            <MudChip @key="assignee.Email"
+                            <MudChip @key="assignee.UserId"
                                      T="string"
                                      Size="Size.Small"
                                      Variant="Variant.Outlined"
                                      Class="rounded-pill px-4 py-4"
-                                     OnClose="() => RemoveAssignee(assignee)">
+                                     OnClose="() => RemoveAssigneeAsync(assignee)">
 
                                 <div class="d-flex align-center gap-1">
                                     <MudAvatar Size="Size.Small" 
-                                               Color="@assignee.AvatarColor">@assignee.Initials</MudAvatar>
+                                               Color=@Color.Tertiary>@assignee.Initials</MudAvatar>
 
                                     <MudText Typo="Typo.body2" 
                                              Class="mr-1">@assignee.FullName</MudText>
@@ -182,16 +183,16 @@
                                           Immediate="true" />
 
                             <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar assignee-list-scroll">
-                                @foreach (var member in FilteredAssignees)
+                                @foreach (var member in FilteredAssignableUsers)
                                 {
                                     var isAssigned = _assignees.Any(a => a.Email == member.Email);
 
-                                    <div @key="member.Email"
+                                    <div @key="member.UserId"
                                          class="d-flex align-center gap-3 pa-2 rounded-lg cursor-pointer mud-ripple assignee-row"
-                                         @onclick="() => ToggleAssignee(member)">
+                                         @onclick="() => AddAssigneeAsync(member)">
 
                                         <MudAvatar Size="Size.Medium" 
-                                                   Color="@member.AvatarColor" 
+                                                   Color=@Color.Tertiary
                                                    Class="assignee-avatar">
                                             @member.Initials
                                         </MudAvatar>
@@ -201,7 +202,7 @@
                                                      Class="font-weight-medium assignee-name">@member.FullName</MudText>
 
                                             <MudText Typo="Typo.caption" 
-                                                     Class="text-muted font-weight-medium">@member.Role</MudText>
+                                                     Class="text-muted font-weight-medium">@member.Email</MudText>
                                         </div>
 
                                         @if (isAssigned)
@@ -214,7 +215,7 @@
                                     </div>
                                 }
 
-                                @if (!FilteredAssignees.Any())
+                                @if (!FilteredAssignableUsers.Any())
                                 {
                                     <MudText Typo="Typo.caption" 
                                              Class="text-muted text-center py-3">No members found</MudText>

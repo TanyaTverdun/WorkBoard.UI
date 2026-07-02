@@ -19,25 +19,85 @@ public partial class CardDetails
     [Inject] 
     private ICardService CardService { get; set; } = default!;
 
-
     private bool _isPendingDeleteCard = false;
 
     private bool _isEditingTitle = false;
     private string _editedTitle = string.Empty;
     private bool _isSavingTitle = false;
 
-
     private bool _isEditingDescription = false;
     private string _editedDescription = string.Empty;
     private bool _isSavingDescription = false;
 
-   
+    private List<CardAssigneeDto> _assignees = new();
+    private List<UserSearchDto> _assignableUsers = new();
 
-    protected override void OnInitialized()
+    private bool _isAssigneePopoverOpen = false;
+    private string _assigneeSearchText = string.Empty;
+
+    private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
+        string.IsNullOrWhiteSpace(_assigneeSearchText)
+            ? _assignableUsers
+            : _assignableUsers.Where(u =>
+                u.FullName.Contains(_assigneeSearchText, StringComparison.OrdinalIgnoreCase) ||
+                u.Email.Contains(_assigneeSearchText, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
         _editedTitle = Card.Name;
         _editedDescription = Card.Description ?? string.Empty;
+
+        await LoadAssigneesDataAsync();
+    }
+
+    private async Task LoadAssigneesDataAsync()
+    {
+        try
+        {
+            var assigneesTask = CardService.GetCardAssigneesAsync(Card.Id);
+            var assignableTask = CardService.GetAssignableUsersAsync(Card.Id);
+
+            await Task.WhenAll(assigneesTask, assignableTask);
+
+            _assignees = assigneesTask.Result.ToList();
+            _assignableUsers = assignableTask.Result.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading assignees data: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddAssigneeAsync(UserSearchDto user)
+    {
+        try
+        {
+            var request = new AddCardAssigneeRequest(user.UserId);
+            await CardService.AddCardAssigneeAsync(Card.Id, request);
+
+            await LoadAssigneesDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding assignee: {ex.Message}");
+        }
+    }
+
+    private async Task RemoveAssigneeAsync(CardAssigneeDto assignee)
+    {
+        try
+        {
+            await CardService.RemoveAssigneeAsync(Card.Id, assignee.UserId);
+            await LoadAssigneesDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error removing assignee: {ex.Message}");
+        }
     }
 
     private async Task ConfirmDeleteCardAsync()
@@ -213,12 +273,6 @@ public partial class CardDetails
             "Looks good! I will start on connection management tomorrow.")
     };
 
-    public record CardAssigneeMock(
-        string FullName, 
-        string Initials, 
-        Color AvatarColor, 
-        string Email, 
-        string Role);
     public class CardChecklistItemMock
     {
         public string Title { get; set; }
@@ -242,28 +296,6 @@ public partial class CardDetails
         Color AvatarColor, 
         DateTime Date, 
         string Text);
-
-    private List<CardAssigneeMock> _assignees = new()
-    {
-        new CardAssigneeMock(
-            "Mikhail Ivanov", "MI", 
-            Color.Secondary, 
-            "mikhail@workboard.com", "Admin"),
-        new CardAssigneeMock(
-            "Sarah Chen", "SC", 
-            Color.Success, 
-            "sarah@workboard.com", "Member")
-    };
-
-    private List<CardAssigneeMock> _allBoardMembers = new()
-    {
-        new CardAssigneeMock("Alexandra Petrova", "AP", Color.Primary, "alexandra@workboard.com", "Owner"),
-        new CardAssigneeMock("Mikhail Ivanov", "MI", Color.Secondary, "mikhail@workboard.com", "Admin"),
-        new CardAssigneeMock("Sarah Chen", "SC", Color.Success, "sarah@workboard.com", "Member"),
-        new CardAssigneeMock("David Nakamura", "DN", Color.Warning, "david@workboard.com", "Member"),
-        new CardAssigneeMock("Elena Novak", "EN", Color.Error, "elena@workboard.com", "Observer")
-    };
-
   
     private int CompletedChecklistItems => _checklist.Count(x => x.IsCompleted);
     private int TotalChecklistItems => _checklist.Count;
@@ -271,32 +303,6 @@ public partial class CardDetails
         : Math.Round((double)CompletedChecklistItems / TotalChecklistItems * 100);
 
     private void Close() => MudDialog.Cancel();
-
-  
-    private bool _isAssigneePopoverOpen = false;
-    private string _assigneeSearchText = string.Empty;
-
-    private IEnumerable<CardAssigneeMock> FilteredAssignees => _allBoardMembers.ToList();
-
-    private void ToggleAssignee(CardAssigneeMock member)
-    {
-        var existing = _assignees.FirstOrDefault(m => m.Email == member.Email);
-        if (existing != null)
-        {
-            _assignees.Remove(existing);
-        }
-        else
-        {
-            _assignees.Add(member);
-        }
-        StateHasChanged();
-    }
-
-    private void RemoveAssignee(CardAssigneeMock assignee)
-    {
-        _assignees.Remove(assignee);
-        StateHasChanged();
-    }
 
     private bool _isAddingChecklistItem = false;
     private string _newChecklistItemTitle = string.Empty;
