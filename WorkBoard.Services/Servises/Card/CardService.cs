@@ -220,4 +220,134 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<CardAssigneeDto>> GetCardAssigneesAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _cardApi.GetCardAssigneesAsync(
+                cardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching assignees " +
+                "for card {CardId}. Status: {StatusCode}",
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching assignees for card {CardId}",
+                cardId);
+            throw;
+        }
+    }
+
+    public async Task AddCardAssigneeAsync(
+        Guid cardId,
+        AddCardAssigneeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.AddCardAssigneeAsync(
+                cardId, 
+                request, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while assigning user {UserId} " +
+                "to card {CardId}. Status: {StatusCode}",
+                request.UserId,
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while assigning user {UserId} to card {CardId}",
+                request.UserId,
+                cardId);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<UserSearchDto>> GetAssignableUsersAsync(
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _cardApi.GetAssignableUsersAsync(
+                cardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching assignable users " +
+                "for card {CardId}. Status: {StatusCode}",
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching assignable users " +
+                "for card {CardId}",
+                cardId);
+            throw;
+        }
+    }
+
+    public async Task RemoveAssigneeAsync(
+        Guid cardId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.RemoveAssigneeAsync(
+                cardId,
+                userId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while removing assignee {UserId} " +
+                "from card {CardId}. Status: {StatusCode}",
+                userId,
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while removing assignee {UserId} " +
+                "from card {CardId}",
+                userId,
+                cardId);
+            throw;
+        }
+    }
 }
