@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using MudBlazor.Utilities;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
@@ -19,6 +18,11 @@ public partial class CardDetails
     [Inject] 
     private ICardService CardService { get; set; } = default!;
 
+    [Inject]
+    private IChecklistService ChecklistService { get; set; } = default!;
+
+    private const string DefaultChecklistTitle = "New Checklist";
+
     private bool _isPendingDeleteCard = false;
 
     private bool _isEditingTitle = false;
@@ -35,6 +39,14 @@ public partial class CardDetails
     private bool _isAssigneePopoverOpen = false;
     private string _assigneeSearchText = string.Empty;
 
+    private ChecklistDto? _currentChecklist;
+    private bool _hasChecklist = false;
+    private string _checklistTitle = DefaultChecklistTitle;
+    private bool _isHoveringChecklistTitle = false;
+    private bool _isEditingChecklistTitle = false;
+    private string _editedChecklistTitle = string.Empty;
+    private bool _isPendingDeleteChecklist = false;
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -47,7 +59,141 @@ public partial class CardDetails
         _editedTitle = Card.Name;
         _editedDescription = Card.Description ?? string.Empty;
 
-        await LoadAssigneesDataAsync();
+        await Task.WhenAll(
+            LoadAssigneesDataAsync(),
+            LoadChecklistAsync()
+        );
+    }
+
+    private async Task LoadChecklistAsync()
+    {
+        try
+        {
+            _currentChecklist = await ChecklistService.GetChecklistByCardAsync(Card.Id);
+
+            if (_currentChecklist != null)
+            {
+                _hasChecklist = true;
+                _checklistTitle = _currentChecklist.Name;
+            }
+            else
+            {
+                _hasChecklist = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading checklist: {ex.Message}");
+        }
+    }
+
+    private void StartAddingChecklist()
+    {
+        _currentChecklist = null;
+        _hasChecklist = true;
+
+        _checklistTitle = DefaultChecklistTitle;
+        _editedChecklistTitle = _checklistTitle;
+        _isEditingChecklistTitle = true;
+        _isPendingDeleteChecklist = false;
+    }
+
+    private void EnableChecklistTitleEdit()
+    {
+        _editedChecklistTitle = _checklistTitle;
+        _isEditingChecklistTitle = true;
+        _isPendingDeleteChecklist = false;
+    }
+
+    private async Task SaveChecklistTitle()
+    {
+
+        if (string.IsNullOrWhiteSpace(_editedChecklistTitle))
+        {
+            if (_currentChecklist == null) 
+            {
+                _hasChecklist = false;
+            }
+
+            _isEditingChecklistTitle = false;
+            return;
+        }
+
+        var trimmedTitle = _editedChecklistTitle.Trim();
+
+        if (_currentChecklist != null && trimmedTitle == _checklistTitle)
+        {
+            _isEditingChecklistTitle = false;
+            return;
+        }
+
+        try
+        {
+            if (_currentChecklist != null)
+            {
+                var request = new UpdateChecklistRequest 
+                { 
+                    Name = trimmedTitle 
+                };
+
+                await ChecklistService.UpdateChecklistAsync(
+                    _currentChecklist.ChecklistId, 
+                    request);
+
+                _checklistTitle = trimmedTitle;
+            }
+            else
+            {
+                var request = new CreateChecklistRequest 
+                { 
+                    Name = trimmedTitle 
+                };
+
+                _currentChecklist = await ChecklistService.CreateChecklistAsync(
+                    Card.Id, 
+                    request);
+
+                _checklistTitle = _currentChecklist.Name;
+            }
+        }
+        finally
+        {
+            _isEditingChecklistTitle = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CancelChecklistTitleEdit()
+    {
+        _isEditingChecklistTitle = false;
+    }
+
+    private async Task ConfirmDeleteChecklist()
+    {
+        if (_currentChecklist != null)
+        {
+            try
+            {
+                await ChecklistService.DeleteChecklistAsync(
+                    _currentChecklist.ChecklistId);
+                _currentChecklist = null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting checklist: {ex.Message}");
+                _isPendingDeleteChecklist = false;
+                StateHasChanged();
+                return;
+            }
+        }
+
+        _checklist.Clear();
+        _hasChecklist = false;
+        _checklistTitle = DefaultChecklistTitle;
+        _isPendingDeleteChecklist = false;
+        _isHoveringChecklistTitle = false;
+
+        StateHasChanged();
     }
 
     private async Task LoadAssigneesDataAsync()
@@ -244,10 +390,6 @@ public partial class CardDetails
 
     private List<CardChecklistItemMock> _checklist = new()
     {
-        new CardChecklistItemMock("Design hub architecture", true),
-        new CardChecklistItemMock("Implement connection management", true),
-        new CardChecklistItemMock("Write delta broadcast logic", false),
-        new CardChecklistItemMock("Integration tests", false)
     };
 
     private List<CardAttachmentMock> _attachments = new()
@@ -329,5 +471,4 @@ public partial class CardDetails
 
         StateHasChanged();
     }
-
 }

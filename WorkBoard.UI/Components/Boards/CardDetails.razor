@@ -231,26 +231,94 @@
                     </div>
                 </div>
 
+                @if (_hasChecklist)
+                {
                 <div class="mb-6">
-                    <div class="d-flex align-center justify-space-between mb-2">
-                        <div class="d-flex align-center gap-2">
+                    <div class="d-flex align-center justify-space-between mb-2 pa-1 rounded transition-all"
+                         style="min-height: 30px;"
+                         @onmouseenter=@(() => _isHoveringChecklistTitle = true)
+                         @onmouseleave=@(() => { _isHoveringChecklistTitle = false; _isPendingDeleteChecklist = false; })>
+
+                        <div class="d-flex align-center gap-2 flex-grow-1">
                             <MudIcon Icon=@Icons.Material.Outlined.CheckBox
                                      Size=@Size.Small
-                                     Class="text-muted" />
+                                     Color=@(_isPendingDeleteChecklist ? Color.Error : Color.Default)
+                                     Class=@(_isPendingDeleteChecklist ? "" : "text-muted") />
 
-                            <MudText Typo=@Typo.subtitle2
-                                     Class="font-weight-bold text-muted">Checklist</MudText>
+                                @if (_isEditingChecklistTitle)
+                                {
+                                    <MudTextField @bind-Value=@_editedChecklistTitle
+                                                  Margin=@Margin.Dense
+                                                  Variant=@Variant.Outlined
+                                                  Class="mt-0 pt-0"
+                                                  Style="max-width: 250px;"
+                                                  Immediate="true"
+                                                  AutoFocus="true" />
+
+                                    <MudIconButton Icon=@Icons.Material.Rounded.Check
+                                                   Size=@Size.Small
+                                                   Color=@Color.Success
+                                                   Class="pa-1 ml-1"
+                                                   OnClick=@(async () => await SaveChecklistTitle()) />
+
+                                    <MudIconButton Icon=@Icons.Material.Rounded.Close
+                                                   Size=@Size.Small
+                                                   Color=@Color.Error
+                                                   Class="pa-1"
+                                                   OnClick=@CancelChecklistTitleEdit />
+                                }
+                            else
+                            {
+                                <MudText Typo=@Typo.subtitle2
+                                         Color=@(_isPendingDeleteChecklist ? Color.Error : Color.Default)
+                                         Class=@($"font-weight-bold {(_isPendingDeleteChecklist ? "" : "text-muted")}")>
+                                    @_checklistTitle
+                                </MudText>
+
+                                @if (_isHoveringChecklistTitle)
+                                {
+                                    <div class="d-flex align-center">
+                                        <MudIconButton Icon=@Icons.Material.Outlined.Edit
+                                                       Size=@Size.Small
+                                                       Class=@($"{(_isPendingDeleteChecklist ? "mud-error-text" : "text-muted")}")
+                                                       OnClick=@EnableChecklistTitleEdit />
+
+                                        @if (_isPendingDeleteChecklist)
+                                        {
+                                            <MudButton Variant=@Variant.Filled
+                                                       Color=@Color.Error
+                                                       Size=@Size.Small
+                                                       Class="ml-1 px-2 text-none rounded"
+                                                       Style="min-width: unset; height: 24px;"
+                                                       OnClick=@ConfirmDeleteChecklist>
+                                                Confirm Delete?
+                                            </MudButton>
+                                        }
+                                        else
+                                        {
+                                            <MudIconButton Icon=@Icons.Material.Outlined.Delete
+                                                           Size=@Size.Small
+                                                           Class="text-muted"
+                                                           OnClick=@(() => _isPendingDeleteChecklist = true) />
+                                        }
+                                    </div>
+                                }
+                            }
                         </div>
 
-                        <MudText Typo=@Typo.caption
-                                 Class="text-muted font-weight-bold">
-                            @CompletedChecklistItems/@TotalChecklistItems — @ChecklistProgress%
-                        </MudText>
+                        @if (!_isEditingChecklistTitle)
+                        {
+                            <MudText Typo=@Typo.caption
+                                     Color=@(_isPendingDeleteChecklist ? Color.Error : Color.Default)
+                                     Class=@($"font-weight-bold ml-2 my-2 flex-shrink-0 {(_isPendingDeleteChecklist ? "" : "text-muted")}")>
+                                @CompletedChecklistItems/@TotalChecklistItems — @ChecklistProgress%
+                            </MudText>
+                        }
                     </div>
 
                     <MudProgressLinear Color=@Color.Primary
                                        Value=@ChecklistProgress
-                                       Class="mb-4 rounded-lg" 
+                                       Class="mb-4 rounded-lg"
                                        Size=@Size.Small />
 
                     <div class="d-flex flex-column gap-2 mb-2">
@@ -276,7 +344,7 @@
                     }
                     else
                     {
-                        <MudPaper Elevation="0" 
+                        <MudPaper Elevation="0"
                                   Class="d-flex align-center pa-2 mt-2 border-solid border mud-border-info rounded add-item-container">
                             <MudIcon Icon=@Icons.Material.Outlined.CheckBoxOutlineBlank
                                      Size=@Size.Small
@@ -306,6 +374,18 @@
                         </MudPaper>
                     }
                 </div>
+                }
+                else{
+                    <div class="mb-6">
+                    <MudButton Variant=@Variant.Outlined
+                               StartIcon=@Icons.Material.Rounded.Add
+                               Size=@Size.Small
+                               Class="w-100 border-dashed text-muted rounded-lg"
+                               OnClick=@StartAddingChecklist>
+                        Add checklist
+                    </MudButton>
+                </div>
+                }
 
                 <div class="mt-8 mb-2">
                     <MudTabs Elevation="0" 
