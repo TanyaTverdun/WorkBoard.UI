@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.Services.Servises.Checklist;
@@ -150,6 +151,39 @@ internal class ChecklistService : IChecklistService
             _logger.LogError(
                 ex,
                 "Error occurred while deleting checklist {ChecklistId}",
+                checklistId);
+            throw;
+        }
+    }
+
+    public async Task<ChecklistItemDto> AddChecklistItemAsync(
+        Guid checklistId,
+        AddChecklistItemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _checklistApi.AddChecklistItemAsync(
+                checklistId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while adding item '{Title}' to checklist {ChecklistId}. Status: {StatusCode}",
+                request.Title,
+                checklistId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while adding item '{Title}' to checklist {ChecklistId}",
+                request.Title,
                 checklistId);
             throw;
         }
