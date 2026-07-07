@@ -231,7 +231,7 @@
                     </div>
                 </div>
 
-                @if (_hasChecklist)
+                @if (_checklist != null || _isEditingChecklistTitle)
                 {
                 <div class="mb-6">
                     <div class="d-flex align-center justify-space-between mb-2 pa-1 rounded transition-all"
@@ -272,7 +272,7 @@
                                 <MudText Typo=@Typo.subtitle2
                                          Color=@(_isPendingDeleteChecklist ? Color.Error : Color.Default)
                                          Class=@($"font-weight-bold {(_isPendingDeleteChecklist ? "" : "text-muted")}")>
-                                    @_checklistTitle
+                                    @_checklist?.Name
                                 </MudText>
 
                                 @if (_isHoveringChecklistTitle)
@@ -322,9 +322,9 @@
                                        Size=@Size.Small />
 
                     <div class="d-flex flex-column gap-2 mb-2">
-                        @foreach (var item in _checklist)
-                        {
-                            <MudCheckBox @bind-Value=@item.IsCompleted
+                            @foreach (var item in _checklist?.Items ?? [])
+                            {
+                            <MudCheckBox @bind-Value=@item.IsDone
                                          Label=@item.Title
                                          Color=@Color.Success
                                          Dense="true"
