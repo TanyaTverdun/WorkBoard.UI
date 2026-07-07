@@ -321,36 +321,64 @@
                                        Class="mb-4 rounded-lg"
                                        Size=@Size.Small />
 
-                    <div class="d-flex flex-column gap-2 mb-2">
+                        <div class="d-flex flex-column gap-2 mb-2">
                             @foreach (var item in _checklist?.Items ?? [])
                             {
                                 <div class="d-flex align-center justify-space-between mud-background-gray rounded px-2"
-                                     @onmouseenter="@(() => _hoveredItemId = item.Id)"
+                                     @onmouseenter="@(() => { if (_editingItemId != item.Id) _hoveredItemId = item.Id; })"
                                      @onmouseleave="@(() => _hoveredItemId = null)">
 
-                                    <MudCheckBox T="bool"
-                                                 Value="@item.IsDone"
-                                                 ValueChanged="@((bool val) => UpdateItemStatusAsync(item, val))"
-                                                 Label="@item.Title"
-                                                 Color="@Color.Success"
-                                                 Dense="true"
-                                                 Class="flex-grow-1 mr-2" />
-
-                                    @if (_hoveredItemId == item.Id)
+                                    @if (_editingItemId == item.Id)
                                     {
-                                        <div class="d-flex align-center flex-shrink-0">
-                                            <MudIconButton Icon="@Icons.Material.Outlined.Edit"
-                                                           Size="@Size.Small"
-                                                           Class="text-muted pa-1" />
+                                        <MudTextField @bind-Value=@_editedItemTitle
+                                                      Margin=@Margin.Dense
+                                                      Variant=@Variant.Outlined
+                                                      Class="flex-grow-1 mr-2 checklist-title-input"
+                                                      AutoFocus="true"
+                                                      Immediate="true"
+                                                      MaxLength="200" />
 
-                                            <MudIconButton Icon="@Icons.Material.Outlined.Delete"
-                                                           Size="@Size.Small"
-                                                           Class="text-muted pa-1" />
+                                        <div class="d-flex flex-shrink-0 gap-1">
+                                            <MudIconButton Icon=@Icons.Material.Rounded.Check
+                                                           Size=@Size.Small
+                                                           Color=@Color.Success
+                                                           Class="pa-1"
+                                                           OnClick="@(async () => await SaveItemTitleAsync(item))" />
+
+                                            <MudIconButton Icon=@Icons.Material.Rounded.Close
+                                                           Size=@Size.Small
+                                                           Color=@Color.Error
+                                                           Class="pa-1"
+                                                           OnClick=@CancelItemEdit />
                                         </div>
+                                    }
+                                    else
+                                    {
+                                        <MudCheckBox T="bool"
+                                                     Value="@item.IsDone"
+                                                     ValueChanged="@((bool val) => UpdateItemStatusAsync(item, val))"
+                                                     Label="@item.Title"
+                                                     Color="@Color.Success"
+                                                     Dense="true"
+                                                     Class="flex-grow-1 mr-2" />
+
+                                        @if (_hoveredItemId == item.Id)
+                                        {
+                                            <div class="d-flex align-center flex-shrink-0">
+                                                <MudIconButton Icon="@Icons.Material.Outlined.Edit"
+                                                               Size="@Size.Small"
+                                                               Class="text-muted pa-1"
+                                                               OnClick="@(() => EnableItemEdit(item))" />
+
+                                                <MudIconButton Icon="@Icons.Material.Outlined.Delete"
+                                                               Size="@Size.Small"
+                                                               Class="text-muted pa-1" />
+                                            </div>
+                                        }
                                     }
                                 </div>
                             }
-                    </div>
+                        </div>
 
                     @if (!_isAddingChecklistItem)
                     {

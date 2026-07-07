@@ -49,6 +49,8 @@ public partial class CardDetails
     private bool _isAddingChecklistItem = false;
     private string _newChecklistItemTitle = string.Empty;
     private Guid? _hoveredItemId = null;
+    private Guid? _editingItemId = null;
+    private string _editedItemTitle = string.Empty;
 
     private int CompletedChecklistItems => _checklist?.Items?.Count(x => x.IsDone) ?? 0;
     private int TotalChecklistItems => _checklist?.Items?.Count ?? 0;
@@ -267,6 +269,63 @@ public partial class CardDetails
 
             item.IsDone = !isDone;
             Snackbar.Add("Failed to update item status. Please try again.", Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void EnableItemEdit(ChecklistItemDto item)
+    {
+        _editingItemId = item.Id;
+        _editedItemTitle = item.Title;
+        _hoveredItemId = null;
+    }
+
+    private void CancelItemEdit()
+    {
+        _editingItemId = null;
+        _editedItemTitle = string.Empty;
+    }
+
+    private async Task SaveItemTitleAsync(ChecklistItemDto item)
+    {
+        if (string.IsNullOrWhiteSpace(_editedItemTitle))
+        {
+            CancelItemEdit();
+            return;
+        }
+
+        var trimmedTitle = _editedItemTitle.Trim();
+
+        if (trimmedTitle == item.Title)
+        {
+            CancelItemEdit();
+            return;
+        }
+
+        try
+        {
+            var request = new UpdateChecklistItemRequest 
+            { 
+                Title = trimmedTitle 
+            };
+            var updatedItem = await ChecklistService.UpdateChecklistItemAsync(
+                item.Id, 
+                request);
+
+            item.Title = updatedItem.Title;
+            CancelItemEdit();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error updating item title: {ex.Message}");
+
+            Snackbar.Add(
+                "Failed to update item title or this title already exists.", 
+                Severity.Error);
         }
         finally
         {
