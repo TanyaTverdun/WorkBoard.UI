@@ -48,6 +48,8 @@ public partial class CardDetails
 
     private bool _isAddingChecklistItem = false;
     private string _newChecklistItemTitle = string.Empty;
+    private Guid? _hoveredItemId = null;
+
     private int CompletedChecklistItems => _checklist?.Items?.Count(x => x.IsDone) ?? 0;
     private int TotalChecklistItems => _checklist?.Items?.Count ?? 0;
     private double ChecklistProgress => TotalChecklistItems == 0 ? 0
@@ -234,6 +236,37 @@ public partial class CardDetails
         catch (Exception ex)
         {
             Console.WriteLine($"Error adding checklist item: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateItemStatusAsync(ChecklistItemDto item, bool isDone)
+    {
+        item.IsDone = isDone;
+        StateHasChanged();
+
+        try
+        {
+            var request = new UpdateChecklistItemStatusRequest 
+            { 
+                IsDone = isDone 
+            };
+
+            var updatedItem = await ChecklistService.UpdateChecklistItemStatusAsync(
+                item.Id, 
+                request);
+
+            item.IsDone = updatedItem.IsDone;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating item status: {ex.Message}");
+
+            item.IsDone = !isDone;
+            Snackbar.Add("Failed to update item status. Please try again.", Severity.Error);
         }
         finally
         {
