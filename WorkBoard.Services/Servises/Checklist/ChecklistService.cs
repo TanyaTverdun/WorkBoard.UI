@@ -256,4 +256,33 @@ internal class ChecklistService : IChecklistService
             throw;
         }
     }
+
+    public async Task DeleteChecklistItemAsync(
+        Guid itemId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _checklistApi.DeleteChecklistItemAsync(
+                itemId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while deleting item {ItemId}. Status: {StatusCode}",
+                itemId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while deleting item {ItemId}",
+                itemId);
+            throw;
+        }
+    }
 }

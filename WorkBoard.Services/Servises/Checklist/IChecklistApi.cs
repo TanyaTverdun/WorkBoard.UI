@@ -45,4 +45,9 @@ internal interface IChecklistApi
         Guid itemId,
         [Body] UpdateChecklistItemRequest request,
         CancellationToken cancellationToken = default);
+
+    [Delete("/api/checklists/items/{itemId}")]
+    Task DeleteChecklistItemAsync(
+        Guid itemId,
+        CancellationToken cancellationToken = default);
 }

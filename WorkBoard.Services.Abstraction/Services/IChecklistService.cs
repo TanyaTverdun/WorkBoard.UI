@@ -37,4 +37,8 @@ public interface IChecklistService
         Guid itemId,
         UpdateChecklistItemRequest request,
         CancellationToken cancellationToken = default);
+
+    Task DeleteChecklistItemAsync(
+        Guid itemId,
+        CancellationToken cancellationToken = default);
 }
