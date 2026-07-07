@@ -172,7 +172,8 @@ internal class ChecklistService : IChecklistService
         {
             _logger.LogError(
                 apiEx,
-                "API error occurred while adding item '{Title}' to checklist {ChecklistId}. Status: {StatusCode}",
+                "API error occurred while adding item '{Title}' to checklist " +
+                "{ChecklistId}. Status: {StatusCode}",
                 request.Title,
                 checklistId,
                 apiEx.StatusCode);
@@ -182,7 +183,8 @@ internal class ChecklistService : IChecklistService
         {
             _logger.LogError(
                 ex,
-                "Error occurred while adding item '{Title}' to checklist {ChecklistId}",
+                "Error occurred while adding item '{Title}' " +
+                "to checklist {ChecklistId}",
                 request.Title,
                 checklistId);
             throw;
@@ -205,7 +207,8 @@ internal class ChecklistService : IChecklistService
         {
             _logger.LogError(
                 apiEx,
-                "API error occurred while updating status for item {ItemId}. Status: {StatusCode}",
+                "API error occurred while updating status " +
+                "for item {ItemId}. Status: {StatusCode}",
                 itemId,
                 apiEx.StatusCode);
             throw;
@@ -214,7 +217,41 @@ internal class ChecklistService : IChecklistService
         {
             _logger.LogError(
                 ex,
-                "Error occurred while updating status for item {ItemId}",
+                "Error occurred while updating status " +
+                "for item {ItemId}",
+                itemId);
+            throw;
+        }
+    }
+
+    public async Task<ChecklistItemDto> UpdateChecklistItemAsync(
+        Guid itemId,
+        UpdateChecklistItemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _checklistApi.UpdateChecklistItemAsync(
+                itemId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating title " +
+                "for item {ItemId}. Status: {StatusCode}",
+                itemId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while updating title " +
+                "for item {ItemId}",
                 itemId);
             throw;
         }
