@@ -4,7 +4,7 @@ using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 
-namespace WorkBoard.UI.Components.Boards
+namespace WorkBoard.UI.Components.Card
 {
     public partial class CardLabelsSection : ComponentBase
     {
