@@ -188,4 +188,35 @@ internal class ChecklistService : IChecklistService
             throw;
         }
     }
+
+    public async Task<ChecklistItemDto> UpdateChecklistItemStatusAsync(
+        Guid itemId,
+        UpdateChecklistItemStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _checklistApi.UpdateChecklistItemStatusAsync(
+                itemId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating status for item {ItemId}. Status: {StatusCode}",
+                itemId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while updating status for item {ItemId}",
+                itemId);
+            throw;
+        }
+    }
 }
