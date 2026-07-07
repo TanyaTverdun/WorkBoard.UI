@@ -1,0 +1,8 @@
+﻿.checklist-item-row {
+    background-color: var(--mud-palette-background-gray);
+    transition: background-color 0.2s ease;
+}
+
+    .checklist-item-row.delete-confirm-active {
+        background-color: rgba(244, 67, 54, 0.12);
+    }

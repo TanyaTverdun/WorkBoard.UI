@@ -1,4 +1,4 @@
-﻿namespace WorkBoard.Services.Abstraction.DTOs;
+﻿namespace WorkBoard.Services.Abstraction.Requests;
 
 public class CreateLabelRequest
 {
