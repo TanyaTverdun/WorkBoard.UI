@@ -51,6 +51,7 @@ public partial class CardDetails
     private Guid? _hoveredItemId = null;
     private Guid? _editingItemId = null;
     private string _editedItemTitle = string.Empty;
+    private Guid? _pendingDeleteChecklistItemId = null;
 
     private int CompletedChecklistItems => _checklist?.Items?.Count(x => x.IsDone) ?? 0;
     private int TotalChecklistItems => _checklist?.Items?.Count ?? 0;
@@ -329,6 +330,38 @@ public partial class CardDetails
         }
         finally
         {
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteChecklistItemAsync(ChecklistItemDto item)
+    {
+        try
+        {
+            await ChecklistService.DeleteChecklistItemAsync(item.Id);
+
+            if (_checklist?.Items != null)
+            {
+                var currentItems = _checklist.Items.ToList();
+                var itemToRemove = currentItems.FirstOrDefault(x => x.Id == item.Id);
+                if (itemToRemove != null)
+                {
+                    currentItems.Remove(itemToRemove);
+                    _checklist.Items = currentItems;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting checklist item: {ex.Message}");
+            
+            Snackbar.Add(
+                "Failed to delete item. Please try again.", 
+                Severity.Error);
+        }
+        finally
+        {
+            _pendingDeleteChecklistItemId = null;
             StateHasChanged();
         }
     }
