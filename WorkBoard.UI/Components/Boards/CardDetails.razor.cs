@@ -24,6 +24,9 @@ public partial class CardDetails
     [Inject] 
     private ICardService CardService { get; set; } = default!;
 
+    [Inject]
+    private IAttachmentService AttachmentService { get; set; } = default!;
+
     private bool _isPendingDeleteCard = false;
 
     private DateTime? _dueDate;
@@ -44,6 +47,8 @@ public partial class CardDetails
 
     private int _commentsCount = 0;
 
+    private List<AttachmentDto> _attachments = new();
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -58,8 +63,54 @@ public partial class CardDetails
         _dueDate = Card.DueDate;
 
         await Task.WhenAll(
-            LoadAssigneesDataAsync()
+            LoadAssigneesDataAsync(),
+            LoadAttachmentsAsync()
         );
+    }
+
+    private async Task LoadAttachmentsAsync()
+    {
+        try
+        {
+            var dtos = await AttachmentService.GetAttachmentsByCardAsync(
+                Card.Id);
+
+            _attachments = dtos.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading attachments: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private string FormatBytes(long bytes)
+    {
+        string[] suffix = { "B", "KB", "MB", "GB", "TB" };
+        int i;
+        double dblSByte = bytes;
+        for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+        {
+            dblSByte = bytes / 1024.0;
+        }
+        return $"{dblSByte:0.##} {suffix[i]}";
+    }
+
+    private (string Icon, Color Color) GetFileIconAndColor(string fileName)
+    {
+        var ext = System.IO.Path.GetExtension(fileName)?.ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => (Icons.Material.Filled.PictureAsPdf, Color.Error),
+            ".doc" or ".docx" => (Icons.Material.Filled.Description, Color.Info),
+            ".xls" or ".xlsx" or ".csv" => (Icons.Material.Filled.TableChart, Color.Success),
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".svg" => (Icons.Material.Filled.Image, Color.Warning),
+            ".zip" or ".rar" or ".7z" => (Icons.Material.Filled.Archive, Color.Secondary),
+            _ => (Icons.Material.Filled.InsertDriveFile, Color.Default)
+        };
     }
 
     private async Task OnDueDateChangedAsync(DateTime? newDate)
@@ -280,23 +331,4 @@ public partial class CardDetails
     }
 
     private void Close() => MudDialog.Cancel();
-
-
-    /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
-    private List<CardAttachmentMock> _attachments = new()
-    {
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("hub-diagram.png", "340 KB", Icons.Material.Filled.Image, Color.Info),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error)
-    };
-
-    public record CardAttachmentMock(
-        string FileName, 
-        string FileSize, 
-        string Icon, 
-        Color IconColor);
 }

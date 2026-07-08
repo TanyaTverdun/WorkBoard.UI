@@ -296,17 +296,20 @@
                     <div class="flex-grow-1 overflow-y-auto custom-scrollbar pr-1">
                         @foreach (var file in _attachments)
                         {
+                            var iconInfo = GetFileIconAndColor(file.FileName);
+
                             <MudPaper Elevation="0" 
                                       Class="pa-2 mb-2 border-solid border-2 mud-border-lines-default rounded-lg d-flex align-center gap-3">
-                                <MudIcon Icon=@file.Icon
-                                         Color=@file.IconColor />
+            
+                                <MudIcon Icon=@iconInfo.Icon
+                                         Color=@iconInfo.Color />
 
                                 <div class="overflow-hidden">
                                     <MudText Typo=@Typo.body2
                                              Class="text-truncate font-weight-bold">@file.FileName</MudText>
 
                                     <MudText Typo=@Typo.caption
-                                             Class="text-muted">@file.FileSize</MudText>
+                                             Class="text-muted">@FormatBytes(file.FileSizeBytes)</MudText>
                                 </div>
                             </MudPaper>
                         }
