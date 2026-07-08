@@ -350,4 +350,41 @@ internal class CardService : ICardService
             throw;
         }
     }
+
+    public async Task UpdateCardDueDateAsync(
+        Guid boardId,
+        Guid cardId,
+        UpdateCardDueDateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cardApi.UpdateCardDueDateAsync(
+                boardId,
+                cardId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating due date for card {CardId} " +
+                "on board {BoardId}. Status: {StatusCode}",
+                cardId,
+                boardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while updating due date for card {CardId} " +
+                "on board {BoardId}",
+                cardId,
+                boardId);
+            throw;
+        }
+    }
 }

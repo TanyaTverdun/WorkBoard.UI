@@ -274,14 +274,16 @@
                                  Size=@Size.Small /> Due Date
                     </MudText>
 
-                    <MudDatePicker @bind-Date=@_dueDate
+                    <MudDatePicker Date=@_dueDate
+                                   DateChanged=@OnDueDateChangedAsync
                                    ShowToolbar="false"
                                    Variant=@Variant.Outlined
                                    Margin=@Margin.Dense
                                    DateFormat="dd MMM yyyy"
                                    Adornment=@Adornment.Start
                                    AdornmentIcon=@Icons.Material.Outlined.AccessTime
-                                   Class="@($"custom-date-picker {(_dueDate < DateTime.Now ? "due-date-error" : "due-date-warning")}")" />
+                                   Clearable="true"
+                                   Class="@($"custom-date-picker {(!_dueDate.HasValue ? "text-muted" : _dueDate.Value < DateTime.Now ? "due-date-error" : "due-date-warning")}")" />
                 </div>
 
                 <div class="mb-4 flex-grow-1 d-flex flex-column overflow-hidden">

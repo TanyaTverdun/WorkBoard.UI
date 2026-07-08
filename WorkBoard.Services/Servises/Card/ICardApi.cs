@@ -66,4 +66,11 @@ internal interface ICardApi
         Guid cardId,
         Guid userId,
         CancellationToken cancellationToken = default);
+
+    [Put("/api/boards/{boardId}/cards/{cardId}/due-date")]
+    Task UpdateCardDueDateAsync(
+        Guid boardId,
+        Guid cardId,
+        [Body] UpdateCardDueDateRequest request,
+        CancellationToken cancellationToken = default);
 }
