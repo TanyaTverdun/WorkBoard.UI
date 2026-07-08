@@ -11,6 +11,7 @@ using WorkBoard.Services.Servises.Board;
 using WorkBoard.Services.Servises.BoardMenbers;
 using WorkBoard.Services.Servises.Card;
 using WorkBoard.Services.Servises.Checklist;
+using WorkBoard.Services.Servises.Comment;
 using WorkBoard.Services.Servises.Label;
 using WorkBoard.Services.Servises.Section;
 using WorkBoard.Services.Servises.Users;
@@ -96,6 +97,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IChecklistService, ChecklistService>();
+
+        services.AddRefitClient<ICommentApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<ICommentService, CommentService>();
 
         return services;
     }

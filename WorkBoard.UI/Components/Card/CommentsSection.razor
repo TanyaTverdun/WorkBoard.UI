@@ -1,0 +1,55 @@
+﻿@using MudBlazor
+
+<div class="d-flex flex-column gap-4 mt-3">
+    @foreach (var comment in _comments)
+    {
+        var isCurrentUser = comment.UserId == CurrentUserId;
+
+        <div class="d-flex gap-3 @(isCurrentUser ? "flex-row-reverse" : "")">
+
+            <MudAvatar Color=@Color.Surface
+                       Size=@Size.Small
+                       Class="mt-1 flex-shrink-0">
+                @comment.Initials
+            </MudAvatar>
+
+            <MudPaper Elevation="0"
+                      Class="@($"pa-3 border-solid border-2 mud-border-lines-default rounded-lg")"
+                      Style="max-width: 85%;">
+
+                <div class="d-flex justify-space-between align-center mb-2 gap-4">
+                    <MudText Typo=@Typo.body2
+                             Class="font-weight-bold">
+                        @(isCurrentUser ? "You" : comment.UserFullName)
+                    </MudText>
+
+                    <MudText Typo=@Typo.caption
+                             Style="opacity: 0.8;">
+                        @DateTime.SpecifyKind(comment.CreatedAt, DateTimeKind.Utc).ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                    </MudText>
+                </div>
+
+                <MudText Typo=@Typo.body2>@comment.Text</MudText>
+            </MudPaper>
+        </div>
+    }
+</div>
+
+<div class="d-flex gap-3 align-end mt-4">
+    <MudAvatar Color=@Color.Info
+               Size=@Size.Small
+               Class="mb-1">AP</MudAvatar>
+
+    <MudTextField @bind-Value=@_newComment
+                  Placeholder="Write a comment..."
+                  Variant=@Variant.Outlined
+                  Margin=@Margin.Dense
+                  Class="flex-grow-1 bg-white rounded-lg" />
+
+    <MudIconButton Icon=@Icons.Material.Filled.Send
+                   Color=@Color.Primary
+                   Variant=@Variant.Filled
+                   Size=@Size.Small
+                   Class="rounded-lg mb-1"
+                   OnClick=@AddCommentAsync />
+</div>

@@ -15,14 +15,11 @@ public partial class CardDetails
     [Parameter] 
     public KanbanTaskViewModel Card { get; set; } = default!;
 
+    [Parameter]
+    public Guid CurrentUserId { get; set; }
+
     [Inject] 
     private ICardService CardService { get; set; } = default!;
-
-    [Inject]
-    private IChecklistService ChecklistService { get; set; } = default!;
-
-    [Inject]
-    private ISnackbar Snackbar { get; set; } = default!;
 
     private bool _isPendingDeleteCard = false;
 
@@ -40,6 +37,8 @@ public partial class CardDetails
     private bool _isAssigneePopoverOpen = false;
     private string _assigneeSearchText = string.Empty;
 
+    private int _commentsCount = 0;
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -55,6 +54,12 @@ public partial class CardDetails
         await Task.WhenAll(
             LoadAssigneesDataAsync()
         );
+    }
+
+    private void UpdateCommentsCount(int count)
+    {
+        _commentsCount = count;
+        StateHasChanged();
     }
 
     private async Task LoadAssigneesDataAsync()
@@ -248,7 +253,7 @@ public partial class CardDetails
 
     /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
     private DateTime? _dueDate = null;
-    private string _newComment = string.Empty;
+
 
     private List<CardAttachmentMock> _attachments = new()
     {
@@ -261,27 +266,9 @@ public partial class CardDetails
         new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error)
     };
 
-    private List<CardCommentMock> _comments = new()
-    {
-        new CardCommentMock(
-            "Mikhail Ivanov", "MI", 
-            Color.Primary, new DateTime(2026, 5, 21, 13, 30, 0), 
-            "I have drafted the hub architecture. Sharing the diagram now."),
-        new CardCommentMock(
-            "Sarah Chen", "SC", 
-            Color.Success, new DateTime(2026, 5, 21, 14, 15, 0), 
-            "Looks good! I will start on connection management tomorrow.")
-    };
-
     public record CardAttachmentMock(
         string FileName, 
         string FileSize, 
         string Icon, 
         Color IconColor);
-    public record CardCommentMock(
-        string AuthorName, 
-        string Initials, 
-        Color AvatarColor, 
-        DateTime Date, 
-        string Text);
 }
