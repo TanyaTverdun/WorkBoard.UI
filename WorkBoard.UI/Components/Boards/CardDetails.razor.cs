@@ -283,9 +283,6 @@ public partial class CardDetails
 
 
     /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
-    private string _newComment = string.Empty;
-
-
     private List<CardAttachmentMock> _attachments = new()
     {
         new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
