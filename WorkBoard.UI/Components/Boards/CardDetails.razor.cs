@@ -51,6 +51,7 @@ public partial class CardDetails
 
     private List<AttachmentDto> _attachments = new();
     private MudFileUpload<IBrowserFile>? _fileUpload;
+    private Guid? _pendingDeleteAttachmentId = null;
 
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
@@ -173,6 +174,27 @@ public partial class CardDetails
             }
 
             StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmDeleteAttachmentAsync(Guid attachmentId)
+    {
+        try
+        {
+            await AttachmentService.DeleteAttachmentAsync(
+                Card.Id, 
+                attachmentId);
+
+            _attachments.RemoveAll(a => a.Id == attachmentId);
+            _pendingDeleteAttachmentId = null;
+
+            Snackbar.Add("Attachment deleted", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting attachment: {ex.Message}");
+            Snackbar.Add("Failed to delete attachment", Severity.Error);
         }
     }
 
