@@ -4,7 +4,6 @@ using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.UI.ViewModels.Board;
-using WorkBoard.UI.ViewModels.Comment;
 
 namespace WorkBoard.UI.Components.Boards;
 
@@ -16,17 +15,11 @@ public partial class CardDetails
     [Parameter] 
     public KanbanTaskViewModel Card { get; set; } = default!;
 
+    [Parameter]
+    public Guid CurrentUserId { get; set; }
+
     [Inject] 
     private ICardService CardService { get; set; } = default!;
-
-    [Inject]
-    private IChecklistService ChecklistService { get; set; } = default!;
-
-    [Inject]
-    private ISnackbar Snackbar { get; set; } = default!;
-
-    [Inject]
-    private ICommentService CommentService { get; set; } = default!;
 
     private bool _isPendingDeleteCard = false;
 
@@ -44,7 +37,7 @@ public partial class CardDetails
     private bool _isAssigneePopoverOpen = false;
     private string _assigneeSearchText = string.Empty;
 
-    private List<CommentViewModel> _comments = new();
+    private int _commentsCount = 0;
 
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
@@ -59,45 +52,14 @@ public partial class CardDetails
         _editedDescription = Card.Description ?? string.Empty;
 
         await Task.WhenAll(
-            LoadAssigneesDataAsync(),
-            LoadCommentsAsync()
+            LoadAssigneesDataAsync()
         );
     }
 
-    private async Task LoadCommentsAsync()
+    private void UpdateCommentsCount(int count)
     {
-        try
-        {
-            var commentsDto = await CommentService.GetCommentsByCardAsync(Card.Id);
-
-            var uiComments = new List<CommentViewModel>();
-
-            foreach (var dto in commentsDto)
-            {
-                var authorName = !string.IsNullOrWhiteSpace(dto.UserFullName) ? dto.UserFullName : "Unknown User";
-                var initials = !string.IsNullOrWhiteSpace(dto.Initials) ? dto.Initials : "UU";
-
-                uiComments.Add(new CommentViewModel
-                {
-                    Id = dto.Id,
-                    AuthorName = authorName,
-                    Initials = initials,
-                    Date = dto.CreatedAt,
-                    Text = dto.Text
-                });
-            }
-
-            _comments = uiComments;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading comments: {ex.Message}");
-            Snackbar.Add("Failed to load comments.", Severity.Error);
-        }
-        finally
-        {
-            StateHasChanged();
-        }
+        _commentsCount = count;
+        StateHasChanged();
     }
 
     private async Task LoadAssigneesDataAsync()
@@ -292,7 +254,6 @@ public partial class CardDetails
     /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
     private DateTime? _dueDate = null;
 
-    private string _newComment = string.Empty;
 
     private List<CardAttachmentMock> _attachments = new()
     {

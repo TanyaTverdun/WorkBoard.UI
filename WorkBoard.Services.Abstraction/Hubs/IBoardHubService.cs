@@ -25,6 +25,8 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<CardRenameDto>? OnCardRenamed;
 
+    event Action<CommentDto>? OnCommentAdded;
+
     Task StartConnectionAsync(
         string backendUrl,
         Guid boardId,

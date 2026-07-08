@@ -585,7 +585,8 @@ public partial class BoardPage
     {
         var parameters = new DialogParameters<CardDetails>
     {
-        { x => x.Card, card }
+        { x => x.Card, card },
+        { x => x.CurrentUserId, _currentUserId ?? Guid.Empty }
     };
 
         var options = new DialogOptions
