@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
@@ -48,6 +50,7 @@ public partial class CardDetails
     private int _commentsCount = 0;
 
     private List<AttachmentDto> _attachments = new();
+    private MudFileUpload<IBrowserFile>? _fileUpload;
 
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
@@ -111,6 +114,66 @@ public partial class CardDetails
             ".zip" or ".rar" or ".7z" => (Icons.Material.Filled.Archive, Color.Secondary),
             _ => (Icons.Material.Filled.InsertDriveFile, Color.Default)
         };
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        await UploadFileAsync(file);
+    }
+
+    private async Task UploadFileAsync(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        long maxFileSize = 100L * 1024 * 1024;
+
+        if (file.Size > maxFileSize)
+        {
+            Snackbar.Add(
+                "File is too large. Maximum size is 100 MB.", 
+                Severity.Error);
+
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(maxFileSize);
+
+            var streamPart = new StreamPart(
+                stream, 
+                file.Name, 
+                file.ContentType);
+
+            var uploadedAttachment = await AttachmentService.UploadAttachmentAsync(
+                Card.Id, 
+                streamPart);
+
+            _attachments.Add(uploadedAttachment);
+
+            Snackbar.Add(
+                "File uploaded successfully", 
+                Severity.Success);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error uploading file: {ex.Message}");
+            Snackbar.Add("Failed to upload file.", Severity.Error);
+        }
+        finally
+        {
+            if (_fileUpload != null)
+            {
+                await _fileUpload.ClearAsync();
+            }
+
+            StateHasChanged();
+        }
     }
 
     private async Task OnDueDateChangedAsync(DateTime? newDate)
