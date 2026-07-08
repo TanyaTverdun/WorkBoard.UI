@@ -13,4 +13,9 @@ public interface IAttachmentService
         Guid cardId, 
         StreamPart file, 
         CancellationToken cancellationToken = default);
+
+    Task DeleteAttachmentAsync(
+        Guid cardId,
+        Guid attachmentId,
+        CancellationToken cancellationToken = default);
 }

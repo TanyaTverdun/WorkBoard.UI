@@ -79,4 +79,35 @@ public class AttachmentService : IAttachmentService
             throw;
         }
     }
+
+    public async Task DeleteAttachmentAsync(
+        Guid cardId,
+        Guid attachmentId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _attachmentApi.DeleteAttachmentAsync(
+                cardId,
+                attachmentId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error deleting attachment {AttachmentId}" +
+                " for card {CardId}. Status: {StatusCode}",
+                attachmentId, cardId, apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error deleting attachment {AttachmentId} for card {CardId}",
+                attachmentId, cardId);
+            throw;
+        }
+    }
 }

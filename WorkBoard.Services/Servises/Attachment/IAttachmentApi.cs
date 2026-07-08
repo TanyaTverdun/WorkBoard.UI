@@ -16,4 +16,10 @@ public interface IAttachmentApi
         Guid cardId,
         [AliasAs("file")] StreamPart file,
         CancellationToken cancellationToken = default);
+
+    [Delete("/api/cards/{cardId}/attachments/{attachmentId}")]
+    Task DeleteAttachmentAsync(
+        Guid cardId,
+        Guid attachmentId,
+        CancellationToken cancellationToken = default);
 }
