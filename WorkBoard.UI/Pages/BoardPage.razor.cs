@@ -180,7 +180,8 @@ public partial class BoardPage
                     sectionName,
                     c.Position,
                     BoardIdGuid,
-                    c.Description);
+                    c.Description,
+                    c.DueDate);
 
             }).OrderBy(t => t.Position).ToList();
         }
@@ -614,7 +615,8 @@ public partial class BoardPage
                 targetSection.Name,
                 newCard.Position,
                 BoardIdGuid,
-                newCard.Description);
+                newCard.Description,
+                null);
 
             _tasks.Add(newTask);
 

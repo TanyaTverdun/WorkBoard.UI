@@ -18,10 +18,15 @@ public partial class CardDetails
     [Parameter]
     public Guid CurrentUserId { get; set; }
 
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
+
     [Inject] 
     private ICardService CardService { get; set; } = default!;
 
     private bool _isPendingDeleteCard = false;
+
+    private DateTime? _dueDate;
 
     private bool _isEditingTitle = false;
     private string _editedTitle = string.Empty;
@@ -50,10 +55,36 @@ public partial class CardDetails
     {
         _editedTitle = Card.Name;
         _editedDescription = Card.Description ?? string.Empty;
+        _dueDate = Card.DueDate;
 
         await Task.WhenAll(
             LoadAssigneesDataAsync()
         );
+    }
+
+    private async Task OnDueDateChangedAsync(DateTime? newDate)
+    {
+        _dueDate = newDate;
+
+        try
+        {
+            var request = new UpdateCardDueDateRequest 
+            { 
+                DueDate = newDate 
+            };
+
+            await CardService.UpdateCardDueDateAsync(
+                Card.BoardId,
+                Card.Id,
+                request);
+
+             Card.DueDate = newDate; 
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating due date: {ex.Message}");
+            Snackbar.Add("Failed to update due date.", Severity.Error);
+        }
     }
 
     private void UpdateCommentsCount(int count)
@@ -252,7 +283,7 @@ public partial class CardDetails
 
 
     /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
-    private DateTime? _dueDate = null;
+    private string _newComment = string.Empty;
 
 
     private List<CardAttachmentMock> _attachments = new()
