@@ -4,6 +4,7 @@ using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.UI.ViewModels.Board;
+using WorkBoard.UI.ViewModels.Comment;
 
 namespace WorkBoard.UI.Components.Boards;
 
@@ -24,6 +25,9 @@ public partial class CardDetails
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
+    [Inject]
+    private ICommentService CommentService { get; set; } = default!;
+
     private bool _isPendingDeleteCard = false;
 
     private bool _isEditingTitle = false;
@@ -40,6 +44,8 @@ public partial class CardDetails
     private bool _isAssigneePopoverOpen = false;
     private string _assigneeSearchText = string.Empty;
 
+    private List<CommentViewModel> _comments = new();
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -53,8 +59,45 @@ public partial class CardDetails
         _editedDescription = Card.Description ?? string.Empty;
 
         await Task.WhenAll(
-            LoadAssigneesDataAsync()
+            LoadAssigneesDataAsync(),
+            LoadCommentsAsync()
         );
+    }
+
+    private async Task LoadCommentsAsync()
+    {
+        try
+        {
+            var commentsDto = await CommentService.GetCommentsByCardAsync(Card.Id);
+
+            var uiComments = new List<CommentViewModel>();
+
+            foreach (var dto in commentsDto)
+            {
+                var authorName = !string.IsNullOrWhiteSpace(dto.UserFullName) ? dto.UserFullName : "Unknown User";
+                var initials = !string.IsNullOrWhiteSpace(dto.Initials) ? dto.Initials : "UU";
+
+                uiComments.Add(new CommentViewModel
+                {
+                    Id = dto.Id,
+                    AuthorName = authorName,
+                    Initials = initials,
+                    Date = dto.CreatedAt,
+                    Text = dto.Text
+                });
+            }
+
+            _comments = uiComments;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading comments: {ex.Message}");
+            Snackbar.Add("Failed to load comments.", Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
     private async Task LoadAssigneesDataAsync()
@@ -248,6 +291,7 @@ public partial class CardDetails
 
     /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
     private DateTime? _dueDate = null;
+
     private string _newComment = string.Empty;
 
     private List<CardAttachmentMock> _attachments = new()
@@ -261,27 +305,9 @@ public partial class CardDetails
         new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error)
     };
 
-    private List<CardCommentMock> _comments = new()
-    {
-        new CardCommentMock(
-            "Mikhail Ivanov", "MI", 
-            Color.Primary, new DateTime(2026, 5, 21, 13, 30, 0), 
-            "I have drafted the hub architecture. Sharing the diagram now."),
-        new CardCommentMock(
-            "Sarah Chen", "SC", 
-            Color.Success, new DateTime(2026, 5, 21, 14, 15, 0), 
-            "Looks good! I will start on connection management tomorrow.")
-    };
-
     public record CardAttachmentMock(
         string FileName, 
         string FileSize, 
         string Icon, 
         Color IconColor);
-    public record CardCommentMock(
-        string AuthorName, 
-        string Initials, 
-        Color AvatarColor, 
-        DateTime Date, 
-        string Text);
 }
