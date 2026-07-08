@@ -47,4 +47,36 @@ public class AttachmentService : IAttachmentService
             throw;
         }
     }
+
+    public async Task<AttachmentDto> UploadAttachmentAsync(
+        Guid cardId, 
+        StreamPart file, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _attachmentApi.UploadAttachmentAsync(
+                cardId, 
+                file, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx, 
+                "API error uploading attachment for card {CardId}. " +
+                "Status: {StatusCode}", 
+                cardId, 
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex, 
+                "Error uploading attachment for card {CardId}", 
+                cardId);
+            throw;
+        }
+    }
 }
