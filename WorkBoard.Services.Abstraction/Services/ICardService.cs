@@ -50,8 +50,15 @@ public interface ICardService
     Task<IReadOnlyList<UserSearchDto>> GetAssignableUsersAsync(
         Guid cardId,
         CancellationToken cancellationToken = default);
+
     Task RemoveAssigneeAsync(
         Guid cardId,
         Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateCardDueDateAsync(
+        Guid boardId,
+        Guid cardId,
+        UpdateCardDueDateRequest request,
         CancellationToken cancellationToken = default);
 }
