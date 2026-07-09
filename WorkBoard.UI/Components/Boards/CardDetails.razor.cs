@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.UI.ViewModels.Board;
@@ -31,6 +32,9 @@ public partial class CardDetails
 
     [Inject]
     private IActivityLogService ActivityLogService { get; set; } = default!;
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
 
     private bool _isPendingDeleteCard = false;
 
@@ -70,6 +74,8 @@ public partial class CardDetails
         _editedTitle = Card.Name;
         _editedDescription = Card.Description ?? string.Empty;
         _dueDate = Card.DueDate;
+
+        BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
 
         await Task.WhenAll(
             LoadAssigneesDataAsync(),
@@ -440,4 +446,18 @@ public partial class CardDetails
     }
 
     private void Close() => MudDialog.Cancel();
+
+    private void HandleActivityLogAdded(ActivityLogDto log)
+    {
+        if (log.CardId == Card.Id)
+        {
+            _activityLogs.Insert(0, log);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        BoardHubService.OnActivityLogAdded -= HandleActivityLogAdded;
+    }
 }

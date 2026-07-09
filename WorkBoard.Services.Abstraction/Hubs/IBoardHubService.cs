@@ -13,7 +13,7 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<Guid>? OnSectionDeleted;
 
-    public event Action<Guid, double>? OnSectionMoved;
+    event Action<Guid, double>? OnSectionMoved;
 
     event Action<Guid, BoardRole>? OnMemberRoleUpdated;
 
@@ -26,6 +26,8 @@ public interface IBoardHubService : IAsyncDisposable
     event Action<CardRenameDto>? OnCardRenamed;
 
     event Action<CommentDto>? OnCommentAdded;
+
+    event Action<ActivityLogDto>? OnActivityLogAdded;
 
     Task StartConnectionAsync(
         string backendUrl,
