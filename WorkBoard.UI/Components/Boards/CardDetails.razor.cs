@@ -29,6 +29,9 @@ public partial class CardDetails
     [Inject]
     private IAttachmentService AttachmentService { get; set; } = default!;
 
+    [Inject]
+    private IActivityLogService ActivityLogService { get; set; } = default!;
+
     private bool _isPendingDeleteCard = false;
 
     private DateTime? _dueDate;
@@ -53,6 +56,8 @@ public partial class CardDetails
     private MudFileUpload<IBrowserFile>? _fileUpload;
     private Guid? _pendingDeleteAttachmentId = null;
 
+    private List<ActivityLogDto> _activityLogs = new();
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -68,8 +73,27 @@ public partial class CardDetails
 
         await Task.WhenAll(
             LoadAssigneesDataAsync(),
-            LoadAttachmentsAsync()
+            LoadAttachmentsAsync(),
+            LoadActivityLogsAsync()
         );
+    }
+
+    private async Task LoadActivityLogsAsync()
+    {
+        try
+        {
+            var logs = await ActivityLogService.GetActivityLogsByCardAsync(
+                Card.Id);
+            _activityLogs = logs.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading activity logs: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
     private async Task LoadAttachmentsAsync()
