@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
@@ -24,6 +26,9 @@ public partial class CardDetails
     [Inject] 
     private ICardService CardService { get; set; } = default!;
 
+    [Inject]
+    private IAttachmentService AttachmentService { get; set; } = default!;
+
     private bool _isPendingDeleteCard = false;
 
     private DateTime? _dueDate;
@@ -44,6 +49,10 @@ public partial class CardDetails
 
     private int _commentsCount = 0;
 
+    private List<AttachmentDto> _attachments = new();
+    private MudFileUpload<IBrowserFile>? _fileUpload;
+    private Guid? _pendingDeleteAttachmentId = null;
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -58,8 +67,135 @@ public partial class CardDetails
         _dueDate = Card.DueDate;
 
         await Task.WhenAll(
-            LoadAssigneesDataAsync()
+            LoadAssigneesDataAsync(),
+            LoadAttachmentsAsync()
         );
+    }
+
+    private async Task LoadAttachmentsAsync()
+    {
+        try
+        {
+            var dtos = await AttachmentService.GetAttachmentsByCardAsync(
+                Card.Id);
+
+            _attachments = dtos.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading attachments: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private string FormatBytes(long bytes)
+    {
+        string[] suffix = { "B", "KB", "MB", "GB", "TB" };
+        int i;
+        double dblSByte = bytes;
+        for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+        {
+            dblSByte = bytes / 1024.0;
+        }
+        return $"{dblSByte:0.##} {suffix[i]}";
+    }
+
+    private (string Icon, Color Color) GetFileIconAndColor(string fileName)
+    {
+        var ext = System.IO.Path.GetExtension(fileName)?.ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => (Icons.Material.Filled.PictureAsPdf, Color.Error),
+            ".doc" or ".docx" => (Icons.Material.Filled.Description, Color.Info),
+            ".xls" or ".xlsx" or ".csv" => (Icons.Material.Filled.TableChart, Color.Success),
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".svg" => (Icons.Material.Filled.Image, Color.Warning),
+            ".zip" or ".rar" or ".7z" => (Icons.Material.Filled.Archive, Color.Secondary),
+            _ => (Icons.Material.Filled.InsertDriveFile, Color.Default)
+        };
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        await UploadFileAsync(file);
+    }
+
+    private async Task UploadFileAsync(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        long maxFileSize = 100L * 1024 * 1024;
+
+        if (file.Size > maxFileSize)
+        {
+            Snackbar.Add(
+                "File is too large. Maximum size is 100 MB.", 
+                Severity.Error);
+
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(maxFileSize);
+
+            var streamPart = new StreamPart(
+                stream, 
+                file.Name, 
+                file.ContentType);
+
+            var uploadedAttachment = await AttachmentService.UploadAttachmentAsync(
+                Card.Id, 
+                streamPart);
+
+            _attachments.Add(uploadedAttachment);
+
+            Snackbar.Add(
+                "File uploaded successfully", 
+                Severity.Success);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error uploading file: {ex.Message}");
+            Snackbar.Add("Failed to upload file.", Severity.Error);
+        }
+        finally
+        {
+            if (_fileUpload != null)
+            {
+                await _fileUpload.ClearAsync();
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmDeleteAttachmentAsync(Guid attachmentId)
+    {
+        try
+        {
+            await AttachmentService.DeleteAttachmentAsync(
+                Card.Id, 
+                attachmentId);
+
+            _attachments.RemoveAll(a => a.Id == attachmentId);
+            _pendingDeleteAttachmentId = null;
+
+            Snackbar.Add("Attachment deleted", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting attachment: {ex.Message}");
+            Snackbar.Add("Failed to delete attachment", Severity.Error);
+        }
     }
 
     private async Task OnDueDateChangedAsync(DateTime? newDate)
@@ -280,23 +416,4 @@ public partial class CardDetails
     }
 
     private void Close() => MudDialog.Cancel();
-
-
-    /// /////////МОКИ///////////////////////////////////////////////////////////////////////////////
-    private List<CardAttachmentMock> _attachments = new()
-    {
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("hub-diagram.png", "340 KB", Icons.Material.Filled.Image, Color.Info),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error),
-        new CardAttachmentMock("signalr-architecture.pdf", "1.2 MB", Icons.Material.Filled.Description, Color.Error)
-    };
-
-    public record CardAttachmentMock(
-        string FileName, 
-        string FileSize, 
-        string Icon, 
-        Color IconColor);
 }

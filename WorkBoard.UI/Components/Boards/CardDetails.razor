@@ -296,26 +296,67 @@
                     <div class="flex-grow-1 overflow-y-auto custom-scrollbar pr-1">
                         @foreach (var file in _attachments)
                         {
-                            <MudPaper Elevation="0" 
-                                      Class="pa-2 mb-2 border-solid border-2 mud-border-lines-default rounded-lg d-flex align-center gap-3">
-                                <MudIcon Icon=@file.Icon
-                                         Color=@file.IconColor />
+                            var iconInfo = GetFileIconAndColor(file.FileName);
+                            var isPendingDelete = _pendingDeleteAttachmentId == file.Id;
 
-                                <div class="overflow-hidden">
-                                    <MudText Typo=@Typo.body2
-                                             Class="text-truncate font-weight-bold">@file.FileName</MudText>
+                            <MudPaper Elevation="0"
+                                      Class="@($"pa-2 mb-2 border-solid border-2 rounded-lg d-flex align-center justify-space-between transition-all {(isPendingDelete ? "mud-border-error mud-background-error" : "mud-border-lines-default")}")"
+                                      @onmouseleave=@(() => { if (isPendingDelete) _pendingDeleteAttachmentId = null;})>
 
-                                    <MudText Typo=@Typo.caption
-                                             Class="text-muted">@file.FileSize</MudText>
-                                </div>
+                                @if (isPendingDelete)
+                                {
+                                    <div class="d-flex align-center justify-center w-100 gap-2">
+                                        <MudText Typo=@Typo.body2
+                                                 Class="text-error font-weight-bold text-truncate">
+                                            Delete @file.FileName?
+                                        </MudText>
+
+                                        <MudButton Size=@Size.Small
+                                                   Variant=@Variant.Filled
+                                                   Color=@Color.Error
+                                                   OnClick=@(() => ConfirmDeleteAttachmentAsync(file.Id))>
+                                            Confirm
+                                        </MudButton>
+
+                                        <MudIconButton Size=@Size.Small
+                                                       Icon=@Icons.Material.Rounded.Close
+                                                       Class="text-error"
+                                                       OnClick=@(() => _pendingDeleteAttachmentId = null) />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <a href=@file.FileUrl
+                                            target="_blank" 
+                                            class="text-decoration-none d-flex align-center gap-3 flex-grow-1 overflow-hidden">
+                                        <MudIcon Icon=@iconInfo.Icon Color=@iconInfo.Color />
+
+                                        <div class="overflow-hidden">
+                                            <MudText Typo=@Typo.body2 
+                                                     Class="text-truncate font-weight-bold">@file.FileName</MudText>
+
+                                            <MudText Typo=@Typo.caption 
+                                                     Class="text-muted">@FormatBytes(file.FileSizeBytes)</MudText>
+                                        </div>
+                                    </a>
+
+                                    <MudIconButton Icon=@Icons.Material.Rounded.Close
+                                                   Size=@Size.Small
+                                                   Class="text-muted flex-shrink-0"
+                                                   OnClick=@(() => _pendingDeleteAttachmentId = file.Id) />
+                                }
                             </MudPaper>
                         }
                     </div>
 
-                    <MudButton Variant=@Variant.Outlined
-                               Size=@Size.Small
-                               StartIcon=@Icons.Material.Rounded.Add
-                               Class="w-100 border-dashed text-muted rounded-lg mt-1 flex-shrink-0">
+                    <InputFile id="custom-file-upload" OnChange="OnFileSelected" hidden />
+
+                    <MudButton HtmlTag="label"
+                               for="custom-file-upload"
+                               Variant="@Variant.Outlined"
+                               Size="@Size.Small"
+                               StartIcon="@Icons.Material.Rounded.Add"
+                               Class="w-100 border-dashed text-muted rounded-lg mt-1 flex-shrink-0 cursor-pointer">
                         Upload file
                     </MudButton>
                 </div>

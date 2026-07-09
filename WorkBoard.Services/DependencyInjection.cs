@@ -6,6 +6,7 @@ using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.Hubs;
+using WorkBoard.Services.Servises.Attachment;
 using WorkBoard.Services.Servises.Auth;
 using WorkBoard.Services.Servises.Board;
 using WorkBoard.Services.Servises.BoardMenbers;
@@ -103,6 +104,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<ICommentService, CommentService>();
+
+        services.AddRefitClient<IAttachmentApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<IAttachmentService, AttachmentService>();
 
         return services;
     }
