@@ -256,8 +256,36 @@
                                      Class="tab-title-text" 
                                      Icon=@Icons.Material.Outlined.ShowChart>
 
-                            <MudText Typo=@Typo.body2
-                                     Class="text-muted mt-4">Activity history will appear here.</MudText>
+                            @if (!_activityLogs.Any())
+                            {
+                                <MudText Typo=@Typo.body2 Class="text-muted mt-4">
+                                    Activity history will appear here.
+                                </MudText>
+                            }
+                            else
+                            {
+                                <div class="mt-4 pr-4 pl-5 overflow-y-auto custom-scrollbar" style="max-height: 400px;">
+                                    @foreach (var log in _activityLogs)
+                                    {
+                                        <div class="py-2">
+                                            <div class="d-flex align-center gap-2">
+                                                <div class="d-flex align-center gap-1">
+                                                    <MudAvatar Size=@Size.Small
+                                                               Color=@Color.Tertiary>@log.Initials</MudAvatar>
+                                                </div>
+
+                                                <MudText Typo=@Typo.body2 Class="font-weight-medium">
+                                                    @log.Text
+                                                </MudText>
+                                            </div>
+
+                                            <MudText Typo=@Typo.caption Class="text-muted">
+                                                @log.CreatedAt.ToLocalTime().ToString("MMM dd, HH:mm")
+                                            </MudText>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </MudTabPanel>
 
                     </MudTabs>

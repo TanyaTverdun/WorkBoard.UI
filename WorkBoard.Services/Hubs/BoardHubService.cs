@@ -25,6 +25,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<Guid>? OnCardDeleted;
     public event Action<CardRenameDto>? OnCardRenamed;
     public event Action<CommentDto>? OnCommentAdded;
+    public event Action<ActivityLogDto>? OnActivityLogAdded;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -150,6 +151,15 @@ internal class BoardHubService : IBoardHubService
                     comment.CardId);
 
                 OnCommentAdded?.Invoke(comment);
+            });
+
+            _hubConnection.On<ActivityLogDto>(BoardHubEvents.ActivityLogAdded, (log) =>
+            {
+                _logger.LogInformation(
+                    "Received new activity log via SignalR for card: {CardId}",
+                    log.CardId);
+
+                OnActivityLogAdded?.Invoke(log);
             });
 
             await _hubConnection.StartAsync(cancellationToken);

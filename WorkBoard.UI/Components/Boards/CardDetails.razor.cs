@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.UI.ViewModels.Board;
@@ -29,6 +30,12 @@ public partial class CardDetails
     [Inject]
     private IAttachmentService AttachmentService { get; set; } = default!;
 
+    [Inject]
+    private IActivityLogService ActivityLogService { get; set; } = default!;
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
+
     private bool _isPendingDeleteCard = false;
 
     private DateTime? _dueDate;
@@ -53,6 +60,8 @@ public partial class CardDetails
     private MudFileUpload<IBrowserFile>? _fileUpload;
     private Guid? _pendingDeleteAttachmentId = null;
 
+    private List<ActivityLogDto> _activityLogs = new();
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -66,10 +75,31 @@ public partial class CardDetails
         _editedDescription = Card.Description ?? string.Empty;
         _dueDate = Card.DueDate;
 
+        BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
+
         await Task.WhenAll(
             LoadAssigneesDataAsync(),
-            LoadAttachmentsAsync()
+            LoadAttachmentsAsync(),
+            LoadActivityLogsAsync()
         );
+    }
+
+    private async Task LoadActivityLogsAsync()
+    {
+        try
+        {
+            var logs = await ActivityLogService.GetActivityLogsByCardAsync(
+                Card.Id);
+            _activityLogs = logs.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading activity logs: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
     private async Task LoadAttachmentsAsync()
@@ -416,4 +446,18 @@ public partial class CardDetails
     }
 
     private void Close() => MudDialog.Cancel();
+
+    private void HandleActivityLogAdded(ActivityLogDto log)
+    {
+        if (log.CardId == Card.Id)
+        {
+            _activityLogs.Insert(0, log);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        BoardHubService.OnActivityLogAdded -= HandleActivityLogAdded;
+    }
 }

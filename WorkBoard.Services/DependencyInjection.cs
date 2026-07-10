@@ -6,6 +6,7 @@ using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.Hubs;
+using WorkBoard.Services.Servises.ActivityLog;
 using WorkBoard.Services.Servises.Attachment;
 using WorkBoard.Services.Servises.Auth;
 using WorkBoard.Services.Servises.Board;
@@ -110,6 +111,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IAttachmentService, AttachmentService>();
+
+        services.AddRefitClient<IActivityLogApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<IActivityLogService, ActivityLogService>();
 
         return services;
     }
