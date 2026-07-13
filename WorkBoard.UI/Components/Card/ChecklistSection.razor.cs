@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using System.Xml.Linq;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
@@ -16,6 +17,9 @@ public partial class ChecklistSection : ComponentBase
 
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public ChecklistDto? Checklist { get; set; }
 
     private ChecklistDto? _checklist;
     private bool _isHoveringChecklistTitle = false;
@@ -35,20 +39,12 @@ public partial class ChecklistSection : ComponentBase
     private double ChecklistProgress => TotalChecklistItems == 0 ? 0
         : Math.Round((double)CompletedChecklistItems / TotalChecklistItems * 100);
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
-        await LoadChecklistAsync();
-    }
-
-    private async Task LoadChecklistAsync()
-    {
-        try
+        if (Checklist != null)
         {
-            _checklist = await ChecklistService.GetChecklistByCardAsync(CardId);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading checklist: {ex.Message}");
+            _checklist = Checklist;
+            StateHasChanged();
         }
     }
 

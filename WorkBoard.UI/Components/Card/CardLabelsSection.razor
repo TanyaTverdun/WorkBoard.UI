@@ -1,34 +1,34 @@
 ﻿    <div class="d-flex gap-2 align-center">
-        @foreach (var label in _labels)
-        {
-            var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
+    @foreach (var label in _labels)
+    {
+        var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
+        var chipStyle = $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); height: 3.5vh";
 
-            var chipStyle = $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1);";
+        <MudPaper @key=@label.Id
+                  Elevation="0"
+                  Style=@chipStyle
+                  Class="d-flex align-center rounded-pill px-3 py-1 gap-1 custom-chip-close">
 
-            <MudChip @key=@label.Id
-                     Value=@label.Name
-                     Size=@Size.Small
-                     Variant=@Variant.Text
-                     Class="font-weight-bold custom-chip-close"
-                     Style=@chipStyle
-                     CloseIcon=@Icons.Material.Rounded.Close
-                     OnClose=@(async (MudChip<string> chip) => await ToggleLabelAsync(label))>
+            <span style="font-size: 0.8125rem; font-weight: 600; line-height: 1.5;">
                 @label.Name
-            </MudChip>
+            </span>
 
-        }
-
-        <MudChip T="string"
-                 Size=@Size.Small
-                 Variant=@Variant.Outlined
-                 Class="border-dashed text-muted cursor-pointer"
-                 OnClick=@(() => _isLabelPopoverOpen = !_isLabelPopoverOpen)>
-            <MudIcon Icon=@Icons.Material.Rounded.Add
+            <MudIcon Icon=@Icons.Material.Rounded.Close
                      Size=@Size.Small
-                     Class="mr-1" /> 
-                     
-            Label
-        </MudChip>
+                     Class="cursor-pointer"
+                     Style="font-size: 1rem; margin-right: -4px; opacity: 0.8;"
+                     @onclick=@(async () => await ToggleLabelAsync(label)) />
+        </MudPaper>
+    }
+
+    <MudButton Variant=@Variant.Outlined
+               Size=@Size.Small
+               StartIcon=@Icons.Material.Rounded.Add
+               Class="rounded-pill border-dashed text-muted px-3 text-none"
+               Style="min-width: 0; height: 3.5vh; text-transform: none"
+               OnClick=@(() => _isLabelPopoverOpen = !_isLabelPopoverOpen)>
+        Label
+    </MudButton>
 
         <MudPopover Open=@_isLabelPopoverOpen
                     AnchorOrigin=@Origin.BottomLeft
@@ -202,7 +202,7 @@
                             <MudButton Variant=@Variant.Filled
                                        Color=@Color.Primary
                                        FullWidth="true"
-                                       Class="rounded-lg text-none btn-create popover-action-btn"
+                                   Class="rounded-lg text-none custom-btn popover-action-btn"
                                        OnClick=@CreateNewLabelAsync
                                        Disabled=@string.IsNullOrWhiteSpace(_newLabelName)>
                                 Create
@@ -211,7 +211,7 @@
                             <MudButton Variant=@Variant.Filled
                                        Color=@Color.Surface
                                        FullWidth="true"
-                                       Class="rounded-lg text-none cancel-btn popover-action-btn"
+                                   Class="rounded-lg text-none text-btn popover-action-btn"
                                        DropShadow="false"
                                        OnClick=@HideCreateLabelForm>
                                 Cancel

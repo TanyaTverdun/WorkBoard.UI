@@ -66,22 +66,6 @@
     word-break: break-word;
 }
 
-::deep .btn-create {
-    background-color: #5C6BC0 !important;
-    color: white !important;
-    text-transform: none !important;
-    transition: background-color 0.2s ease-in-out;
-}
-
-    ::deep .btn-create:hover {
-        text-transform: none !important;
-        background-color: #3949AB !important;
-    }
-
-::deep .cancel-btn {
-    text-transform: none !important;
-}
-
 ::deep .hover-error-btn:hover .mud-icon-root {
     fill: var(--mud-palette-error) !important;
 }

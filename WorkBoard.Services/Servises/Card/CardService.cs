@@ -50,6 +50,38 @@ internal class CardService : ICardService
         }
     }
 
+    public async Task<CardDetailsDto> GetCardDetailsAsync(
+        Guid sectionId,
+        Guid cardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _cardApi.GetCardDetailsAsync(
+                sectionId,
+                cardId, 
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error getting card details for card {CardId}. " +
+                "Status: {StatusCode}",
+                cardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex, 
+                "Error getting details for card {CardId}", 
+                cardId);
+            throw;
+        }
+    }
+
     public async Task<CardDto> CreateCardAsync(
         Guid sectionId,
         CreateCardRequest request,

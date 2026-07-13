@@ -10,6 +10,11 @@ public interface ICardService
         Guid boardId,
         CancellationToken cancellationToken = default);
 
+    Task<CardDetailsDto> GetCardDetailsAsync(
+        Guid sectionId,
+        Guid cardId,
+        CancellationToken cancellationToken = default);
+
     Task<CardDto> CreateCardAsync(
         Guid sectionId,
         CreateCardRequest request,

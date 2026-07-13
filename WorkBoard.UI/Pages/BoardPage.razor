@@ -193,7 +193,7 @@
 								<MudButton Variant=@Variant.Filled
 										   Color=@Color.Primary
 										   OnClick=@AddMemberAsync
-										   Class="btn-create rounded-lg btn-add-compact">
+										   Class="custom-btn rounded-lg btn-add-compact">
 									Add
 								</MudButton>
 							</div>
@@ -265,7 +265,7 @@
 							<MudButton Variant=@Variant.Filled
 									   Color=@Color.Primary
 									   FullWidth="true"
-									   Class="rounded-lg text-none btn-create"
+									   Class="rounded-lg text-none custom-btn"
 									   OnClick=@ApplySectionOrderAsync>
 								Apply Order
 							</MudButton>
@@ -273,7 +273,7 @@
 							<MudButton Variant=@Variant.Filled
 									   Color=@Color.Surface
 									   FullWidth="true"
-									   Class="rounded-lg text-none cancel-btn"
+									   Class="rounded-lg text-none text-btn"
 									   DropShadow="false"
 									   OnClick=@CloseReorderPopover>
 								Cancel
@@ -401,7 +401,7 @@
 								<MudButton OnClick=@(() => AddTask(item))
 										   Variant=@Variant.Filled
 										   Size=@Size.Small
-										   Class="rounded-lg text-none px-3 btn-create">
+										   Class="rounded-lg text-none px-3 custom-btn">
 									Add Card
 								</MudButton>
 
@@ -452,7 +452,7 @@
 								<MudButton ButtonType=@ButtonType.Submit
 										   Variant=@Variant.Filled
 										   Size=@Size.Small
-										   Class="rounded-lg text-none px-3 btn-create">
+										   Class="rounded-lg text-none px-3 custom-btn">
 									Add section
 								</MudButton>
 

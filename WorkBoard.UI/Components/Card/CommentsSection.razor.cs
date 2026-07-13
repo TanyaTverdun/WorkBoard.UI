@@ -18,6 +18,9 @@ public partial class CommentsSection : ComponentBase, IDisposable
     [Parameter]
     public EventCallback<int> CommentsCountChanged { get; set; }
 
+    [Parameter] 
+    public List<CommentDto> Comments { get; set; } = new();
+
     [Inject]
     private ICommentService CommentService { get; set; } = default!;
 
@@ -33,22 +36,14 @@ public partial class CommentsSection : ComponentBase, IDisposable
     protected override async Task OnInitializedAsync()
     {
         BoardHubService.OnCommentAdded += HandleNewComment;
-        await LoadCommentsAsync();
     }
 
-    private async Task LoadCommentsAsync()
+    protected override void OnParametersSet()
     {
-        try
+        if (Comments != null)
         {
-            var commentsDto = await CommentService.GetCommentsByCardAsync(CardId);
-            _comments = commentsDto.ToList();
-
-            await NotifyCountChangedAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading comments: {ex.Message}");
-            Snackbar.Add("Failed to load comments.", Severity.Error);
+            _comments = Comments.ToList();
+            StateHasChanged();
         }
     }
 

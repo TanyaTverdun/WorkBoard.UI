@@ -180,6 +180,7 @@ public partial class BoardPage
                     sectionName,
                     c.Position,
                     BoardIdGuid,
+                    c.SectionId,
                     c.Description,
                     c.DueDate);
 
@@ -615,6 +616,7 @@ public partial class BoardPage
                 targetSection.Name,
                 newCard.Position,
                 BoardIdGuid,
+                targetSection.Id,
                 newCard.Description,
                 null);
 

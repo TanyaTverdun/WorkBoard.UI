@@ -31,9 +31,6 @@ public partial class CardDetails
     private IAttachmentService AttachmentService { get; set; } = default!;
 
     [Inject]
-    private IActivityLogService ActivityLogService { get; set; } = default!;
-
-    [Inject]
     private IBoardHubService BoardHubService { get; set; } = default!;
 
     private bool _isPendingDeleteCard = false;
@@ -62,6 +59,13 @@ public partial class CardDetails
 
     private List<ActivityLogDto> _activityLogs = new();
 
+    private ChecklistDto? _checklist;
+    private List<LabelDto> _cardLabels = new();
+    private List<CommentDto> _comments = new();
+
+    private bool _isPickerLoaded = false;
+    private MudDatePicker _datePicker;
+
     private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
         string.IsNullOrWhiteSpace(_assigneeSearchText)
             ? _assignableUsers
@@ -71,54 +75,49 @@ public partial class CardDetails
 
     protected override async Task OnInitializedAsync()
     {
-        _editedTitle = Card.Name;
-        _editedDescription = Card.Description ?? string.Empty;
-        _dueDate = Card.DueDate;
-
         BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
 
-        await Task.WhenAll(
-            LoadAssigneesDataAsync(),
-            LoadAttachmentsAsync(),
-            LoadActivityLogsAsync()
-        );
-    }
+        var sw = System.Diagnostics.Stopwatch.StartNew();
 
-    private async Task LoadActivityLogsAsync()
-    {
         try
         {
-            var logs = await ActivityLogService.GetActivityLogsByCardAsync(
+            var cardDetails = await CardService.GetCardDetailsAsync(
+                Card.SectionId,
                 Card.Id);
-            _activityLogs = logs.ToList();
+
+            _editedTitle = cardDetails.Title;
+            _editedDescription = cardDetails.Description ?? string.Empty;
+            _dueDate = cardDetails.DueDate?.Date;
+            _assignees = cardDetails.Assignees.ToList();
+            _cardLabels = cardDetails.Labels.ToList();
+            _checklist = cardDetails.Checklist;
+            _attachments = cardDetails.Attachments.ToList();
+            _comments = cardDetails.Comments.ToList();
+            _activityLogs = cardDetails.ActivityLogs.ToList();
+            _commentsCount = _comments.Count;
+
+            var assignableUsers = await CardService.GetAssignableUsersAsync(
+                Card.Id);
+
+            _assignableUsers = assignableUsers.ToList();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading activity logs: {ex.Message}");
+            Console.WriteLine($"Error loading card details: {ex.Message}");
+            Snackbar.Add("Failed to load card details", Severity.Error);
         }
-        finally
-        {
-            StateHasChanged();
-        }
+
+        sw.Stop();
     }
 
-    private async Task LoadAttachmentsAsync()
+    private async Task LoadAndOpenPicker()
     {
-        try
-        {
-            var dtos = await AttachmentService.GetAttachmentsByCardAsync(
-                Card.Id);
+        _isPickerLoaded = true;
+        StateHasChanged();
 
-            _attachments = dtos.ToList();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading attachments: {ex.Message}");
-        }
-        finally
-        {
-            StateHasChanged();
-        }
+        await Task.Delay(50);
+
+        _datePicker?.OpenAsync();
     }
 
     private string FormatBytes(long bytes)
@@ -230,6 +229,11 @@ public partial class CardDetails
 
     private async Task OnDueDateChangedAsync(DateTime? newDate)
     {
+        if (_dueDate?.Date == newDate?.Date)
+        {
+            return;
+        }
+
         _dueDate = newDate;
 
         try
@@ -258,29 +262,6 @@ public partial class CardDetails
         _commentsCount = count;
         StateHasChanged();
     }
-
-    private async Task LoadAssigneesDataAsync()
-    {
-        try
-        {
-            var assigneesTask = CardService.GetCardAssigneesAsync(Card.Id);
-            var assignableTask = CardService.GetAssignableUsersAsync(Card.Id);
-
-            await Task.WhenAll(assigneesTask, assignableTask);
-
-            _assignees = assigneesTask.Result.ToList();
-            _assignableUsers = assignableTask.Result.ToList();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading assignees data: {ex.Message}");
-        }
-        finally
-        {
-            StateHasChanged();
-        }
-    }
-
     private async Task AddAssigneeAsync(UserSearchDto user)
     {
         try
@@ -288,7 +269,15 @@ public partial class CardDetails
             var request = new AddCardAssigneeRequest(user.UserId);
             await CardService.AddCardAssigneeAsync(Card.Id, request);
 
-            await LoadAssigneesDataAsync();
+            var newAssignee = new CardAssigneeDto(
+                user.UserId,
+                user.FullName,
+                user.Email,
+                user.AvatarUrl,
+                user.Initials ?? "Un");
+
+            _assignees.Add(newAssignee);
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -301,7 +290,9 @@ public partial class CardDetails
         try
         {
             await CardService.RemoveAssigneeAsync(Card.Id, assignee.UserId);
-            await LoadAssigneesDataAsync();
+
+            _assignees.Remove(assignee);
+            StateHasChanged();
         }
         catch (Exception ex)
         {

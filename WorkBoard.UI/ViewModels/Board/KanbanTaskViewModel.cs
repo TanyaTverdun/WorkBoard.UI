@@ -9,6 +9,7 @@ public class KanbanTaskViewModel
     public double Position { get; set; }
     public DateTime? DueDate { get; set; }
     public Guid BoardId { get; set; }
+    public Guid SectionId { get; set; }
 
     public KanbanTaskViewModel(
         Guid id,
@@ -16,6 +17,7 @@ public class KanbanTaskViewModel
         string status,
         double position,
         Guid boardId,
+        Guid sectionId,
         string? description,
         DateTime? dueDate)
     {
@@ -24,6 +26,7 @@ public class KanbanTaskViewModel
         Status = status;
         Position = position;
         BoardId = boardId;
+        SectionId = sectionId;
         Description = description;
         DueDate = dueDate;
     }
