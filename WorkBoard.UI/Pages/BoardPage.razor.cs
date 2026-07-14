@@ -204,19 +204,27 @@ public partial class BoardPage
             return;
         }
 
+        var oldSectionId = info.Item.SectionId;
         var oldSectionName = info.Item.Status;
-        info.Item.Status = info.DropzoneIdentifier;
 
-        var targetSection = _sections.FirstOrDefault(
-            s => s.Name == info.DropzoneIdentifier);
+        if (!Guid.TryParse(info.DropzoneIdentifier, out var targetSectionId))
+        {
+            return;
+        }
+
+        var targetSection = _sections
+            .FirstOrDefault(s => s.Id == targetSectionId);
 
         if (targetSection == null)
         {
             return;
         }
 
+        info.Item.SectionId = targetSectionId;
+        info.Item.Status = targetSection.Name;
+
         var cardsInSection = _tasks
-            .Where(t => t.Status == targetSection.Name && t.Id != info.Item.Id)
+            .Where(t => t.SectionId == targetSectionId && t.Id != info.Item.Id)
             .OrderBy(t => t.Position)
             .ToList();
 
@@ -252,6 +260,7 @@ public partial class BoardPage
         }
         catch (Exception)
         {
+            info.Item.SectionId = oldSectionId;
             info.Item.Status = oldSectionName;
             Snackbar.Add("Failed to move card", Severity.Error);
 
@@ -356,7 +365,7 @@ public partial class BoardPage
             return;
         }
 
-        var currentCardsInSection = _tasks.Where(t => t.Status == section.Name).ToList();
+        var currentCardsInSection = _tasks.Where(t => t.SectionId == section.Id).ToList();
         double nextPosition = currentCardsInSection.Count > 0
             ? currentCardsInSection.Count + 1.0
             : 1.0;
@@ -662,10 +671,9 @@ public partial class BoardPage
 
         if (section != null && section.Name != data.NewName)
         {
-            string oldName = section.Name;
             section.Name = data.NewName;
 
-            var tasksToUpdate = _tasks.Where(t => t.Status == oldName).ToList();
+            var tasksToUpdate = _tasks.Where(t => t.SectionId == data.SectionId).ToList();
             foreach (var t in tasksToUpdate)
             {
                 t.Status = data.NewName;
@@ -686,7 +694,7 @@ public partial class BoardPage
         if (section != null)
         {
             _sections.Remove(section);
-            _tasks.RemoveAll(t => t.Status == section.Name);
+            _tasks.RemoveAll(t => t.SectionId == sectionId);
 
             InvokeAsync(() =>
             {

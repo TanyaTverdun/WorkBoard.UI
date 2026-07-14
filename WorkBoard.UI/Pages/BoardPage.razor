@@ -255,7 +255,7 @@
 
 									<MudText Typo=@Typo.caption
 											 Class="text-muted">
-										@(_tasks.Count(t => t.Status == context.Name)) cards
+										@(_tasks.Count(t => t.SectionId == context.Id)) cards
 									</MudText>
 								</MudPaper>
 							</ItemRenderer>
@@ -296,7 +296,7 @@
 	<MudDropContainer T=@KanbanTaskViewModel
 					  @ref=@_dropContainer
 					  Items=@_tasks
-					  ItemsSelector=@((item, column) => item.Status == column)
+					  ItemsSelector=@((item, column) => item.SectionId.ToString() == column)
 					  ItemDropped=@TaskUpdated
 					  Class="d-flex flex-row px-6 pr-15 flex-grow-1 kanban-container">
 		<ChildContent>
@@ -381,7 +381,7 @@
 					</MudToolBar>
 
 					<MudDropZone T=@KanbanTaskViewModel
-								 Identifier="@item.Name"
+								 Identifier=@item.Id.ToString()
 								 Class="flex-grow-1 pb-4 drop-zone"
 								 AllowReorder="true" />
 
@@ -478,7 +478,7 @@
 		<ItemRenderer>
 			<MudPaper Elevation="1"
 					  Class="pa-4 rounded-lg my-3 task-item cursor-pointer hover-effect"
-					  @onclick="@(() => OpenCardDetails(context))">
+					  @onclick=@(() => OpenCardDetails(context))>
 				@context.Name
 			</MudPaper>
 		</ItemRenderer>
