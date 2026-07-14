@@ -1,5 +1,5 @@
 ﻿@using WorkBoard.UI.Components
-
+@using MudBlazor
 @inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_customTheme" />
@@ -8,9 +8,31 @@
 <MudPopoverProvider />
 
 <div class="d-flex vh-100 overflow-hidden">
-    <Sidebar />
+    <div class="collapsible-sidebar d-flex flex-column position-relative @(_isSidebarOpen ? "" : "collapsed")">
+
+        <div class="d-flex align-center position-relative flex-shrink-0 @(_isSidebarOpen ? "justify-end pe-3" : "justify-center")" 
+             style="height: 64px;">
+
+            <div class="logo-section sidebar-logo position-absolute d-flex align-items-center gap-2" 
+                 style="left: 16px;">
+                <i class="bi bi-briefcase-fill text-primary fs-4"></i>
+                <span class="fw-bold fs-5 tracking-wide text-white">WorkBoard</span>
+            </div>
+
+            <MudIconButton Icon=@(_isSidebarOpen ? Icons.Material.Rounded.MenuOpen : Icons.Material.Rounded.Menu)
+                           OnClick=@ToggleSidebar
+                           Size=@Size.Small
+                           Class="text-white z-10" />
+        </div>
+
+        <div class="sidebar-content-wrapper flex-grow-1 overflow-hidden">
+            <Sidebar />
+        </div>
+
+    </div>
 
     <main class="flex-grow-1 overflow-auto app-main-content">
         @Body
     </main>
+
 </div>
