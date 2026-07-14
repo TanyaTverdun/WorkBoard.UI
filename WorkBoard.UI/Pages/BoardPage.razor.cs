@@ -115,6 +115,7 @@ public partial class BoardPage
         BoardHubService.OnCardMoved += HandleCardMoved;
         BoardHubService.OnCardDeleted += HandleCardDeleted;
         BoardHubService.OnCardRenamed += HandleCardRenamed;
+        BoardHubService.OnCardDueDateUpdated += HandleCardDueDateUpdated;
 
         try
         {
@@ -764,25 +765,22 @@ public partial class BoardPage
         }
     }
 
-    private void HandleCardMoved(
-        Guid cardId,
-        Guid newSectionId, 
-        double newPosition)
+    private void HandleCardMoved(CardMovedDto data)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == cardId);
-        var targetSection = _sections.FirstOrDefault(s => s.Id == newSectionId);
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
 
-        if (task != null && targetSection != null)
+        if (task != null)
         {
-            task.Status = targetSection.Name;
-            task.Position = newPosition;
+            task.Status = data.NewSectionName;
+            task.SectionId = data.NewSectionId;
+            task.Position = data.NewPosition;
 
             _tasks = _tasks.OrderBy(t => t.Position).ToList();
 
             InvokeAsync(() =>
             {
                 StateHasChanged();
-                _dropContainer.Refresh();
+                _dropContainer?.Refresh();
             });
         }
     }
@@ -819,6 +817,10 @@ public partial class BoardPage
         }
     }
 
+    private void HandleCardDueDateUpdated(CardDueDateUpdateDto data)
+    {
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -832,6 +834,8 @@ public partial class BoardPage
         BoardHubService.OnCardMoved -= HandleCardMoved;
         BoardHubService.OnCardDeleted -= HandleCardDeleted;
         BoardHubService.OnCardRenamed -= HandleCardRenamed;
+        BoardHubService.OnCardDueDateUpdated -= HandleCardDueDateUpdated;
+
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

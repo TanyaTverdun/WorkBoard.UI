@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor.Utilities;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.UI.Components.Card;
 
-public partial class CardLabelsSection : ComponentBase
+public partial class CardLabelsSection : ComponentBase, IDisposable
 {
     [Parameter, EditorRequired]
     public Guid CardId { get; set; }
@@ -19,6 +20,9 @@ public partial class CardLabelsSection : ComponentBase
 
     [Parameter]
     public EventCallback<List<LabelDto>> AppliedLabelsChanged { get; set; }
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
 
     [Inject]
     private ILabelService LabelService { get; set; } = default!;
@@ -38,6 +42,12 @@ public partial class CardLabelsSection : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        BoardHubService.OnLabelAddedToCard += HandleLabelAddedToCard;
+        BoardHubService.OnLabelRemovedFromCard += HandleLabelRemovedFromCard;
+        BoardHubService.OnLabelCreated += HandleLabelCreated;
+        BoardHubService.OnLabelUpdated += HandleLabelUpdated;
+        BoardHubService.OnLabelDeleted += HandleLabelDeleted;
+
         await LoadBoardLabelsAsync();
     }
 
@@ -219,5 +229,91 @@ public partial class CardLabelsSection : ComponentBase
         {
             StateHasChanged();
         }
+    }
+
+    private void HandleLabelAddedToCard(Guid cardId, LabelDto label)
+    {
+        if (CardId == cardId && 
+            !_labels.Any(l => l.Id == label.Id))
+        {
+            _labels.Add(label);
+            AppliedLabelsChanged.InvokeAsync(_labels);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleLabelRemovedFromCard(Guid cardId, Guid labelId)
+    {
+        if (CardId == cardId &&
+                _labels.RemoveAll(l => l.Id == labelId) > 0)
+        {
+            AppliedLabelsChanged.InvokeAsync(_labels);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleLabelCreated(LabelDto newLabel)
+    {
+        if (!_allAvailableLabels.Any(l => l.Id == newLabel.Id))
+        {
+            _allAvailableLabels.Add(newLabel);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleLabelUpdated(LabelDto updatedLabel)
+    {
+        bool changed = false;
+
+        var boardLabel = _allAvailableLabels.FirstOrDefault(l => l.Id == updatedLabel.Id);
+        if (boardLabel != null)
+        {
+            boardLabel.Name = updatedLabel.Name;
+            boardLabel.Color = updatedLabel.Color;
+            changed = true;
+        }
+
+        var cardLabel = _labels.FirstOrDefault(l => l.Id == updatedLabel.Id);
+        if (cardLabel != null)
+        {
+            cardLabel.Name = updatedLabel.Name;
+            cardLabel.Color = updatedLabel.Color;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleLabelDeleted(Guid labelId)
+    {
+        bool changed = false;
+
+        if (_allAvailableLabels.RemoveAll(l => l.Id == labelId) > 0)
+        {
+            changed = true;
+        }
+
+        if (_labels.RemoveAll(l => l.Id == labelId) > 0)
+        {
+            changed = true;
+            AppliedLabelsChanged.InvokeAsync(_labels);
+        }
+
+        if (changed)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        BoardHubService.OnLabelAddedToCard -= HandleLabelAddedToCard;
+        BoardHubService.OnLabelRemovedFromCard -= HandleLabelRemovedFromCard;
+        BoardHubService.OnLabelCreated -= HandleLabelCreated;
+        BoardHubService.OnLabelUpdated -= HandleLabelUpdated;
+        BoardHubService.OnLabelDeleted -= HandleLabelDeleted;
     }
 }

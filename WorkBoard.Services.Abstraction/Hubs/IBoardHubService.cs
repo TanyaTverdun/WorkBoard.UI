@@ -19,8 +19,6 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<Guid>? OnMemberRemoved;
 
-    event Action<Guid, Guid, double>? OnCardMoved;
-
     event Action<Guid>? OnCardDeleted;
 
     event Action<CardRenameDto>? OnCardRenamed;
@@ -28,6 +26,44 @@ public interface IBoardHubService : IAsyncDisposable
     event Action<CommentDto>? OnCommentAdded;
 
     event Action<ActivityLogDto>? OnActivityLogAdded;
+
+    event Action<CardDueDateUpdateDto>? OnCardDueDateUpdated;
+
+    event Action<Guid, LabelDto>? OnLabelAddedToCard;
+
+    event Action<Guid, Guid>? OnLabelRemovedFromCard;
+
+    event Action<LabelDto>? OnLabelCreated;
+
+    event Action<LabelDto>? OnLabelUpdated;
+
+    event Action<Guid>? OnLabelDeleted;
+
+    event Action<AssigneeAddDto>? OnAssigneeAdded;
+
+    event Action<AssigneeRemoveDto>? OnAssigneeRemoved;
+
+    event Action<CardMovedDto>? OnCardMoved;
+
+    event Action<CardDescriptionUpdateDto>? OnCardDescriptionUpdated;
+
+    event Action<ChecklistItemAddedDto>? OnChecklistItemAdded;
+
+    event Action<ChecklistCreatedDto>? OnChecklistCreated;
+
+    event Action<ChecklistDeletedDto>? OnChecklistDeleted;
+
+    event Action<ChecklistItemDeletedDto>? OnChecklistItemDeleted;
+
+    event Action<ChecklistRenamedDto>? OnChecklistRenamed;
+
+    event Action<ChecklistItemRenamedDto>? OnChecklistItemRenamed;
+
+    event Action<ChecklistItemStatusUpdatedDto>? OnChecklistItemStatusUpdated;
+
+    event Action<AttachmentAddedDto>? OnAttachmentAdded;
+
+    event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
 
     Task StartConnectionAsync(
         string backendUrl,

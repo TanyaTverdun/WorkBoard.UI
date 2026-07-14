@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using MudBlazor;
 using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
@@ -33,7 +34,14 @@ public partial class CardDetails
     [Inject]
     private IBoardHubService BoardHubService { get; set; } = default!;
 
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private ElementReference _mainContentScroll;
+    private IJSObjectReference? _jsModule;
+
     private bool _isPendingDeleteCard = false;
+    private bool _isDeletingLocally = false;
 
     private DateTime? _dueDate;
 
@@ -76,6 +84,15 @@ public partial class CardDetails
     protected override async Task OnInitializedAsync()
     {
         BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
+        BoardHubService.OnCardDueDateUpdated += HandleCardDueDateUpdated;
+        BoardHubService.OnAssigneeAdded += HandleAssigneeAdded;
+        BoardHubService.OnAssigneeRemoved += HandleAssigneeRemoved;
+        BoardHubService.OnCardMoved += HandleCardMoved;
+        BoardHubService.OnCardDescriptionUpdated += HandleDescriptionUpdated;
+        BoardHubService.OnCardRenamed += HandleCardRenamed;
+        BoardHubService.OnAttachmentAdded += HandleAttachmentAdded;
+        BoardHubService.OnAttachmentDeleted += HandleAttachmentDeleted;
+        BoardHubService.OnCardDeleted += HandleCardDeleted;
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
@@ -108,6 +125,16 @@ public partial class CardDetails
         }
 
         sw.Stop();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./Components/Boards/CardDetails.razor.js");
+        }
     }
 
     private async Task LoadAndOpenPicker()
@@ -257,10 +284,25 @@ public partial class CardDetails
         }
     }
 
-    private void UpdateCommentsCount(int count)
+    private async Task UpdateCommentsCount(int count)
     {
         _commentsCount = count;
         StateHasChanged();
+
+        await Task.Delay(50);
+        try
+        {
+            if (_jsModule != null)
+            {
+                await _jsModule.InvokeVoidAsync(
+                    "scrollToBottom", 
+                    _mainContentScroll);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Scroll error in parent: {ex.Message}");
+        }
     }
     private async Task AddAssigneeAsync(UserSearchDto user)
     {
@@ -304,12 +346,15 @@ public partial class CardDetails
     {
         try
         {
+            _isDeletingLocally = true;
+
             await CardService.DeleteCardAsync(Card.BoardId, Card.Id);
 
             MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
         {
+            _isDeletingLocally = false;
             Console.WriteLine($"Error deleting card: {ex.Message}");
         }
     }
@@ -447,8 +492,133 @@ public partial class CardDetails
         }
     }
 
+    private void HandleCardDueDateUpdated(CardDueDateUpdateDto data)
+    {
+        if (data.CardId == Card.Id)
+        {
+            _dueDate = data.DueDate?.Date;
+            Card.DueDate = data.DueDate?.Date;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleAssigneeAdded(AssigneeAddDto data)
+    {
+        if (Card.Id == data.CardId)
+        {
+            if (!_assignees.Any(a => a.UserId == data.Assignee.UserId))
+            {
+                _assignees.Add(data.Assignee);
+
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleAssigneeRemoved(AssigneeRemoveDto data)
+    {
+        if (Card.Id == data.CardId)
+        {
+            var removedCount = _assignees.RemoveAll(a => a.UserId == data.UserId);
+
+            if (removedCount > 0)
+            {
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleCardMoved(CardMovedDto data)
+    {
+        if (Card.Id == data.CardId)
+        {
+            Card.SectionId = data.NewSectionId;
+            Card.Status = data.NewSectionName;
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleDescriptionUpdated(CardDescriptionUpdateDto data)
+    {
+        if (Card.Id == data.CardId)
+        {
+            Card.Description = data.Description;
+
+            _editedDescription = data.Description; 
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleCardRenamed(CardRenameDto data)
+    {
+        if (Card.Id == data.CardId)
+        {
+            Card.Name = data.NewTitle;
+
+            _editedTitle = data.NewTitle;
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleAttachmentAdded(AttachmentAddedDto data)
+    {
+        if (Card.Id == data.CardId && 
+            !_attachments.Any(a => a.Id == data.Attachment.Id))
+        {
+            _attachments.Add(data.Attachment);
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleAttachmentDeleted(AttachmentDeletedDto data)
+    {
+        if (Card.Id == data.CardId)
+        {
+            var removedCount = _attachments.RemoveAll(a => a.Id == data.AttachmentId);
+
+            if (removedCount > 0)
+            {
+                if (_pendingDeleteAttachmentId == data.AttachmentId)
+                {
+                    _pendingDeleteAttachmentId = null;
+                }
+
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleCardDeleted(Guid cardId)
+    {
+        if (Card.Id == cardId && !_isDeletingLocally)
+        {
+            InvokeAsync(() =>
+            {
+                Snackbar.Add(
+                    "This card was deleted by another user.", 
+                    Severity.Warning);
+                MudDialog.Cancel();
+            });
+        }
+    }
+
     public void Dispose()
     {
+        _ = _jsModule?.DisposeAsync();
+
         BoardHubService.OnActivityLogAdded -= HandleActivityLogAdded;
+        BoardHubService.OnCardDueDateUpdated -= HandleCardDueDateUpdated;
+        BoardHubService.OnAssigneeAdded -= HandleAssigneeAdded;
+        BoardHubService.OnAssigneeRemoved -= HandleAssigneeRemoved;
+        BoardHubService.OnCardMoved -= HandleCardMoved;
+        BoardHubService.OnCardDescriptionUpdated -= HandleDescriptionUpdated;
+        BoardHubService.OnCardRenamed -= HandleCardRenamed;
+        BoardHubService.OnAttachmentAdded -= HandleAttachmentAdded;
+        BoardHubService.OnAttachmentDeleted -= HandleAttachmentDeleted;
+        BoardHubService.OnCardDeleted -= HandleCardDeleted;
     }
 }

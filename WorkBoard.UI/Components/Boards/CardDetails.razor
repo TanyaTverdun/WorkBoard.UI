@@ -26,6 +26,7 @@
                     @Card.Status
                 </MudChip>
             </div>
+
             <div class="mb-3 pr-8">
                 <MudTextField @bind-Value=@_editedTitle
                               Placeholder="Task name..."
@@ -68,7 +69,8 @@
         <MudDivider Class="mx-0" />
 
         <div class="flex-grow-1 d-flex overflow-hidden">
-            <div class="mud-background-gray flex-grow-1 overflow-y-auto custom-scrollbar pl-6 pr-6 pb-6 pt-2 bg-white card-main-content">
+            <div @ref="_mainContentScroll" 
+                 class="mud-background-gray flex-grow-1 overflow-y-auto custom-scrollbar pl-6 pr-6 pb-6 pt-2 bg-white card-main-content">
                 <div class="mb-6 mt-2">
                     <div class="d-flex align-center gap-2 mb-2">
                         <MudIcon Icon=@Icons.Material.Outlined.Description
@@ -233,7 +235,7 @@
                 </div>
 
                 <ChecklistSection CardId="@Card.Id"
-                                  Checklist="@_checklist" />
+                                  @bind-Checklist="_checklist" />
 
                 <MudDivider Style="border-color: rgba(0, 0, 0, 0.4) !important;" />
 
