@@ -50,10 +50,12 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
         string[] suffix = { "B", "KB", "MB", "GB", "TB" };
         int i;
         double dblSByte = bytes;
+
         for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
         {
             dblSByte = bytes / 1024.0;
         }
+
         return $"{dblSByte:0.##} {suffix[i]}";
     }
 
@@ -74,7 +76,10 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
     private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        if (file == null) return;
+        if (file == null)
+        {
+            return;
+        }
 
         await UploadFileAsync(file);
     }
@@ -83,7 +88,7 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
     {
         if (file == null) return;
 
-        long maxFileSize = 100L * 1024 * 1024; // 100 MB
+        long maxFileSize = 100L * 1024 * 1024;
 
         if (file.Size > maxFileSize)
         {
@@ -96,7 +101,9 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
             using var stream = file.OpenReadStream(maxFileSize);
             var streamPart = new StreamPart(stream, file.Name, file.ContentType);
 
-            var uploadedAttachment = await AttachmentService.UploadAttachmentAsync(CardId, streamPart);
+            var uploadedAttachment = await AttachmentService.UploadAttachmentAsync(
+                CardId, 
+                streamPart);
 
             _attachments.Add(uploadedAttachment);
             Attachments.Add(uploadedAttachment);
@@ -117,7 +124,9 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
     {
         try
         {
-            await AttachmentService.DeleteAttachmentAsync(CardId, attachmentId);
+            await AttachmentService.DeleteAttachmentAsync(
+                CardId, 
+                attachmentId);
 
             _attachments.RemoveAll(a => a.Id == attachmentId);
             Attachments.RemoveAll(a => a.Id == attachmentId);
@@ -137,7 +146,8 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
 
     private void HandleAttachmentAdded(AttachmentAddedDto data)
     {
-        if (CardId == data.CardId && !_attachments.Any(a => a.Id == data.Attachment.Id))
+        if (CardId == data.CardId && 
+            !_attachments.Any(a => a.Id == data.Attachment.Id))
         {
             _attachments.Add(data.Attachment);
             Attachments.Add(data.Attachment);
@@ -154,7 +164,8 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
     {
         if (CardId == data.CardId)
         {
-            var removedCount = _attachments.RemoveAll(a => a.Id == data.AttachmentId);
+            var removedCount = _attachments.RemoveAll(
+                a => a.Id == data.AttachmentId);
 
             if (removedCount > 0)
             {

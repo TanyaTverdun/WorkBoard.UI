@@ -56,6 +56,7 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
         try
         {
             var request = new AddCardAssigneeRequest(user.UserId);
+
             await CardService.AddCardAssigneeAsync(CardId, request);
 
             var newAssignee = new CardAssigneeDto(

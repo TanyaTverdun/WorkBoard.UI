@@ -37,7 +37,6 @@ public partial class ActivityLogSection : ComponentBase, IDisposable
     {
         if (log.CardId == CardId)
         {
-            // Вставляємо на початок списку (щоб найновіші були зверху)
             _activityLogs.Insert(0, log);
             ActivityLogs.Insert(0, log);
 

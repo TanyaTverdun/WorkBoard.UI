@@ -153,7 +153,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private async Task SaveEditLabelAsync()
     {
-        if (string.IsNullOrWhiteSpace(_editingLabelName) || _editingLabelId == null) return;
+        if (string.IsNullOrWhiteSpace(_editingLabelName) || 
+            _editingLabelId == null)
+        {
+            return;
+        }
 
         try
         {
@@ -191,7 +195,10 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private async Task CreateNewLabelAsync()
     {
-        if (string.IsNullOrWhiteSpace(_newLabelName)) return;
+        if (string.IsNullOrWhiteSpace(_newLabelName))
+        {
+            return;
+        }
 
         var trimmedName = _newLabelName.Trim();
 

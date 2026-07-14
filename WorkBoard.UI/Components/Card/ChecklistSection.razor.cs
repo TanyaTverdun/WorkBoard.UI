@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using System.Xml.Linq;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
@@ -421,7 +420,8 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private void HandleChecklistRenamed(ChecklistRenamedDto data)
     {
-        if (_checklist != null && _checklist.ChecklistId == data.ChecklistId)
+        if (_checklist != null && 
+            _checklist.ChecklistId == data.ChecklistId)
         {
             _checklist.Name = data.NewName;
 
