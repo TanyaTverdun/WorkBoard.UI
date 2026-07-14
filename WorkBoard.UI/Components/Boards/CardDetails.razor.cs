@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using MudBlazor;
-using Refit;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
@@ -56,14 +54,9 @@ public partial class CardDetails
     private List<CardAssigneeDto> _assignees = new();
     private List<UserSearchDto> _assignableUsers = new();
 
-    private bool _isAssigneePopoverOpen = false;
-    private string _assigneeSearchText = string.Empty;
-
     private int _commentsCount = 0;
 
     private List<AttachmentDto> _attachments = new();
-    private MudFileUpload<IBrowserFile>? _fileUpload;
-    private Guid? _pendingDeleteAttachmentId = null;
 
     private List<ActivityLogDto> _activityLogs = new();
 
@@ -74,24 +67,12 @@ public partial class CardDetails
     private bool _isPickerLoaded = false;
     private MudDatePicker _datePicker;
 
-    private IEnumerable<UserSearchDto> FilteredAssignableUsers =>
-        string.IsNullOrWhiteSpace(_assigneeSearchText)
-            ? _assignableUsers
-            : _assignableUsers.Where(u =>
-                u.FullName.Contains(_assigneeSearchText, StringComparison.OrdinalIgnoreCase) ||
-                u.Email.Contains(_assigneeSearchText, StringComparison.OrdinalIgnoreCase));
-
     protected override async Task OnInitializedAsync()
     {
-        BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
         BoardHubService.OnCardDueDateUpdated += HandleCardDueDateUpdated;
-        BoardHubService.OnAssigneeAdded += HandleAssigneeAdded;
-        BoardHubService.OnAssigneeRemoved += HandleAssigneeRemoved;
         BoardHubService.OnCardMoved += HandleCardMoved;
         BoardHubService.OnCardDescriptionUpdated += HandleDescriptionUpdated;
         BoardHubService.OnCardRenamed += HandleCardRenamed;
-        BoardHubService.OnAttachmentAdded += HandleAttachmentAdded;
-        BoardHubService.OnAttachmentDeleted += HandleAttachmentDeleted;
         BoardHubService.OnCardDeleted += HandleCardDeleted;
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -147,113 +128,6 @@ public partial class CardDetails
         _datePicker?.OpenAsync();
     }
 
-    private string FormatBytes(long bytes)
-    {
-        string[] suffix = { "B", "KB", "MB", "GB", "TB" };
-        int i;
-        double dblSByte = bytes;
-        for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
-        {
-            dblSByte = bytes / 1024.0;
-        }
-        return $"{dblSByte:0.##} {suffix[i]}";
-    }
-
-    private (string Icon, Color Color) GetFileIconAndColor(string fileName)
-    {
-        var ext = System.IO.Path.GetExtension(fileName)?.ToLowerInvariant();
-        return ext switch
-        {
-            ".pdf" => (Icons.Material.Filled.PictureAsPdf, Color.Error),
-            ".doc" or ".docx" => (Icons.Material.Filled.Description, Color.Info),
-            ".xls" or ".xlsx" or ".csv" => (Icons.Material.Filled.TableChart, Color.Success),
-            ".png" or ".jpg" or ".jpeg" or ".gif" or ".svg" => (Icons.Material.Filled.Image, Color.Warning),
-            ".zip" or ".rar" or ".7z" => (Icons.Material.Filled.Archive, Color.Secondary),
-            _ => (Icons.Material.Filled.InsertDriveFile, Color.Default)
-        };
-    }
-
-    private async Task OnFileSelected(InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-        if (file == null) return;
-
-        await UploadFileAsync(file);
-    }
-
-    private async Task UploadFileAsync(IBrowserFile file)
-    {
-        if (file == null) return;
-
-        long maxFileSize = 100L * 1024 * 1024;
-
-        if (file.Size > maxFileSize)
-        {
-            Snackbar.Add(
-                "File is too large. Maximum size is 100 MB.", 
-                Severity.Error);
-
-            return;
-        }
-
-        try
-        {
-            using var stream = file.OpenReadStream(maxFileSize);
-
-            var streamPart = new StreamPart(
-                stream, 
-                file.Name, 
-                file.ContentType);
-
-            var uploadedAttachment = await AttachmentService.UploadAttachmentAsync(
-                Card.Id, 
-                streamPart);
-
-            _attachments.Add(uploadedAttachment);
-
-            Snackbar.Add(
-                "File uploaded successfully", 
-                Severity.Success);
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error uploading file: {ex.Message}");
-            Snackbar.Add("Failed to upload file.", Severity.Error);
-        }
-        finally
-        {
-            if (_fileUpload != null)
-            {
-                await _fileUpload.ClearAsync();
-            }
-
-            StateHasChanged();
-        }
-    }
-
-    private async Task ConfirmDeleteAttachmentAsync(Guid attachmentId)
-    {
-        try
-        {
-            await AttachmentService.DeleteAttachmentAsync(
-                Card.Id, 
-                attachmentId);
-
-            _attachments.RemoveAll(a => a.Id == attachmentId);
-            _pendingDeleteAttachmentId = null;
-
-            Snackbar.Add("Attachment deleted", Severity.Success);
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting attachment: {ex.Message}");
-            Snackbar.Add("Failed to delete attachment", Severity.Error);
-        }
-    }
-
     private async Task OnDueDateChangedAsync(DateTime? newDate)
     {
         if (_dueDate?.Date == newDate?.Date)
@@ -302,43 +176,6 @@ public partial class CardDetails
         catch (Exception ex)
         {
             Console.WriteLine($"Scroll error in parent: {ex.Message}");
-        }
-    }
-    private async Task AddAssigneeAsync(UserSearchDto user)
-    {
-        try
-        {
-            var request = new AddCardAssigneeRequest(user.UserId);
-            await CardService.AddCardAssigneeAsync(Card.Id, request);
-
-            var newAssignee = new CardAssigneeDto(
-                user.UserId,
-                user.FullName,
-                user.Email,
-                user.AvatarUrl,
-                user.Initials ?? "Un");
-
-            _assignees.Add(newAssignee);
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error adding assignee: {ex.Message}");
-        }
-    }
-
-    private async Task RemoveAssigneeAsync(CardAssigneeDto assignee)
-    {
-        try
-        {
-            await CardService.RemoveAssigneeAsync(Card.Id, assignee.UserId);
-
-            _assignees.Remove(assignee);
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error removing assignee: {ex.Message}");
         }
     }
 
@@ -483,15 +320,6 @@ public partial class CardDetails
 
     private void Close() => MudDialog.Cancel();
 
-    private void HandleActivityLogAdded(ActivityLogDto log)
-    {
-        if (log.CardId == Card.Id)
-        {
-            _activityLogs.Insert(0, log);
-            InvokeAsync(StateHasChanged);
-        }
-    }
-
     private void HandleCardDueDateUpdated(CardDueDateUpdateDto data)
     {
         if (data.CardId == Card.Id)
@@ -499,32 +327,6 @@ public partial class CardDetails
             _dueDate = data.DueDate?.Date;
             Card.DueDate = data.DueDate?.Date;
             InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private void HandleAssigneeAdded(AssigneeAddDto data)
-    {
-        if (Card.Id == data.CardId)
-        {
-            if (!_assignees.Any(a => a.UserId == data.Assignee.UserId))
-            {
-                _assignees.Add(data.Assignee);
-
-                InvokeAsync(StateHasChanged);
-            }
-        }
-    }
-
-    private void HandleAssigneeRemoved(AssigneeRemoveDto data)
-    {
-        if (Card.Id == data.CardId)
-        {
-            var removedCount = _assignees.RemoveAll(a => a.UserId == data.UserId);
-
-            if (removedCount > 0)
-            {
-                InvokeAsync(StateHasChanged);
-            }
         }
     }
 
@@ -563,35 +365,6 @@ public partial class CardDetails
         }
     }
 
-    private void HandleAttachmentAdded(AttachmentAddedDto data)
-    {
-        if (Card.Id == data.CardId && 
-            !_attachments.Any(a => a.Id == data.Attachment.Id))
-        {
-            _attachments.Add(data.Attachment);
-
-            InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private void HandleAttachmentDeleted(AttachmentDeletedDto data)
-    {
-        if (Card.Id == data.CardId)
-        {
-            var removedCount = _attachments.RemoveAll(a => a.Id == data.AttachmentId);
-
-            if (removedCount > 0)
-            {
-                if (_pendingDeleteAttachmentId == data.AttachmentId)
-                {
-                    _pendingDeleteAttachmentId = null;
-                }
-
-                InvokeAsync(StateHasChanged);
-            }
-        }
-    }
-
     private void HandleCardDeleted(Guid cardId)
     {
         if (Card.Id == cardId && !_isDeletingLocally)
@@ -610,15 +383,10 @@ public partial class CardDetails
     {
         _ = _jsModule?.DisposeAsync();
 
-        BoardHubService.OnActivityLogAdded -= HandleActivityLogAdded;
         BoardHubService.OnCardDueDateUpdated -= HandleCardDueDateUpdated;
-        BoardHubService.OnAssigneeAdded -= HandleAssigneeAdded;
-        BoardHubService.OnAssigneeRemoved -= HandleAssigneeRemoved;
         BoardHubService.OnCardMoved -= HandleCardMoved;
         BoardHubService.OnCardDescriptionUpdated -= HandleDescriptionUpdated;
         BoardHubService.OnCardRenamed -= HandleCardRenamed;
-        BoardHubService.OnAttachmentAdded -= HandleAttachmentAdded;
-        BoardHubService.OnAttachmentDeleted -= HandleAttachmentDeleted;
         BoardHubService.OnCardDeleted -= HandleCardDeleted;
     }
 }
