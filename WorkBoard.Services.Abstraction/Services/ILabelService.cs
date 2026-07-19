@@ -14,10 +14,6 @@ public interface ILabelService
         CreateLabelRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<LabelDto>> GetLabelsByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default);
-
     Task AddLabelToCardAsync(
         Guid cardId,
         Guid labelId,

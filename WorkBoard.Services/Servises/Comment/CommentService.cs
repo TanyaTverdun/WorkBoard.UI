@@ -19,36 +19,6 @@ internal class CommentService : ICommentService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<CommentDto>> GetCommentsByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _commentApi.GetCommentsByCardAsync(
-                cardId, 
-                cancellationToken);
-        }
-        catch (ApiException apiEx)
-        {
-            _logger.LogError(
-                apiEx,
-                "API error occurred while fetching comments for card {CardId}. " +
-                "Status: {StatusCode}",
-                cardId,
-                apiEx.StatusCode);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error occurred while fetching comments for card {CardId}",
-                cardId);
-            throw;
-        }
-    }
-
     public async Task<CommentDto> CreateCommentAsync(
         Guid cardId,
         CreateCommentRequest request,

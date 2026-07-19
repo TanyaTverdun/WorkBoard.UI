@@ -6,11 +6,6 @@ namespace WorkBoard.Services.Servises.Checklist;
 
 internal interface IChecklistApi
 {
-    [Get("/api/cards/{cardId}/checklists")]
-    Task<ApiResponse<ChecklistDto>> GetChecklistByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default);
-
     [Post("/api/cards/{cardId}/checklists")]
     Task<ChecklistDto> CreateChecklistAsync(
         Guid cardId,
