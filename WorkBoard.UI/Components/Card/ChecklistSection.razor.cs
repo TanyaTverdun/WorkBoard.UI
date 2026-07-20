@@ -406,7 +406,7 @@ public partial class ChecklistSection : ComponentBase, IDisposable
             _checklist.Items != null)
         {
             var currentItems = _checklist.Items.ToList();
-            var itemToRemove = currentItems.FirstOrDefault(x => x.Id == data.ItemId);
+            var itemToRemove = currentItems.FirstOrDefault(x => x.Id == data.Item.Id);
 
             if (itemToRemove != null)
             {

@@ -238,6 +238,18 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
         }
     }
 
+    private string GetContrastColor(MudBlazor.Utilities.MudColor color)
+    {
+        if (color == null)
+        {
+            return "white";
+        }
+
+        double luminance = 0.299 * color.R + 0.587 * color.G + 0.114 * color.B;
+
+        return luminance > 128 ? "black" : "white";
+    }
+
     private void HandleLabelAddedToCard(Guid cardId, LabelDto label)
     {
         if (CardId == cardId && 

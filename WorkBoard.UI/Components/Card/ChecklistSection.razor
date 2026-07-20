@@ -19,6 +19,7 @@
                     <MudTextField @bind-Value=@_editedChecklistTitle
                                   Margin=@Margin.Dense
                                   Variant=@Variant.Outlined
+                                  MaxLength="50"
                                   Class="mt-0 pt-0"
                                   Style="max-width: 250px;"
                                   Immediate="true"
@@ -103,6 +104,7 @@
                                       Margin=@Margin.Dense
                                       Variant=@Variant.Outlined
                                       Class="flex-grow-1 mr-2 checklist-title-input"
+                                      MaxLength="200"
                                       AutoFocus="true"
                                       Immediate="true"
                                       OnKeyDown=@(async (e) => { if (e.Key == "Enter") await SaveItemTitleAsync(item); }) />
@@ -126,10 +128,15 @@
                         <MudCheckBox T="bool"
                                      Value=@item.IsDone
                                      ValueChanged=@((bool val) => UpdateItemStatusAsync(item, val))
-                                     Label=@item.Title
                                      Color=@Color.Success
                                      Dense="true"
-                                     Class="flex-grow-1 mr-2" />
+                                     Class="flex-grow-1 mr-2"
+                                     Style="min-width: 0;">
+
+                            <span style="word-break: break-all; white-space: normal; line-height: 1.2;">
+                                @item.Title
+                            </span>
+                        </MudCheckBox>
 
                         @if (_hoveredItemId == item.Id)
                         {

@@ -7,10 +7,14 @@ using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.UI.ViewModels.Board;
 
-namespace WorkBoard.UI.Components.Boards;
+namespace WorkBoard.UI.Components.Card;
 
-public partial class CardDetails
+public partial class CardDetails: ComponentBase, IDisposable
 {
+    private const string ImportCommand = "import";
+
+    private const string JsModulePath = "./Components/Boards/CardDetails.razor.js";
+
     [CascadingParameter] 
     IMudDialogInstance MudDialog { get; set; } = default!;
 
@@ -112,9 +116,16 @@ public partial class CardDetails
     {
         if (firstRender)
         {
-            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
-                "import",
-                "./Components/Boards/CardDetails.razor.js");
+            try
+            {
+                _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                    ImportCommand,
+                    JsModulePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading JS module: {ex.Message}");
+            }
         }
     }
 
