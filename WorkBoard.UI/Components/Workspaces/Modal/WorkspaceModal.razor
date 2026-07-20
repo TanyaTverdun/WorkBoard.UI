@@ -54,6 +54,7 @@
                             <InputText id="workspaceName"
                                        class="form-control bg-dark border-secondary text-white shadow-none py-2"
                                        placeholder="e.g. Corp Engineering"
+                                       maxlength="50"
                                        @bind-Value=@Model.Name />
                             <ValidationMessage For=@(() => Model.Name) 
                                                class="text-danger small mt-1 d-block ms-1" />

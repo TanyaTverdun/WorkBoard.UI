@@ -51,6 +51,21 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
         }
     }
 
+    public async Task ToggleAssigneeAsync(UserSearchDto user)
+    {
+        var existingAssignee = _assignees
+            .FirstOrDefault(a => a.UserId == user.UserId);
+
+        if (existingAssignee != null)
+        {
+            await RemoveAssigneeAsync(existingAssignee);
+        }
+        else
+        {
+            await AddAssigneeAsync(user);
+        }
+    }
+
     private async Task AddAssigneeAsync(UserSearchDto user)
     {
         try

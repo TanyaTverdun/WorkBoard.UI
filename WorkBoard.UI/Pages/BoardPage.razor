@@ -302,7 +302,8 @@
 		<ChildContent>
 			@foreach (var item in _sections)
 			{
-				<MudPaper Elevation="0"
+				<MudPaper @key="item.Id"
+						  Elevation="0"
 						  Width="17rem"
 						  Class="pa-4 ma-4 d-flex flex-column rounded-lg kanban-column">
 					<MudToolBar Gutters="false"
@@ -476,10 +477,121 @@
 			</MudPaper>
 		</ChildContent>
 		<ItemRenderer>
-			<MudPaper Elevation="1"
-					  Class="pa-4 rounded-lg my-3 task-item cursor-pointer hover-effect"
+			<MudPaper Elevation="0"
+					  Class="pa-3 rounded-lg my-3 task-item cursor-pointer d-flex flex-column"
+					  Style="box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.05) !important; border: 1px solid #e2e8f0; transition: transform 0.1s, box-shadow 0.1s;"
 					  @onclick=@(() => OpenCardDetails(context))>
-				@context.Name
+
+				@if (context.Labels != null && context.Labels.Any())
+				{
+					<div class="d-flex flex-wrap gap-2 mb-2">
+						@foreach (var label in context.Labels)
+						{
+							var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
+							var chipStyle = $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.5); font-weight: 400; font-size: 0.75rem; height: 24px;";
+
+							<MudChip T="string"
+									 Size=@Size.Small
+									 Class="ma-0 rounded-pill px-2"
+									 Style=@chipStyle>
+								@label.Name
+							</MudChip>
+						}
+					</div>
+				}
+
+				<MudText Typo=@Typo.body1 
+						 Class="font-weight-regular mb-2" 
+						 Style="font-size: 0.95rem; line-height: 1.4; color: #1e293b;">
+					@context.Name
+				</MudText>
+
+				@if (context.DueDate.HasValue)
+				{
+					bool isOverdue = context.DueDate.Value < DateTime.Now;
+					string themeColor = isOverdue ? "#ef4444" : "#f97316";
+					var dateIcon = isOverdue ? Icons.Material.Outlined.ErrorOutline : Icons.Material.Outlined.AccessTime;
+
+					<div class="d-flex align-center rounded px-1 mb-2"
+						 style="background-color: @(themeColor)15; color: @(themeColor); width: fit-content; height: 22px;">
+
+						<MudIcon Icon=@dateIcon
+								 Style="font-size: 14px; margin-right: 4px;" />
+
+						<span style="font-size: 0.75rem; font-weight: 500; line-height: 1;">
+							@context.DueDate.Value.ToString("dd MMM")
+						</span>
+					</div>
+				}
+
+				@if (context.ChecklistTotalItems > 0)
+				{
+					bool isChecklistDone = context.ChecklistDoneItems == context.ChecklistTotalItems;
+
+					var progressColor = isChecklistDone ? Color.Success : Color.Info;
+					string iconColor = isChecklistDone ? "#10b981" : "#64748b";
+
+					<div class="d-flex flex-column gap-1 mb-3">
+						<div class="d-flex align-center" style="font-size: 0.75rem; font-weight: 500; color: #94a3b8;">
+							<MudIcon Icon=@Icons.Material.Outlined.CheckBox
+									 Size=@Size.Small
+									 Style=@($"font-size: 15px; margin-right: 4px; color: {iconColor};") />
+							<span>@context.ChecklistDoneItems/@context.ChecklistTotalItems</span>
+						</div>
+
+						<MudProgressLinear Color=@progressColor
+										   Size=@Size.Small
+										   Value=@((double)context.ChecklistDoneItems / context.ChecklistTotalItems * 100)
+										   Class="rounded-pill"
+										   Style="height: 4px; background-color: #e2e8f0;" />
+					</div>
+				}
+
+				<div class="d-flex align-center justify-space-between mt-auto pt-1">
+
+					<div class="d-flex align-center gap-3 text-muted" 
+						 style="font-size: 0.75rem; font-weight: 500; color: #94a3b8 !important;">
+						@if (context.AttachmentsCount > 0)
+						{
+							<div class="d-flex align-center gap-1">
+								<MudIcon Icon=@Icons.Material.Outlined.AttachFile 
+										 Style="font-size: 14px;" />
+								<span>@context.AttachmentsCount</span>
+							</div>
+						}
+						@if (context.CommentsCount > 0)
+						{
+							<div class="d-flex align-center gap-1">
+								<MudIcon Icon=@Icons.Material.Outlined.ModeComment 
+										 Style="font-size: 14px;" />
+								<span>@context.CommentsCount</span>
+							</div>
+						}
+					</div>
+
+					@if (context.Assignees != null && context.Assignees.Any())
+					{
+						<MudAvatarGroup Max="3" 
+										Spacing="2" 
+										MaxColor=@Color.Dark Size=@Size.Small>
+							@foreach (var assignee in context.Assignees)
+							{
+								@if (!string.IsNullOrEmpty(assignee.AvatarUrl))
+								{
+									<MudAvatar Size=@Size.Small Image="@assignee.AvatarUrl" />
+								}
+								else
+								{
+									<MudAvatar Size=@Size.Small 
+											   Color=@Color.Primary 
+											   Style="font-size: 0.7rem; font-weight: 600;">
+										@assignee.Initials
+									</MudAvatar>
+								}
+							}
+						</MudAvatarGroup>
+					}
+				</div>
 			</MudPaper>
 		</ItemRenderer>
 	</MudDropContainer>

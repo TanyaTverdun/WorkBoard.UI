@@ -1,5 +1,6 @@
 ﻿namespace WorkBoard.Services.Abstraction.DTOs;
 
 public record ChecklistItemDeletedDto(
-    Guid ChecklistId, 
-    Guid ItemId);
+    Guid CardId,
+    Guid ChecklistId,
+    ChecklistItemDto Item);

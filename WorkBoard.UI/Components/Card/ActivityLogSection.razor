@@ -12,19 +12,23 @@ else
         @foreach (var log in _activityLogs)
         {
             <div class="py-2">
-                <div class="d-flex align-center gap-2">
-                    <div class="d-flex align-center gap-1">
+                <div class="d-flex align-start gap-2">
+
+                    <div class="d-flex align-center gap-1 flex-shrink-0 mt-1">
                         <MudAvatar Size=@Size.Small Color=@Color.Tertiary>
                             @log.Initials
                         </MudAvatar>
                     </div>
 
-                    <MudText Typo=@Typo.body2 Class="font-weight-medium">
+                    <MudText Typo=@Typo.body2
+                             Class="font-weight-medium flex-grow-1"
+                             Style="word-break: break-word; min-width: 0; line-height: 1.5;">
                         @log.Text
                     </MudText>
                 </div>
 
-                <MudText Typo=@Typo.caption Class="text-muted">
+                <MudText Typo=@Typo.caption
+                         Class="text-muted">
                     @log.CreatedAt.ToLocalTime().ToString("MMM dd, HH:mm")
                 </MudText>
             </div>

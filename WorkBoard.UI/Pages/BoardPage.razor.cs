@@ -11,7 +11,7 @@ using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Requestsж;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
-using WorkBoard.UI.Components.Boards;
+using WorkBoard.UI.Components.Card;
 using WorkBoard.UI.ViewModels.Board;
 
 namespace WorkBoard.UI.Pages;
@@ -116,19 +116,19 @@ public partial class BoardPage
         BoardHubService.OnCardDeleted += HandleCardDeleted;
         BoardHubService.OnCardRenamed += HandleCardRenamed;
         BoardHubService.OnCardDueDateUpdated += HandleCardDueDateUpdated;
-
-        try
-        {
-            var backendUrl = UiOptions.Value.BackendBaseUrl;
-
-            await BoardHubService.StartConnectionAsync(backendUrl, BoardIdGuid);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(
-                "Working in offline mode. Live updates are unavailable", 
-                Severity.Warning);
-        }
+        BoardHubService.OnLabelAddedToCard += HandleLabelAddedToCard;
+        BoardHubService.OnLabelRemovedFromCard += HandleLabelRemovedFromCard;
+        BoardHubService.OnLabelUpdated += HandleLabelUpdated;
+        BoardHubService.OnLabelDeleted += HandleLabelDeleted;
+        BoardHubService.OnAssigneeAdded += HandleAssigneeAdded;
+        BoardHubService.OnAssigneeRemoved += HandleAssigneeRemoved;
+        BoardHubService.OnAttachmentAdded += HandleAttachmentAdded;
+        BoardHubService.OnAttachmentDeleted += HandleAttachmentDeleted;
+        BoardHubService.OnChecklistDeleted += HandleChecklistDeleted;
+        BoardHubService.OnChecklistItemAdded += HandleChecklistItemAdded;
+        BoardHubService.OnChecklistItemDeleted += HandleChecklistItemDeleted;
+        BoardHubService.OnChecklistItemStatusUpdated += HandleChecklistItemStatusUpdated;
+        BoardHubService.OnCommentAdded += HandleNewComment;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -175,15 +175,23 @@ public partial class BoardPage
                 var sectionName = _sections.FirstOrDefault(
                     s => s.Id == c.SectionId)?.Name ?? string.Empty;
 
-                return new KanbanTaskViewModel(
-                    c.Id,
-                    c.Title,
-                    sectionName,
-                    c.Position,
-                    BoardIdGuid,
-                    c.SectionId,
-                    c.Description,
-                    c.DueDate);
+                return new KanbanTaskViewModel
+                {
+                    Id = c.Id,
+                    Name = c.Title,
+                    Status = sectionName,
+                    Position = c.Position,
+                    BoardId = BoardIdGuid,
+                    SectionId = c.SectionId,
+                    Description = c.Description,
+                    DueDate = c.DueDate,
+                    CommentsCount = c.CommentsCount,
+                    AttachmentsCount = c.AttachmentsCount,
+                    ChecklistTotalItems = c.ChecklistTotalItems,
+                    ChecklistDoneItems = c.ChecklistDoneItems,
+                    Labels = c.Labels,
+                    Assignees = c.Assignees
+                };
 
             }).OrderBy(t => t.Position).ToList();
         }
@@ -194,6 +202,19 @@ public partial class BoardPage
                 Severity.Warning);
 
             NavigationManager.NavigateTo("/");
+        }
+
+        try
+        {
+            var backendUrl = UiOptions.Value.BackendBaseUrl;
+
+            await BoardHubService.StartConnectionAsync(backendUrl, BoardIdGuid);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                "Working in offline mode. Live updates are unavailable",
+                Severity.Warning);
         }
     }
 
@@ -282,7 +303,6 @@ public partial class BoardPage
 
             newSectionModel.Name = string.Empty;
             _addSectionOpen = false;
-
         }
         catch (Exception)
         {
@@ -620,15 +640,23 @@ public partial class BoardPage
 
         if (targetSection != null)
         {
-            var newTask = new KanbanTaskViewModel(
-                newCard.Id,
-                newCard.Title,
-                targetSection.Name,
-                newCard.Position,
-                BoardIdGuid,
-                targetSection.Id,
-                newCard.Description,
-                null);
+            var newTask = new KanbanTaskViewModel 
+            {
+                Id = newCard.Id,
+                Name = newCard.Title,
+                Status = targetSection.Name,
+                Position = newCard.Position,
+                BoardId = BoardIdGuid,
+                SectionId = targetSection.Id,
+                Description = newCard.Description,
+                DueDate = null,
+                CommentsCount = newCard.CommentsCount,
+                AttachmentsCount = newCard.AttachmentsCount,
+                ChecklistTotalItems = newCard.ChecklistTotalItems,
+                ChecklistDoneItems = newCard.ChecklistDoneItems,
+                Labels = newCard.Labels,
+                Assignees = newCard.Assignees
+            };
 
             _tasks.Add(newTask);
 
@@ -658,10 +686,12 @@ public partial class BoardPage
             Position = newSection.Position
         });
 
-        InvokeAsync(() =>
+        _sections = _sections.OrderBy(s => s.Position).ToList();
+
+        InvokeAsync(async () =>
         {
             StateHasChanged();
-            _dropContainer.Refresh();
+            _dropContainer?.Refresh();
         });
     }
 
@@ -827,6 +857,247 @@ public partial class BoardPage
 
     private void HandleCardDueDateUpdated(CardDueDateUpdateDto data)
     {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            task.DueDate = data.DueDate?.Date;
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleLabelAddedToCard(Guid cardId, LabelDto label)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == cardId);
+        if (task != null && !task.Labels.Any(l => l.Id == label.Id))
+        {
+            task.Labels.Add(label);
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleLabelRemovedFromCard(Guid cardId, Guid labelId)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == cardId);
+        if (task != null)
+        {
+            var removedCount = task.Labels.RemoveAll(l => l.Id == labelId);
+            if (removedCount > 0)
+            {
+                InvokeAsync(() =>
+                {
+                    StateHasChanged();
+                    _dropContainer.Refresh();
+                });
+            }
+        }
+    }
+
+    private void HandleLabelUpdated(LabelDto updatedLabel)
+    {
+        bool changed = false;
+
+        foreach (var task in _tasks)
+        {
+            var label = task.Labels.FirstOrDefault(l => l.Id == updatedLabel.Id);
+            if (label != null)
+            {
+                label.Name = updatedLabel.Name;
+                label.Color = updatedLabel.Color;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleLabelDeleted(Guid labelId)
+    {
+        bool changed = false;
+
+        foreach (var task in _tasks)
+        {
+            if (task.Labels.RemoveAll(l => l.Id == labelId) > 0)
+            {
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleAssigneeAdded(AssigneeAddDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null && 
+            !task.Assignees.Any(a => a.UserId == data.Assignee.UserId))
+        {
+            task.Assignees.Add(data.Assignee);
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleAssigneeRemoved(AssigneeRemoveDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            var removedCount = task.Assignees.RemoveAll(a => a.UserId == data.UserId);
+            if (removedCount > 0)
+            {
+                InvokeAsync(() =>
+                {
+                    StateHasChanged();
+                    _dropContainer.Refresh();
+                });
+            }
+        }
+    }
+
+    private void HandleAttachmentAdded(AttachmentAddedDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            task.AttachmentsCount++;
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleAttachmentDeleted(AttachmentDeletedDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null && task.AttachmentsCount > 0)
+        {
+            task.AttachmentsCount--;
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleChecklistDeleted(ChecklistDeletedDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            task.ChecklistTotalItems = 0;
+            task.ChecklistDoneItems = 0;
+        }
+
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+            _dropContainer.Refresh();
+        });
+    }
+
+    private void HandleChecklistItemAdded(ChecklistItemAddedDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            task.ChecklistTotalItems++;
+            if (data.Item.IsDone)
+            {
+                task.ChecklistDoneItems++;
+            }
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleChecklistItemDeleted(ChecklistItemDeletedDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            if (task.ChecklistTotalItems > 0)
+            {
+                task.ChecklistTotalItems--;
+            }
+            if (data.Item.IsDone && task.ChecklistDoneItems > 0)
+            {
+                task.ChecklistDoneItems--;
+            }
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleChecklistItemStatusUpdated(ChecklistItemStatusUpdatedDto data)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
+        if (task != null)
+        {
+            if (data.IsDone)
+            {
+                task.ChecklistDoneItems++;
+            }
+            else if (task.ChecklistDoneItems > 0)
+            {
+                task.ChecklistDoneItems--;
+            }
+
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer.Refresh();
+            });
+        }
+    }
+
+    private void HandleNewComment(CommentDto newComment)
+    {
+        var task = _tasks.FirstOrDefault(t => t.Id == newComment.CardId);
+        if (task != null)
+        {
+            task.CommentsCount++;
+        }
+
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+            _dropContainer.Refresh();
+        });
     }
 
     public async ValueTask DisposeAsync()
@@ -843,9 +1114,20 @@ public partial class BoardPage
         BoardHubService.OnCardDeleted -= HandleCardDeleted;
         BoardHubService.OnCardRenamed -= HandleCardRenamed;
         BoardHubService.OnCardDueDateUpdated -= HandleCardDueDateUpdated;
-
+        BoardHubService.OnLabelAddedToCard -= HandleLabelAddedToCard;
+        BoardHubService.OnLabelRemovedFromCard -= HandleLabelRemovedFromCard;
+        BoardHubService.OnLabelUpdated -= HandleLabelUpdated;
+        BoardHubService.OnLabelDeleted -= HandleLabelDeleted;
+        BoardHubService.OnAssigneeAdded -= HandleAssigneeAdded;
+        BoardHubService.OnAssigneeRemoved -= HandleAssigneeRemoved;
+        BoardHubService.OnAttachmentAdded -= HandleAttachmentAdded;
+        BoardHubService.OnAttachmentDeleted -= HandleAttachmentDeleted;
+        BoardHubService.OnChecklistDeleted -= HandleChecklistDeleted;
+        BoardHubService.OnChecklistItemAdded -= HandleChecklistItemAdded;
+        BoardHubService.OnChecklistItemDeleted -= HandleChecklistItemDeleted;
+        BoardHubService.OnChecklistItemStatusUpdated -= HandleChecklistItemStatusUpdated;
+        BoardHubService.OnCommentAdded -= HandleNewComment;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }
-
 }

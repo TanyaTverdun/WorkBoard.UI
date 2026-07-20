@@ -366,7 +366,7 @@ internal class BoardHubService : IBoardHubService
                 _logger.LogInformation(
                     "Received checklist item deleted via SignalR " +
                     "for item: {ItemId}",
-                    data.ItemId);
+                    data.Item.Id);
 
                 OnChecklistItemDeleted?.Invoke(data);
             });

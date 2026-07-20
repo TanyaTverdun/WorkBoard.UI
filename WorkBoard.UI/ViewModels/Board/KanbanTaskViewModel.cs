@@ -1,4 +1,6 @@
-﻿namespace WorkBoard.UI.ViewModels.Board;
+﻿using WorkBoard.Services.Abstraction.DTOs;
+
+namespace WorkBoard.UI.ViewModels.Board;
 
 public class KanbanTaskViewModel
 {
@@ -10,24 +12,10 @@ public class KanbanTaskViewModel
     public DateTime? DueDate { get; set; }
     public Guid BoardId { get; set; }
     public Guid SectionId { get; set; }
-
-    public KanbanTaskViewModel(
-        Guid id,
-        string name,
-        string status,
-        double position,
-        Guid boardId,
-        Guid sectionId,
-        string? description,
-        DateTime? dueDate)
-    {
-        Id = id;
-        Name = name;
-        Status = status;
-        Position = position;
-        BoardId = boardId;
-        SectionId = sectionId;
-        Description = description;
-        DueDate = dueDate;
-    }
+    public int CommentsCount { get; set; }
+    public int AttachmentsCount { get; set; }
+    public int ChecklistTotalItems { get; set; }
+    public int ChecklistDoneItems { get; set; }
+    public List<LabelDto> Labels { get; set; } = new();
+    public List<CardAssigneeDto> Assignees { get; set; } = new();
 }

@@ -93,11 +93,13 @@ public partial class SidebarWorkspaces : IDisposable
 
     protected void OpenCreateModal()
     {
+        _workspaceToModify = null;
         _isCreateModalOpen = true;
     }
 
     protected void CloseCreateModal()
     {
+        _workspaceToModify = null;
         _isCreateModalOpen = false;
     }
 
