@@ -76,7 +76,7 @@
 
                     <div @key=@member.UserId
                          class="d-flex align-center gap-3 pa-2 rounded-lg cursor-pointer mud-ripple assignee-row"
-                         @onclick=@(() => AddAssigneeAsync(member))>
+                         @onclick=@(() => ToggleAssigneeAsync(member))>
 
                         <MudAvatar Size=@Size.Medium
                                    Color=@Color.Tertiary
