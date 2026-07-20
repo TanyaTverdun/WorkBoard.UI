@@ -168,6 +168,7 @@
 												   Class="avatar-tiny">
 											@(user.FullName?.FirstOrDefault())
 										</MudAvatar>
+
 										<div class="d-flex flex-column">
 											<MudText Typo=@Typo.body2
 													 Class="font-weight-medium">@user.FullName</MudText>
@@ -203,99 +204,326 @@
 			</div>
 		</div>
 
-		@if (!IsCurrentUserObserver)
-		{
-			<div class="position-relative">
-				<MudIconButton Icon=@Icons.Material.Rounded.Layers
-							   Size=@Size.Small
-							   Class="text-muted"
-							   OnClick=@OpenReorderPopover />
+		<div class="d-flex">
+			<MudButtonGroup Variant=@Variant.Outlined
+							OverrideStyles="false"
+							Class="rounded-lg mr-4 transition-all custom-hover-btn custom-header-btn">
 
-				<MudPopover Open=@_isReorderPopoverOpen
-							AnchorOrigin=@Origin.BottomRight
-							TransformOrigin=@Origin.TopRight
-							Class="pa-4 pt-2 mud-elevation-25 rounded-lg reorder-popover">
+				<MudButton OnClick=@ToggleFilterPopover
+						   Ripple="false"
+						   Class="px-3 border-0 custom-hover-btn"
+						   Style="text-transform: none; min-width: 0;">
 
-					<div class="d-flex justify-space-between align-center mb-2">
-						<MudText Typo=@Typo.subtitle2
-								 Class="font-weight-bold">Reorder Sections</MudText>
-						<MudIconButton Icon=@Icons.Material.Rounded.Close
-									   Size=@Size.Small
-									   OnClick=@CloseReorderPopover />
-					</div>
+					<MudIcon Icon=@Icons.Material.Outlined.FilterAlt
+							 Size=@Size.Small
+							 Class="mr-2"
+							 Style="font-size: 1.1rem; color: #475569" />
 
-					@if (_reorderList.Any())
+					<span style="font-size: 0.875rem; font-weight: 500; color: #334155">
+						Filter @(HasActiveFilters ? $"({ActiveFiltersCount})" : "")
+					</span>
+
+					@if (!HasActiveFilters)
 					{
-						<MudText Typo=@Typo.body2
-								 Class="text-muted mb-4">
-							Drag rows to change the order of sections
-						</MudText>
+						<MudIcon Icon=@Icons.Material.Rounded.ExpandMore
+								 Size=@Size.Small
+								 Class="ml-1"
+								 Style="font-size: 1.2rem;" />
+					}
+				</MudButton>
 
-						<MudDropContainer T=@KanbanSectionViewModel
-										  Items=@_reorderList
-										  ItemsSelector=@((item, zone) => true)
-										  ItemDropped=@SectionDropped
-										  Class="d-flex flex-column mb-4 overflow-y-auto pe-2 reorder-list-container">
-							<ChildContent>
-								<MudDropZone T=@KanbanSectionViewModel
-											 Identifier="reorder-zone"
-											 AllowReorder="true"
-											 Class="d-flex flex-column gap-2" />
-							</ChildContent>
-							<ItemRenderer>
-								<MudPaper Elevation="0"
-										  Class="pa-2 px-3 d-flex align-center border-solid border-2 mud-border-lines-default rounded-lg">
-									<MudIcon Icon=@Icons.Material.Rounded.DragIndicator
-											 Size=@Size.Small
-											 Class="text-muted mr-3" />
+				@if (HasActiveFilters)
+				{
+					<MudButton OnClick=@ClearAllFiltersAsync
+							   Ripple="false"
+							   Class="px-2 custom-hover-btn clear-filters-btn">
 
-									<MudText Typo=@Typo.body2
-											 Class="font-weight-medium reorder-item-text">@context.Name</MudText>
-									<MudSpacer />
+						<MudIcon Icon=@Icons.Material.Rounded.Close
+								 Size=@Size.Small
+								 Style="font-size: 1.1rem;" />
+					</MudButton>
+				}
+			</MudButtonGroup>
 
-									<MudText Typo=@Typo.caption
-											 Class="text-muted">
-										@(_tasks.Count(t => t.SectionId == context.Id)) cards
+			<MudPopover Open=@_isFilterPopoverOpen
+						AnchorOrigin=@Origin.BottomRight
+						TransformOrigin=@Origin.TopRight
+						Class="pa-4 pt-2 mud-elevation-25 rounded-lg"
+						Style="width: 320px; max-height: 80vh; overflow-y: auto; z-index: 9999;">
+
+				<div class="d-flex justify-space-between align-center mb-4">
+					<MudText Typo=@Typo.subtitle1 
+							 Class="font-weight-bold text-dark">Filter Cards</MudText>
+
+					<MudIconButton Icon=@Icons.Material.Rounded.Close
+								   Size=@Size.Small
+								   OnClick=@ToggleFilterPopover
+								   Class="text-muted" />
+				</div>
+
+				<div class="mb-5">
+					<MudText Typo=@Typo.caption 
+							 Class="text-muted font-weight-bold d-block mb-3">
+						FILTER BY MEMBER
+					</MudText>
+
+					<div class="d-flex flex-wrap gap-2">
+						@{
+							var displayMembers = _membersFilterExpanded
+								? _boardMembers
+								: _boardMembers?.Take(VisibleFiltersCount).ToList();
+							var hiddenMembersCount = (_boardMembers?.Count ?? 0) - VisibleFiltersCount;
+
+							bool isNoAssigneeSelected = _selectedFilterMembers.Contains(Guid.Empty);
+						}
+
+						<MudPaper Elevation="0"
+								  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isNoAssigneeSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
+								  @onclick=@(async () => await ToggleMemberFilter(Guid.Empty))>
+
+							<MudIcon Icon=@Icons.Material.Outlined.PersonOff
+									 Size=@Size.Small
+									 Style=@($"color: {(isNoAssigneeSelected ? "white" : "#64748b")}; font-size: 1.1rem;") />
+							<span style="font-size: 0.8125rem;">No Assignee</span>
+						</MudPaper>
+
+						@if (displayMembers != null)
+						{
+							@foreach (var member in displayMembers)
+							{
+								bool isSelected = _selectedFilterMembers.Contains(member.Dto.UserId);
+
+								<MudPaper @key=@member.Dto.UserId
+										  Elevation="0"
+										  Class=@($"filtered-items d-flex align-center rounded-pill px-2 gap-2 border-solid border cursor-pointer {(isSelected ? "mud-theme-primary mud-border-primary" : "bg-transparent mud-border-lines-default")}")
+										  @onclick=@(async () => await ToggleMemberFilter(member.Dto.UserId))>
+
+									<MudAvatar Size=@Size.Small
+											   Color=@(isSelected ? Color.Surface : Color.Tertiary)
+											   Style="height: 20px; width: 20px; font-size: 0.65rem;">
+										@member.Dto.Initials
+									</MudAvatar>
+
+									<MudText Typo=@Typo.body2 
+											 Class="text-truncate" 
+											 Style="max-width: 120px;">
+										@member.Dto.FullName
 									</MudText>
 								</MudPaper>
-							</ItemRenderer>
-						</MudDropContainer>
+							}
 
-						<div class="d-flex gap-2">
-							<MudButton Variant=@Variant.Filled
-									   Color=@Color.Primary
-									   FullWidth="true"
-									   Class="rounded-lg text-none custom-btn"
-									   OnClick=@ApplySectionOrderAsync>
-								Apply Order
-							</MudButton>
+							@if (!_membersFilterExpanded && hiddenMembersCount > 0)
+							{
+								<MudPaper Elevation="0"
+										  Class="filtered-items d-flex align-center rounded-pill px-3 border-solid border mud-border-lines-default bg-transparent cursor-pointer"
+										  @onclick=@(() => _membersFilterExpanded = true)>
+									<span style="font-size: 0.8125rem; color: #64748b;">+@hiddenMembersCount</span>
+								</MudPaper>
+							}
+						}
+					</div>
+				</div>
 
-							<MudButton Variant=@Variant.Filled
-									   Color=@Color.Surface
-									   FullWidth="true"
-									   Class="rounded-lg text-none text-btn"
-									   DropShadow="false"
-									   OnClick=@CloseReorderPopover>
-								Cancel
-							</MudButton>
+				<div class="mb-5">
+					<MudText Typo=@Typo.caption 
+							 Class="text-muted font-weight-bold d-block mb-3">
+						FILTER BY DUE DATE
+					</MudText>
+
+					<div class="d-flex flex-wrap gap-2">
+
+						@foreach (var filter in _dateFilters)
+						{
+							bool isSelected = _selectedFilterDueDates.Contains(filter.Name);
+
+							<MudPaper @key=@filter.Name
+									  Elevation="0"
+									  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
+									  @onclick=@(async () => await ToggleDueDateFilter(filter.Name))>
+
+								<MudIcon Icon=@filter.Icon
+										 Size=@Size.Small
+										 Style=@($"color: {(isSelected ? "white" : filter.Color)}; font-size: 1.1rem;") />
+
+								<span style="font-size: 0.8125rem;">@filter.Name</span>
+							</MudPaper>
+						}
+					</div>
+				</div>
+
+				<div class="mb-2">
+					<MudText Typo=@Typo.caption 
+							 Class="text-muted font-weight-bold d-block mb-3">
+						FILTER BY LABEL
+					</MudText>
+
+					<div class="d-flex flex-wrap gap-2">
+						@{
+							var allLabels = BoardUniqueLabels.ToList();
+							var displayLabels = _labelsFilterExpanded
+								? allLabels
+								: allLabels.Take(VisibleFiltersCount).ToList();
+							var hiddenLabelsCount = allLabels.Count - VisibleFiltersCount;
+
+							bool isNoLabelSelected = _selectedFilterLabels.Contains(Guid.Empty);
+						}
+
+						<MudPaper Elevation="0"
+								  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isNoLabelSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
+								  @onclick=@(async () => await ToggleLabelFilter(Guid.Empty))>
+
+							<MudIcon Icon=@Icons.Material.Outlined.LabelOff
+									 Size=@Size.Small
+									 Style=@($"color: {(isNoLabelSelected ? "white" : "#64748b")}; font-size: 1.1rem;") />
+							<span style="font-size: 0.8125rem;">No Labels</span>
+						</MudPaper>
+
+						@foreach (var label in displayLabels)
+						{
+							bool isSelected = _selectedFilterLabels.Contains(label.Id);
+							var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
+
+							var chipStyle = isSelected
+													? $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); color: white; border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); height: 32px; cursor: pointer;"
+													: $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.5); height: 32px; cursor: pointer;";
+
+							var dotColor = isSelected ? "white" : (label.Color ?? "#808080");
+
+							<MudPaper @key=@label.Id
+									  Elevation="0"
+									  Style=@chipStyle
+									  Class="d-flex align-center rounded-pill px-3 py-1 gap-2"
+									  @onclick=@(async () => await ToggleLabelFilter(label.Id))>
+
+								<div class="rounded-circle lable-point" 
+									 style="background-color: @dotColor;">
+								</div>
+
+								<span style="font-size: 0.8125rem;">@label.Name</span>
+							</MudPaper>
+						}
+
+						@if (!_labelsFilterExpanded && hiddenLabelsCount > 0)
+						{
+							<MudPaper Elevation="0"
+									  Class="d-flex align-center rounded-pill px-3 border-solid border mud-border-lines-default bg-transparent cursor-pointer filtered-items"
+									  @onclick=@(() => _labelsFilterExpanded = true)>
+								<span clas="hidden-labels-count">+@hiddenLabelsCount</span>
+							</MudPaper>
+						}
+					</div>
+				</div>
+
+			</MudPopover>
+
+			<MudOverlay Visible=@_isFilterPopoverOpen
+						OnClick=@ToggleFilterPopover
+						AutoClose="true"
+						ZIndex="9998" />
+
+			@if (!IsCurrentUserObserver)
+			{
+				<div class="position-relative">
+					<MudButton Variant=@Variant.Outlined
+							   OnClick=@OpenReorderPopover
+							   Ripple="false"
+							   Class="rounded-lg px-2 transition-all custom-hover-btn custom-header-btn">
+
+						<MudIcon Icon=@Icons.Material.Outlined.Layers
+								 Size=@Size.Small
+								 Class="mr-1"
+								 Style="font-size: 1.1rem;" />
+
+						<MudIcon Icon=@Icons.Material.Rounded.MoreHoriz
+								 Size=@Size.Small
+								 Style="font-size: 1.1rem;" />
+					</MudButton>
+
+					<MudPopover Open=@_isReorderPopoverOpen
+								AnchorOrigin=@Origin.BottomRight
+								TransformOrigin=@Origin.TopRight
+								Class="pa-4 pt-2 mud-elevation-25 rounded-lg reorder-popover">
+
+						<div class="d-flex justify-space-between align-center mb-2">
+							<MudText Typo=@Typo.subtitle2
+									 Class="font-weight-bold">Reorder Sections</MudText>
+							<MudIconButton Icon=@Icons.Material.Rounded.Close
+										   Size=@Size.Small
+										   OnClick=@CloseReorderPopover />
 						</div>
-					}
-					else
-					{
-						<div class="d-flex flex-column align-center justify-center py-8 text-muted">
-							<MudIcon Icon=@Icons.Material.Rounded.ViewList Size=@Size.Large Class="mb-2" />
-							<MudText Typo=@Typo.body2>No sections yet. Create one to get started!</MudText>
-						</div>
-					}
-				</MudPopover>
-			</div>
-		}
-		
+
+						@if (_reorderList.Any())
+						{
+							<MudText Typo=@Typo.body2
+									 Class="text-muted mb-4">
+								Drag rows to change the order of sections
+							</MudText>
+
+							<MudDropContainer T=@KanbanSectionViewModel
+											  Items=@_reorderList
+											  ItemsSelector=@((item, zone) => true)
+											  ItemDropped=@SectionDropped
+											  Class="d-flex flex-column mb-4 overflow-y-auto pe-2 reorder-list-container">
+								<ChildContent>
+									<MudDropZone T=@KanbanSectionViewModel
+												 Identifier="reorder-zone"
+												 AllowReorder="true"
+												 Class="d-flex flex-column gap-2" />
+								</ChildContent>
+								<ItemRenderer>
+									<MudPaper Elevation="0"
+											  Class="pa-2 px-3 d-flex align-center border-solid border-2 mud-border-lines-default rounded-lg">
+										<MudIcon Icon=@Icons.Material.Rounded.DragIndicator
+												 Size=@Size.Small
+												 Class="text-muted mr-3" />
+
+										<MudText Typo=@Typo.body2
+												 Class="font-weight-medium reorder-item-text">@context.Name</MudText>
+										<MudSpacer />
+
+										<MudText Typo=@Typo.caption
+												 Class="text-muted">
+											@(_tasks.Count(t => t.SectionId == context.Id)) cards
+										</MudText>
+									</MudPaper>
+								</ItemRenderer>
+							</MudDropContainer>
+
+							<div class="d-flex gap-2">
+								<MudButton Variant=@Variant.Filled
+										   Color=@Color.Primary
+										   FullWidth="true"
+										   Class="rounded-lg text-none custom-btn"
+										   OnClick=@ApplySectionOrderAsync>
+									Apply Order
+								</MudButton>
+
+								<MudButton Variant=@Variant.Filled
+										   Color=@Color.Surface
+										   FullWidth="true"
+										   Class="rounded-lg text-none text-btn"
+										   DropShadow="false"
+										   OnClick=@CloseReorderPopover>
+									Cancel
+								</MudButton>
+							</div>
+						}
+						else
+						{
+							<div class="d-flex flex-column align-center justify-center py-8 text-muted">
+								<MudIcon Icon=@Icons.Material.Rounded.ViewList Size=@Size.Large Class="mb-2" />
+								<MudText Typo=@Typo.body2>No sections yet. Create one to get started!</MudText>
+							</div>
+						}
+					</MudPopover>
+				</div>
+			}
+		</div>
 	</div>
 
 	<MudDropContainer T=@KanbanTaskViewModel
 					  @ref=@_dropContainer
-					  Items=@_tasks
+					  Items=@FilteredTasks
 					  ItemsSelector=@((item, column) => item.SectionId.ToString() == column)
 					  ItemDropped=@TaskUpdated
 					  Class="d-flex flex-row px-6 pr-15 flex-grow-1 kanban-container">
@@ -500,8 +728,8 @@
 					</div>
 				}
 
-				<MudText Typo=@Typo.body1 
-						 Class="font-weight-regular mb-2" 
+				<MudText Typo=@Typo.body1
+						 Class="font-weight-regular mb-2"
 						 Style="font-size: 0.95rem; line-height: 1.4; color: #1e293b;">
 					@context.Name
 				</MudText>
@@ -549,12 +777,12 @@
 
 				<div class="d-flex align-center justify-space-between mt-auto pt-1">
 
-					<div class="d-flex align-center gap-3 text-muted" 
+					<div class="d-flex align-center gap-3 text-muted"
 						 style="font-size: 0.75rem; font-weight: 500; color: #94a3b8 !important;">
 						@if (context.AttachmentsCount > 0)
 						{
 							<div class="d-flex align-center gap-1">
-								<MudIcon Icon=@Icons.Material.Outlined.AttachFile 
+								<MudIcon Icon=@Icons.Material.Outlined.AttachFile
 										 Style="font-size: 14px;" />
 								<span>@context.AttachmentsCount</span>
 							</div>
@@ -562,7 +790,7 @@
 						@if (context.CommentsCount > 0)
 						{
 							<div class="d-flex align-center gap-1">
-								<MudIcon Icon=@Icons.Material.Outlined.ModeComment 
+								<MudIcon Icon=@Icons.Material.Outlined.ModeComment
 										 Style="font-size: 14px;" />
 								<span>@context.CommentsCount</span>
 							</div>
@@ -571,8 +799,8 @@
 
 					@if (context.Assignees != null && context.Assignees.Any())
 					{
-						<MudAvatarGroup Max="3" 
-										Spacing="2" 
+						<MudAvatarGroup Max="3"
+										Spacing="2"
 										MaxColor=@Color.Dark Size=@Size.Small>
 							@foreach (var assignee in context.Assignees)
 							{
@@ -582,8 +810,8 @@
 								}
 								else
 								{
-									<MudAvatar Size=@Size.Small 
-											   Color=@Color.Primary 
+									<MudAvatar Size=@Size.Small
+											   Color=@Color.Primary
 											   Style="font-size: 0.7rem; font-weight: 600;">
 										@assignee.Initials
 									</MudAvatar>

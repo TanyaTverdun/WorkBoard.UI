@@ -162,3 +162,45 @@
 ::deep .cursor-pointer {
     cursor: pointer !important;
 }
+
+::deep .custom-header-btn {
+    border: 1px solid #d3d9e0 !important;
+    background-color: white !important;
+    color: #475569 !important;
+    height: 36px !important;
+    min-width: 0 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+
+::deep .custom-hover-btn:hover {
+    background-color: transparent !important;
+}
+
+::deep .custom-hover-btn .mud-button-hover-overlay {
+    opacity: 0 !important;
+}
+
+.lable-point {
+    width: 8px;
+    height: 8px;
+}
+
+.hidden-labels-count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+::deep .filtered-items {
+    border-width: 1px !important;
+    height: 32px !important;
+}
+
+::deep .clear-filters-btn {
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+    border-left: 1px solid #d3d9e0 !important;
+    border-radius: 0 !important;
+    min-width: 0 !important;
+}
