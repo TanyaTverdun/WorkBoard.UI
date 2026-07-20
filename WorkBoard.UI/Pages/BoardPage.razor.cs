@@ -115,6 +115,7 @@ public partial class BoardPage
         BoardHubService.OnCardMoved += HandleCardMoved;
         BoardHubService.OnCardDeleted += HandleCardDeleted;
         BoardHubService.OnCardRenamed += HandleCardRenamed;
+        BoardHubService.OnCardDueDateUpdated += HandleCardDueDateUpdated;
 
         try
         {
@@ -180,6 +181,7 @@ public partial class BoardPage
                     sectionName,
                     c.Position,
                     BoardIdGuid,
+                    c.SectionId,
                     c.Description,
                     c.DueDate);
 
@@ -202,19 +204,27 @@ public partial class BoardPage
             return;
         }
 
+        var oldSectionId = info.Item.SectionId;
         var oldSectionName = info.Item.Status;
-        info.Item.Status = info.DropzoneIdentifier;
 
-        var targetSection = _sections.FirstOrDefault(
-            s => s.Name == info.DropzoneIdentifier);
+        if (!Guid.TryParse(info.DropzoneIdentifier, out var targetSectionId))
+        {
+            return;
+        }
+
+        var targetSection = _sections
+            .FirstOrDefault(s => s.Id == targetSectionId);
 
         if (targetSection == null)
         {
             return;
         }
 
+        info.Item.SectionId = targetSectionId;
+        info.Item.Status = targetSection.Name;
+
         var cardsInSection = _tasks
-            .Where(t => t.Status == targetSection.Name && t.Id != info.Item.Id)
+            .Where(t => t.SectionId == targetSectionId && t.Id != info.Item.Id)
             .OrderBy(t => t.Position)
             .ToList();
 
@@ -250,6 +260,7 @@ public partial class BoardPage
         }
         catch (Exception)
         {
+            info.Item.SectionId = oldSectionId;
             info.Item.Status = oldSectionName;
             Snackbar.Add("Failed to move card", Severity.Error);
 
@@ -354,7 +365,7 @@ public partial class BoardPage
             return;
         }
 
-        var currentCardsInSection = _tasks.Where(t => t.Status == section.Name).ToList();
+        var currentCardsInSection = _tasks.Where(t => t.SectionId == section.Id).ToList();
         double nextPosition = currentCardsInSection.Count > 0
             ? currentCardsInSection.Count + 1.0
             : 1.0;
@@ -615,6 +626,7 @@ public partial class BoardPage
                 targetSection.Name,
                 newCard.Position,
                 BoardIdGuid,
+                targetSection.Id,
                 newCard.Description,
                 null);
 
@@ -659,10 +671,9 @@ public partial class BoardPage
 
         if (section != null && section.Name != data.NewName)
         {
-            string oldName = section.Name;
             section.Name = data.NewName;
 
-            var tasksToUpdate = _tasks.Where(t => t.Status == oldName).ToList();
+            var tasksToUpdate = _tasks.Where(t => t.SectionId == data.SectionId).ToList();
             foreach (var t in tasksToUpdate)
             {
                 t.Status = data.NewName;
@@ -683,7 +694,7 @@ public partial class BoardPage
         if (section != null)
         {
             _sections.Remove(section);
-            _tasks.RemoveAll(t => t.Status == section.Name);
+            _tasks.RemoveAll(t => t.SectionId == sectionId);
 
             InvokeAsync(() =>
             {
@@ -762,25 +773,22 @@ public partial class BoardPage
         }
     }
 
-    private void HandleCardMoved(
-        Guid cardId,
-        Guid newSectionId, 
-        double newPosition)
+    private void HandleCardMoved(CardMovedDto data)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == cardId);
-        var targetSection = _sections.FirstOrDefault(s => s.Id == newSectionId);
+        var task = _tasks.FirstOrDefault(t => t.Id == data.CardId);
 
-        if (task != null && targetSection != null)
+        if (task != null)
         {
-            task.Status = targetSection.Name;
-            task.Position = newPosition;
+            task.Status = data.NewSectionName;
+            task.SectionId = data.NewSectionId;
+            task.Position = data.NewPosition;
 
             _tasks = _tasks.OrderBy(t => t.Position).ToList();
 
             InvokeAsync(() =>
             {
                 StateHasChanged();
-                _dropContainer.Refresh();
+                _dropContainer?.Refresh();
             });
         }
     }
@@ -817,6 +825,10 @@ public partial class BoardPage
         }
     }
 
+    private void HandleCardDueDateUpdated(CardDueDateUpdateDto data)
+    {
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -830,6 +842,8 @@ public partial class BoardPage
         BoardHubService.OnCardMoved -= HandleCardMoved;
         BoardHubService.OnCardDeleted -= HandleCardDeleted;
         BoardHubService.OnCardRenamed -= HandleCardRenamed;
+        BoardHubService.OnCardDueDateUpdated -= HandleCardDueDateUpdated;
+
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

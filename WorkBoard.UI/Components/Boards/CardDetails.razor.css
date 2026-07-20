@@ -30,8 +30,6 @@
     border-color: #9e9e9e !important;
 }
 
-
-
 ::deep .clean-tabs .mud-tabs-tabbar {
     background-color: transparent !important;
 }
@@ -114,3 +112,17 @@
     ::deep .task-title-input .mud-input-root-text {
         padding: 0 !important;
     }
+
+
+::deep .click-wrapper * {
+    cursor: pointer !important;
+    border-radius: 10px !important;
+}
+
+::deep .fake-picker input {
+    padding-right: 36px !important;
+}
+
+::deep .click-wrapper input {
+    text-align: center !important;
+}

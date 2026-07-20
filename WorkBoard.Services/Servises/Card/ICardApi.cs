@@ -12,6 +12,12 @@ internal interface ICardApi
         Guid boardId,
         CancellationToken cancellationToken = default);
 
+    [Get("/api/sections/{sectionId}/cards/{cardId}/details")]
+    Task<CardDetailsDto> GetCardDetailsAsync(
+        Guid sectionId,
+        Guid cardId,
+        CancellationToken cancellationToken = default);
+
     [Post("/api/sections/{sectionId}/cards")]
     Task<CardDto> CreateCardAsync(
         Guid sectionId,

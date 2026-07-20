@@ -26,6 +26,7 @@
                     @Card.Status
                 </MudChip>
             </div>
+
             <div class="mb-3 pr-8">
                 <MudTextField @bind-Value=@_editedTitle
                               Placeholder="Task name..."
@@ -42,7 +43,7 @@
                         <MudButton Variant=@Variant.Filled
                                    Color=@Color.Primary
                                    Size=@Size.Small
-                                   Class="rounded-lg text-none btn-create popover-action-btn"
+                                   Class="rounded-lg text-none custom-btn popover-action-btn"
                                    OnClick=@SaveTitleAsync
                                    Disabled=@string.IsNullOrWhiteSpace(_editedTitle)>
                             Save
@@ -51,7 +52,7 @@
                         <MudButton Variant=@Variant.Filled
                                    Color=@Color.Surface
                                    Size=@Size.Small
-                                   Class="rounded-lg text-none cancel-btn popover-action-btn"
+                                   Class="rounded-lg text-none text-btn popover-action-btn"
                                    DropShadow="false"
                                    OnClick=@DiscardTitleChanges>
                             Cancel
@@ -61,13 +62,15 @@
             </div>
 
             <CardLabelsSection CardId=@Card.Id
-                               BoardId=@Card.BoardId />
+                               BoardId=@Card.BoardId
+                               @bind-AppliedLabels="_cardLabels" />
         </div>
 
         <MudDivider Class="mx-0" />
 
         <div class="flex-grow-1 d-flex overflow-hidden">
-            <div class="mud-background-gray flex-grow-1 overflow-y-auto custom-scrollbar pl-6 pr-6 pb-6 pt-2 bg-white card-main-content">
+            <div @ref="_mainContentScroll" 
+                 class="mud-background-gray flex-grow-1 overflow-y-auto custom-scrollbar pl-6 pr-6 pb-6 pt-2 bg-white card-main-content">
                 <div class="mb-6 mt-2">
                     <div class="d-flex align-center gap-2 mb-2">
                         <MudIcon Icon=@Icons.Material.Outlined.Description
@@ -96,7 +99,7 @@
                                 <MudButton Variant=@Variant.Filled
                                            Color=@Color.Primary
                                            Size=@Size.Small
-                                           Class="rounded-lg text-none btn-create popover-action-btn"
+                                           Class="rounded-lg text-none custom-btn popover-action-btn"
                                            @onmousedown=@SaveDescriptionAsync>
                                     Save
                                 </MudButton>
@@ -104,7 +107,7 @@
                                 <MudButton Variant=@Variant.Filled
                                            Color=@Color.Surface
                                            Size=@Size.Small
-                                           Class="rounded-lg text-none cancel-btn popover-action-btn"
+                                           Class="rounded-lg text-none text-btn popover-action-btn"
                                            DropShadow="false"
                                            @onmousedown=@DiscardDescriptionChanges>
                                     Cancel
@@ -114,127 +117,16 @@
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <div class="d-flex align-center gap-2 mb-2">
-                        <MudIcon Icon=@Icons.Material.Outlined.People
-                                 Size=@Size.Small
-                                 Class="text-muted" />
+                <CardAssigneesSection CardId="@Card.Id"
+                                      AssignableUsers="@_assignableUsers"
+                                      @bind-Assignees="@_assignees" />
 
-                        <MudText Typo=@Typo.subtitle2 
-                                 Class="font-weight-bold text-muted">Assignees</MudText>
-                    </div>
+                <ChecklistSection CardId="@Card.Id"
+                                  @bind-Checklist="_checklist" />
 
-                    <div class="d-flex flex-wrap gap-2 position-relative">
+                <MudDivider Style="border-color: rgba(0, 0, 0, 0.4) !important;" />
 
-                        @foreach (var assignee in _assignees)
-                        {
-                            <MudChip @key=assignee.UserId
-                                     T="string"
-                                     Size=@Size.Small
-                                     Variant=@Variant.Outlined
-                                     Class="rounded-pill px-4 py-4"
-                                     OnClose=@(() => RemoveAssigneeAsync(assignee))>
-
-                                <div class="d-flex align-center gap-1">
-                                    <MudAvatar Size=@Size.Small 
-                                               Color=@Color.Tertiary>@assignee.Initials</MudAvatar>
-
-                                    <MudText Typo=@Typo.body2
-                                             Class="mr-1">@assignee.FullName</MudText>
-                                </div>
-                            </MudChip>
-                        }
-
-                        <MudChip T="string"
-                                 Size=@Size.Small
-                                 Variant=@Variant.Outlined
-                                 Class="rounded-pill border-dashed text-muted cursor-pointer px-4 py-4"
-                                 OnClick=@(() => _isAssigneePopoverOpen = !_isAssigneePopoverOpen)>
-
-                            <div class="d-flex align-center">
-                                <MudIcon Icon=@Icons.Material.Rounded.Add
-                                         Size=@Size.Small
-                                         Class="mr-1" /> Add member
-                            </div>
-                        </MudChip>
-
-                        <MudPopover Open=@_isAssigneePopoverOpen
-                                    AnchorOrigin=@Origin.BottomLeft
-                                    TransformOrigin=@Origin.TopLeft
-                                    Class="pa-3 mud-elevation-4 rounded-lg mt-1"
-                                    Style="width: 280px; z-index: 9999;">
-
-                            <div class="d-flex justify-space-between align-center mb-3">
-                                <MudText Typo=@Typo.caption
-                                         Class="text-muted font-weight-bold text-uppercase">Assign Member</MudText>
-
-                                <MudIconButton Icon=@Icons.Material.Filled.Close
-                                               Size=@Size.Small
-                                               OnClick=@(() => _isAssigneePopoverOpen = false)
-                                               Class="pa-0" />
-                            </div>
-
-                            <MudTextField @bind-Value=@_assigneeSearchText
-                                          Placeholder="Search by email or name..."
-                                          Variant=@Variant.Outlined
-                                          Margin=@Margin.Dense
-                                          Adornment=@Adornment.Start
-                                          AdornmentIcon=@Icons.Material.Filled.Search
-                                          Size="Size.Small"
-                                          Class="mb-2 bg-white rounded-lg compact-input"
-                                          Immediate="true" />
-
-                            <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar assignee-list-scroll">
-                                @foreach (var member in FilteredAssignableUsers)
-                                {
-                                    var isAssigned = _assignees.Any(a => a.Email == member.Email);
-
-                                    <div @key=@member.UserId
-                                         class="d-flex align-center gap-3 pa-2 rounded-lg cursor-pointer mud-ripple assignee-row"
-                                         @onclick=@(() => AddAssigneeAsync(member))>
-
-                                        <MudAvatar Size=@Size.Medium
-                                                   Color=@Color.Tertiary
-                                                   Class="assignee-avatar">
-                                            @member.Initials
-                                        </MudAvatar>
-
-                                        <div class="d-flex flex-column flex-grow-1">
-                                            <MudText Typo=@Typo.body2
-                                                     Class="font-weight-medium assignee-name">@member.FullName</MudText>
-
-                                            <MudText Typo=@Typo.caption
-                                                     Class="text-muted font-weight-medium">@member.Email</MudText>
-                                        </div>
-
-                                        @if (isAssigned)
-                                        {
-                                            <MudIcon Icon=@Icons.Material.Rounded.Check
-                                                     Size=@Size.Small
-                                                     Color=@Color.Info
-                                                     Class="mr-1" />
-                                        }
-                                    </div>
-                                }
-
-                                @if (!FilteredAssignableUsers.Any())
-                                {
-                                    <MudText Typo=@Typo.caption
-                                             Class="text-muted text-center py-3">No members found</MudText>
-                                }
-                            </div>
-                        </MudPopover>
-
-                        <MudOverlay Visible=@_isAssigneePopoverOpen
-                                    OnClick=@(() => _isAssigneePopoverOpen = false)
-                                    AutoClose="true"
-                                    ZIndex="9998" />
-                    </div>
-                </div>
-
-                <ChecklistSection CardId="@Card.Id" />
-
-                <div class="mt-8 mb-2">
+                <div class="mt-3 mb-2">
                     <MudTabs Elevation="0" 
                              Color=@Color.Transparent
                              SliderColor=@Color.Primary
@@ -244,10 +136,12 @@
 
                         <MudTabPanel Text="@($"Comments ({_commentsCount})")"
                                      Class="tab-title-text" 
-                                     Icon=@Icons.Material.Outlined.ChatBubbleOutline>
+                                     Icon=@Icons.Material.Outlined.ChatBubbleOutline
+                                     KeepPanelsAlive="true">
 
                             <CommentsSection CardId="@Card.Id"
                                              CurrentUserId="@CurrentUserId"
+                                             Comments="@_comments"
                                              CommentsCountChanged="@UpdateCommentsCount" />
 
                         </MudTabPanel>
@@ -256,36 +150,8 @@
                                      Class="tab-title-text" 
                                      Icon=@Icons.Material.Outlined.ShowChart>
 
-                            @if (!_activityLogs.Any())
-                            {
-                                <MudText Typo=@Typo.body2 Class="text-muted mt-4">
-                                    Activity history will appear here.
-                                </MudText>
-                            }
-                            else
-                            {
-                                <div class="mt-4 pr-4 pl-5 overflow-y-auto custom-scrollbar" style="max-height: 400px;">
-                                    @foreach (var log in _activityLogs)
-                                    {
-                                        <div class="py-2">
-                                            <div class="d-flex align-center gap-2">
-                                                <div class="d-flex align-center gap-1">
-                                                    <MudAvatar Size=@Size.Small
-                                                               Color=@Color.Tertiary>@log.Initials</MudAvatar>
-                                                </div>
-
-                                                <MudText Typo=@Typo.body2 Class="font-weight-medium">
-                                                    @log.Text
-                                                </MudText>
-                                            </div>
-
-                                            <MudText Typo=@Typo.caption Class="text-muted">
-                                                @log.CreatedAt.ToLocalTime().ToString("MMM dd, HH:mm")
-                                            </MudText>
-                                        </div>
-                                    }
-                                </div>
-                            }
+                            <ActivityLogSection CardId="@Card.Id"
+                                                @bind-ActivityLogs="_activityLogs" />
                         </MudTabPanel>
 
                     </MudTabs>
@@ -294,100 +160,59 @@
             </div>
 
             <div class="mud-background-gray d-flex flex-column overflow-hidden pl-6 pr-6 pb-6 pt-2 border-l-solid border-l-2 mud-border-lines-default card-sidebar">
-
                 <div class="mb-6 mt-2 flex-shrink-0">
-                    <MudText Typo=@Typo.body2
-                             Class="text-muted d-flex align-center gap-2 mb-1">
-                        <MudIcon Icon=@Icons.Material.Outlined.CalendarToday
-                                 Size=@Size.Small /> Due Date
+                    <MudText Typo=@Typo.body2 Class="text-muted d-flex align-center gap-2 mb-1">
+                        <MudIcon Icon=@Icons.Material.Outlined.CalendarToday Size=@Size.Small /> Due Date
                     </MudText>
 
-                    <MudDatePicker Date=@_dueDate
-                                   DateChanged=@OnDueDateChangedAsync
-                                   ShowToolbar="false"
-                                   Variant=@Variant.Outlined
-                                   Margin=@Margin.Dense
-                                   DateFormat="dd MMM yyyy"
-                                   Adornment=@Adornment.Start
-                                   AdornmentIcon=@Icons.Material.Outlined.AccessTime
-                                   Clearable="true"
-                                   Class="@($"custom-date-picker {(!_dueDate.HasValue ? "text-muted" : _dueDate.Value < DateTime.Now ? "due-date-error" : "due-date-warning")}")" />
-                </div>
+                    @if (!_isPickerLoaded)
+                    {
+                        <div class="position-relative click-wrapper" @onclick="LoadAndOpenPicker">
 
-                <div class="mb-4 flex-grow-1 d-flex flex-column overflow-hidden">
-                    <MudText Typo=@Typo.body2
-                             Class="text-muted d-flex align-center gap-2 mb-2 flex-shrink-0">
-                        <MudIcon Icon=@Icons.Material.Outlined.AttachFile
-                                 Size=@Size.Small /> Attachments
-                    </MudText>
+                            <MudTextField T="string"
+                                          Value="@(_dueDate.HasValue ? _dueDate.Value.ToString("dd MMM yyyy") : null)"
+                                          Placeholder="Set due date..."
+                                          ReadOnly="true"
+                                          Variant=@Variant.Outlined
+                                          Margin=@Margin.Dense
+                                          Adornment=@Adornment.Start
+                                          AdornmentIcon=@Icons.Material.Outlined.AccessTime
+                                          Class="@($"click-wrapper fake-picker mt-2 {(!_dueDate.HasValue ? "text-muted" : _dueDate.Value < DateTime.Now ? "due-date-error" : "due-date-warning")}")" />
 
-                    <div class="flex-grow-1 overflow-y-auto custom-scrollbar pr-1">
-                        @foreach (var file in _attachments)
-                        {
-                            var iconInfo = GetFileIconAndColor(file.FileName);
-                            var isPendingDelete = _pendingDeleteAttachmentId == file.Id;
-
-                            <MudPaper Elevation="0"
-                                      Class="@($"pa-2 mb-2 border-solid border-2 rounded-lg d-flex align-center justify-space-between transition-all {(isPendingDelete ? "mud-border-error mud-background-error" : "mud-border-lines-default")}")"
-                                      @onmouseleave=@(() => { if (isPendingDelete) _pendingDeleteAttachmentId = null;})>
-
-                                @if (isPendingDelete)
-                                {
-                                    <div class="d-flex align-center justify-center w-100 gap-2">
-                                        <MudText Typo=@Typo.body2
-                                                 Class="text-error font-weight-bold text-truncate">
-                                            Delete @file.FileName?
-                                        </MudText>
-
-                                        <MudButton Size=@Size.Small
-                                                   Variant=@Variant.Filled
-                                                   Color=@Color.Error
-                                                   OnClick=@(() => ConfirmDeleteAttachmentAsync(file.Id))>
-                                            Confirm
-                                        </MudButton>
-
-                                        <MudIconButton Size=@Size.Small
-                                                       Icon=@Icons.Material.Rounded.Close
-                                                       Class="text-error"
-                                                       OnClick=@(() => _pendingDeleteAttachmentId = null) />
-                                    </div>
-                                }
-                                else
-                                {
-                                    <a href=@file.FileUrl
-                                            target="_blank" 
-                                            class="text-decoration-none d-flex align-center gap-3 flex-grow-1 overflow-hidden">
-                                        <MudIcon Icon=@iconInfo.Icon Color=@iconInfo.Color />
-
-                                        <div class="overflow-hidden">
-                                            <MudText Typo=@Typo.body2 
-                                                     Class="text-truncate font-weight-bold">@file.FileName</MudText>
-
-                                            <MudText Typo=@Typo.caption 
-                                                     Class="text-muted">@FormatBytes(file.FileSizeBytes)</MudText>
-                                        </div>
-                                    </a>
+                            @if (_dueDate.HasValue)
+                            {
+                                <div class="position-absolute"
+                                     style="right: 6px; top: 50%; transform: translateY(-50%); z-index: 10;"
+                                     @onclick:stopPropagation="true">
 
                                     <MudIconButton Icon=@Icons.Material.Rounded.Close
                                                    Size=@Size.Small
-                                                   Class="text-muted flex-shrink-0"
-                                                   OnClick=@(() => _pendingDeleteAttachmentId = file.Id) />
-                                }
-                            </MudPaper>
-                        }
-                    </div>
-
-                    <InputFile id="custom-file-upload" OnChange="OnFileSelected" hidden />
-
-                    <MudButton HtmlTag="label"
-                               for="custom-file-upload"
-                               Variant="@Variant.Outlined"
-                               Size="@Size.Small"
-                               StartIcon="@Icons.Material.Rounded.Add"
-                               Class="w-100 border-dashed text-muted rounded-lg mt-1 flex-shrink-0 cursor-pointer">
-                        Upload file
-                    </MudButton>
+                                                   Class="text-muted pa-1"
+                                                   OnClick="@(async () => await OnDueDateChangedAsync(null))" />
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <MudDatePicker @ref="_datePicker"
+                                       Date=@_dueDate
+                                       DateChanged=@(async (DateTime? newDate) => { await OnDueDateChangedAsync(newDate); _isPickerLoaded = false; })
+                                       Editable="false"
+                                       AutoClose="true"
+                                       ShowToolbar="false"
+                                       Variant=@Variant.Outlined
+                                       Margin=@Margin.Dense
+                                       DateFormat="dd MMM yyyy"
+                                       Adornment=@Adornment.Start
+                                       AdornmentIcon=@Icons.Material.Outlined.AccessTime
+                                       Clearable="true"
+                                       Class="@($"click-wrapper {(!_dueDate.HasValue ? "text-muted" : _dueDate.Value < DateTime.Now ? "due-date-error" : "due-date-warning")}")" />
+                    }
                 </div>
+
+                <CardAttachmentsSection CardId="@Card.Id"
+                                        @bind-Attachments="_attachments" />
 
                 <MudButton Variant=@(_isPendingDeleteCard ? Variant.Filled : Variant.Outlined)
                            Color=@Color.Error

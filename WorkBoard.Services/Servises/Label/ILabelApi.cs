@@ -17,11 +17,6 @@ internal interface ILabelApi
         [Body] CreateLabelRequest request,
         CancellationToken cancellationToken = default);
 
-    [Get("/api/cards/{cardId}/labels")]
-    Task<IReadOnlyList<LabelDto>> GetLabelsByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default);
-
     [Post("/api/cards/{cardId}/labels/{labelId}")]
     Task AddLabelToCardAsync(
         Guid cardId,

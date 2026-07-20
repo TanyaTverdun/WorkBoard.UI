@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.UI.Components.Card;
 
-public partial class ChecklistSection : ComponentBase
+public partial class ChecklistSection : ComponentBase, IDisposable
 {
     [Parameter]
     public Guid CardId { get; set; }
@@ -16,6 +17,15 @@ public partial class ChecklistSection : ComponentBase
 
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
+
+    [Parameter]
+    public ChecklistDto? Checklist { get; set; }
+
+    [Parameter]
+    public EventCallback<ChecklistDto?> ChecklistChanged { get; set; }
 
     private ChecklistDto? _checklist;
     private bool _isHoveringChecklistTitle = false;
@@ -35,20 +45,22 @@ public partial class ChecklistSection : ComponentBase
     private double ChecklistProgress => TotalChecklistItems == 0 ? 0
         : Math.Round((double)CompletedChecklistItems / TotalChecklistItems * 100);
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadChecklistAsync();
+        BoardHubService.OnChecklistItemAdded += HandleChecklistItemAdded;
+        BoardHubService.OnChecklistCreated += HandleChecklistCreated;
+        BoardHubService.OnChecklistDeleted += HandleChecklistDeleted;
+        BoardHubService.OnChecklistItemDeleted += HandleChecklistItemDeleted;
+        BoardHubService.OnChecklistRenamed += HandleChecklistRenamed;
+        BoardHubService.OnChecklistItemRenamed += HandleChecklistItemRenamed;
+        BoardHubService.OnChecklistItemStatusUpdated += HandleChecklistItemStatusUpdated;
     }
 
-    private async Task LoadChecklistAsync()
+    protected override void OnParametersSet()
     {
-        try
+        if (_checklist != Checklist)
         {
-            _checklist = await ChecklistService.GetChecklistByCardAsync(CardId);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading checklist: {ex.Message}");
+            _checklist = Checklist;
         }
     }
 
@@ -106,6 +118,8 @@ public partial class ChecklistSection : ComponentBase
                 _checklist = await ChecklistService.CreateChecklistAsync(
                     CardId, 
                     request);
+
+                await ChecklistChanged.InvokeAsync(_checklist);
             }
         }
         catch (Exception ex)
@@ -135,6 +149,8 @@ public partial class ChecklistSection : ComponentBase
                     _checklist.ChecklistId);
 
                 _checklist = null;
+
+                await ChecklistChanged.InvokeAsync(_checklist);
             }
             catch (Exception ex)
             {
@@ -328,5 +344,135 @@ public partial class ChecklistSection : ComponentBase
             _pendingDeleteChecklistItemId = null;
             StateHasChanged();
         }
+    }
+
+    private void HandleChecklistItemAdded(ChecklistItemAddedDto data)
+    {
+        if (_checklist != null && 
+            _checklist.ChecklistId == data.ChecklistId)
+        {
+            var currentItems = _checklist.Items?.ToList() ?? new List<ChecklistItemDto>();
+
+            if (!currentItems.Any(i => i.Id == data.Item.Id))
+            {
+                currentItems.Add(data.Item);
+                _checklist.Items = currentItems;
+
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleChecklistCreated(ChecklistCreatedDto data)
+    {
+        if (CardId == data.CardId && _checklist == null)
+        {
+            _checklist = data.Checklist;
+
+            _isEditingChecklistTitle = false;
+
+            InvokeAsync(async () =>
+            {
+                await ChecklistChanged.InvokeAsync(_checklist);
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void HandleChecklistDeleted(ChecklistDeletedDto data)
+    {
+        if (_checklist != null &&
+            CardId == data.CardId &&
+            _checklist.ChecklistId == data.ChecklistId)
+        {
+            _checklist = null;
+
+            _isEditingChecklistTitle = false;
+            _isPendingDeleteChecklist = false;
+            _isAddingChecklistItem = false;
+
+            InvokeAsync(async () =>
+            {
+                await ChecklistChanged.InvokeAsync(null);
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void HandleChecklistItemDeleted(ChecklistItemDeletedDto data)
+    {
+        if (_checklist != null && 
+            _checklist.ChecklistId == data.ChecklistId &&
+            _checklist.Items != null)
+        {
+            var currentItems = _checklist.Items.ToList();
+            var itemToRemove = currentItems.FirstOrDefault(x => x.Id == data.ItemId);
+
+            if (itemToRemove != null)
+            {
+                currentItems.Remove(itemToRemove);
+                _checklist.Items = currentItems;
+
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleChecklistRenamed(ChecklistRenamedDto data)
+    {
+        if (_checklist != null && 
+            _checklist.ChecklistId == data.ChecklistId)
+        {
+            _checklist.Name = data.NewName;
+
+            _isEditingChecklistTitle = false;
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleChecklistItemRenamed(ChecklistItemRenamedDto data)
+    {
+        if (_checklist != null && 
+            _checklist.ChecklistId == data.ChecklistId)
+        {
+            var item = _checklist.Items?.FirstOrDefault(x => x.Id == data.ItemId);
+            if (item != null)
+            {
+                item.Title = data.NewTitle;
+
+                if (_editingItemId == data.ItemId)
+                {
+                    CancelItemEdit();
+                }
+
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleChecklistItemStatusUpdated(ChecklistItemStatusUpdatedDto data)
+    {
+        if (_checklist != null && 
+            _checklist.ChecklistId == data.ChecklistId)
+        {
+            var item = _checklist.Items?.FirstOrDefault(x => x.Id == data.ItemId);
+            if (item != null && item.IsDone != data.IsDone)
+            {
+                item.IsDone = data.IsDone;
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        BoardHubService.OnChecklistItemAdded -= HandleChecklistItemAdded;
+        BoardHubService.OnChecklistCreated -= HandleChecklistCreated;
+        BoardHubService.OnChecklistDeleted -= HandleChecklistDeleted;
+        BoardHubService.OnChecklistItemDeleted -= HandleChecklistItemDeleted;
+        BoardHubService.OnChecklistRenamed -= HandleChecklistRenamed;
+        BoardHubService.OnChecklistItemRenamed -= HandleChecklistItemRenamed;
+        BoardHubService.OnChecklistItemStatusUpdated -= HandleChecklistItemStatusUpdated;
     }
 }

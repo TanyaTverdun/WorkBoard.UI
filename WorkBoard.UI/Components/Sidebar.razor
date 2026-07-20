@@ -1,13 +1,8 @@
 ﻿@using WorkBoard.UI.Components.Boards
 @using WorkBoard.UI.Components.Workspaces
 
-<div class="sidebar d-flex flex-column justify-content-between text-white h-100">
-    <div class="sidebar-top-content">
-        <div class="logo-section d-flex align-items-center gap-2 px-3 py-4">
-            <i class="bi bi-briefcase-fill text-primary fs-4"></i>
-            <span class="fw-bold fs-5 tracking-wide">WorkBoard</span>
-        </div>
-
+<div class="sidebar d-flex flex-column justify-content-between text-white">
+    <div class="sidebar-top-content flex-grow-1 overflow-y-auto custom-scrollbar">
         <div class="user-section d-flex align-items-center gap-2 px-3 mb-4">
             <div class="avatar-circle d-flex align-items-center justify-content-center bg-primary fw-bold text-white">
                 @Initials
@@ -55,7 +50,7 @@
 
     </div>
 
-    <div class="sidebar-footer p-3 border-top border-secondary">
+    <div class="sidebar-footer p-3 border-top border-secondary flex-shrink-0">
         <a class="nav-link text-white-50 d-flex align-items-center gap-2 py-2 px-3 rounded"
            href="#">
             <i class="bi bi-person"></i> Profile

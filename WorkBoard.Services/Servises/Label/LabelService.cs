@@ -83,37 +83,6 @@ internal class LabelService : ILabelService
             throw;
         }
     }
-
-    public async Task<IReadOnlyList<LabelDto>> GetLabelsByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _labelApi.GetLabelsByCardAsync(
-                cardId,
-                cancellationToken);
-        }
-        catch (ApiException apiEx)
-        {
-            _logger.LogError(
-                apiEx,
-                "API error occurred while fetching labels " +
-                "for card {CardId}. Status: {StatusCode}",
-                cardId,
-                apiEx.StatusCode);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error occurred while fetching labels for card {CardId}",
-                cardId);
-            throw;
-        }
-    }
-
     public async Task AddLabelToCardAsync(
         Guid cardId,
         Guid labelId,

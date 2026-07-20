@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using WorkBoard.Services.Abstraction.DTOs;
 using WorkBoard.Services.Abstraction.Hubs;
@@ -18,6 +19,9 @@ public partial class CommentsSection : ComponentBase, IDisposable
     [Parameter]
     public EventCallback<int> CommentsCountChanged { get; set; }
 
+    [Parameter] 
+    public List<CommentDto> Comments { get; set; } = new();
+
     [Inject]
     private ICommentService CommentService { get; set; } = default!;
 
@@ -27,28 +31,36 @@ public partial class CommentsSection : ComponentBase, IDisposable
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private ElementReference _scrollContainer;
+    private IJSObjectReference? _jsModule;
+
     private List<CommentDto> _comments = new();
     private string _newComment = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         BoardHubService.OnCommentAdded += HandleNewComment;
-        await LoadCommentsAsync();
     }
 
-    private async Task LoadCommentsAsync()
+    protected override void OnParametersSet()
     {
-        try
+        if (Comments != null)
         {
-            var commentsDto = await CommentService.GetCommentsByCardAsync(CardId);
-            _comments = commentsDto.ToList();
-
-            await NotifyCountChangedAsync();
+            _comments = Comments.ToList();
+            StateHasChanged();
         }
-        catch (Exception ex)
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            Console.WriteLine($"Error loading comments: {ex.Message}");
-            Snackbar.Add("Failed to load comments.", Severity.Error);
+            _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./Components/Card/CommentsSection.razor.js");
         }
     }
 
@@ -74,14 +86,34 @@ public partial class CommentsSection : ComponentBase, IDisposable
                 dto.Initials : "UU";
 
             _comments.Add(dto);
+            Comments.Add(dto);
             _newComment = string.Empty;
 
             await NotifyCountChangedAsync();
+            StateHasChanged();
+
+            await Task.Delay(50);
+            await ScrollToBottomAsync();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error adding comment: {ex.Message}");
             Snackbar.Add("Failed to add comment.", Severity.Error);
+        }
+    }
+
+    private async Task ScrollToBottomAsync()
+    {
+        try
+        {
+            if (_jsModule != null)
+            {
+                await _jsModule.InvokeVoidAsync("scrollToBottom", _scrollContainer);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Scroll error: {ex.Message}");
         }
     }
 
@@ -98,10 +130,15 @@ public partial class CommentsSection : ComponentBase, IDisposable
 
             _comments.Add(newComment);
 
+            Comments.Add(newComment);
+
             InvokeAsync(async () =>
             {
                 await NotifyCountChangedAsync();
                 StateHasChanged();
+
+                await Task.Delay(50);
+                await ScrollToBottomAsync();
             });
         }
     }
@@ -117,5 +154,7 @@ public partial class CommentsSection : ComponentBase, IDisposable
     public void Dispose()
     {
         BoardHubService.OnCommentAdded -= HandleNewComment;
+
+        _ = _jsModule?.DisposeAsync();
     }
 }

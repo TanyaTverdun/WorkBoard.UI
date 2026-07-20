@@ -19,46 +19,6 @@ internal class ChecklistService : IChecklistService
         _logger = logger;
     }
 
-    public async Task<ChecklistDto> GetChecklistByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var response = await _checklistApi.GetChecklistByCardAsync(
-                cardId,
-                cancellationToken);
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
-            {
-                return null;
-            }
-
-            await response.EnsureSuccessStatusCodeAsync();
-
-            return response.Content;
-        }
-        catch (ApiException apiEx)
-        {
-            _logger.LogError(
-                apiEx,
-                "API error occurred while fetching checklists " +
-                "for card {CardId}. Status: {StatusCode}",
-                cardId,
-                apiEx.StatusCode);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error occurred while fetching checklists " +
-                "for card {CardId}",
-                cardId);
-            throw;
-        }
-    }
-
     public async Task<ChecklistDto> CreateChecklistAsync(
         Guid cardId,
         CreateChecklistRequest request,

@@ -21,11 +21,29 @@ internal class BoardHubService : IBoardHubService
     public event Action<Guid, double>? OnSectionMoved;
     public event Action<Guid, BoardRole>? OnMemberRoleUpdated;
     public event Action<Guid>? OnMemberRemoved;
-    public event Action<Guid, Guid, double>? OnCardMoved;
     public event Action<Guid>? OnCardDeleted;
     public event Action<CardRenameDto>? OnCardRenamed;
     public event Action<CommentDto>? OnCommentAdded;
     public event Action<ActivityLogDto>? OnActivityLogAdded;
+    public event Action<CardDueDateUpdateDto>? OnCardDueDateUpdated;
+    public event Action<Guid, LabelDto>? OnLabelAddedToCard;
+    public event Action<Guid, Guid>? OnLabelRemovedFromCard;
+    public event Action<LabelDto>? OnLabelCreated;
+    public event Action<LabelDto>? OnLabelUpdated;
+    public event Action<Guid>? OnLabelDeleted;
+    public event Action<AssigneeAddDto>? OnAssigneeAdded;
+    public event Action<AssigneeRemoveDto>? OnAssigneeRemoved;
+    public event Action<CardMovedDto>? OnCardMoved;
+    public event Action<CardDescriptionUpdateDto>? OnCardDescriptionUpdated;
+    public event Action<ChecklistItemAddedDto>? OnChecklistItemAdded;
+    public event Action<ChecklistCreatedDto>? OnChecklistCreated;
+    public event Action<ChecklistDeletedDto>? OnChecklistDeleted;
+    public event Action<ChecklistItemDeletedDto>? OnChecklistItemDeleted;
+    public event Action<ChecklistRenamedDto>? OnChecklistRenamed;
+    public event Action<ChecklistItemRenamedDto>? OnChecklistItemRenamed;
+    public event Action<ChecklistItemStatusUpdatedDto>? OnChecklistItemStatusUpdated;
+    public event Action<AttachmentAddedDto>? OnAttachmentAdded;
+    public event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -61,21 +79,29 @@ internal class BoardHubService : IBoardHubService
                 .WithAutomaticReconnect()
                 .Build();
 
-            _hubConnection.On<CardDto>(BoardHubEvents.CardCreated, (card) =>
+            _hubConnection.On<CardDto>(
+                BoardHubEvents.CardCreated, 
+                (card) =>
             {
                 _logger.LogInformation(
-                    "Received new card via SignalR: {Title}", card.Title);
+                    "Received new card via SignalR: {Title}", 
+                    card.Title);
                 OnCardCreated?.Invoke(card);
             });
 
-            _hubConnection.On<SectionDto>(BoardHubEvents.SectionCreated, (section) =>
+            _hubConnection.On<SectionDto>(
+                BoardHubEvents.SectionCreated, 
+                (section) =>
             {
                 _logger.LogInformation(
-                    "Received new section via SignalR: {Name}", section.Name);
+                    "Received new section via SignalR: {Name}", 
+                    section.Name);
                 OnSectionCreated?.Invoke(section);
             });
 
-            _hubConnection.On<SectionRenameDto>(BoardHubEvents.SectionRenamed, (section) =>
+            _hubConnection.On<SectionRenameDto>(
+                BoardHubEvents.SectionRenamed, 
+                (section) =>
             {
                 _logger.LogInformation(
                     "Section renamed: {NewName} (ID: {SectionId})", 
@@ -85,13 +111,19 @@ internal class BoardHubService : IBoardHubService
                 OnSectionRenamed?.Invoke(section);
             });
 
-            _hubConnection.On<Guid>(BoardHubEvents.SectionDeleted, (sectionId) =>
+            _hubConnection.On<Guid>(
+                BoardHubEvents.SectionDeleted, 
+                (sectionId) =>
             {
-                _logger.LogInformation("Section deleted: {SectionId}", sectionId);
+                _logger.LogInformation(
+                    "Section deleted: {SectionId}", 
+                    sectionId);
                 OnSectionDeleted?.Invoke(sectionId);
             });
 
-            _hubConnection.On<SectionMoveDto>(BoardHubEvents.SectionMoved, (data) =>
+            _hubConnection.On<SectionMoveDto>(
+                BoardHubEvents.SectionMoved, 
+                (data) =>
             {
                 _logger.LogInformation(
                     "Section moved: {SectionId} to {NewPosition}", 
@@ -101,7 +133,9 @@ internal class BoardHubService : IBoardHubService
                 OnSectionMoved?.Invoke(data.SectionId, data.NewPosition);
             });
 
-            _hubConnection.On<MemberRoleUpdatedDto>(BoardHubEvents.MemberRoleUpdated, (data) =>
+            _hubConnection.On<MemberRoleUpdatedDto>(
+                BoardHubEvents.MemberRoleUpdated, 
+                (data) =>
             {
                 _logger.LogInformation(
                     "Member role updated: {UserId} to {NewRole}", 
@@ -111,30 +145,29 @@ internal class BoardHubService : IBoardHubService
                 OnMemberRoleUpdated?.Invoke(data.UserId, data.NewRole);
             });
 
-            _hubConnection.On<Guid>(BoardHubEvents.MemberRemoved, (userId) =>
+            _hubConnection.On<Guid>(
+                BoardHubEvents.MemberRemoved, 
+                (userId) =>
             {
-                _logger.LogInformation("Member removed from board: {UserId}", userId);
+                _logger.LogInformation(
+                    "Member removed from board: {UserId}", 
+                    userId);
                 OnMemberRemoved?.Invoke(userId);
             });
 
-            _hubConnection.On<Guid, Guid, double>(BoardHubEvents.CardMoved, (cardId, newSectionId, newPosition) =>
+            _hubConnection.On<Guid>(
+                BoardHubEvents.CardDeleted, 
+                (cardId) =>
             {
                 _logger.LogInformation(
-                    "Card moved: {CardId} to section {NewSectionId} at {NewPosition}",
-                    cardId,
-                    newSectionId,
-                    newPosition);
-
-                OnCardMoved?.Invoke(cardId, newSectionId, newPosition);
-            });
-
-            _hubConnection.On<Guid>(BoardHubEvents.CardDeleted, (cardId) =>
-            {
-                _logger.LogInformation("Card deleted via SignalR: {CardId}", cardId);
+                    "Card deleted via SignalR: {CardId}", 
+                    cardId);
                 OnCardDeleted?.Invoke(cardId);
             });
 
-            _hubConnection.On<CardRenameDto>(BoardHubEvents.CardRenamed, (data) =>
+            _hubConnection.On<CardRenameDto>(
+                BoardHubEvents.CardRenamed, 
+                (data) =>
             {
                 _logger.LogInformation(
                     "Card renamed: {NewTitle} (ID: {CardId})", 
@@ -144,7 +177,9 @@ internal class BoardHubService : IBoardHubService
                 OnCardRenamed?.Invoke(data);
             });
 
-            _hubConnection.On<CommentDto>(BoardHubEvents.CommentAdded, (comment) =>
+            _hubConnection.On<CommentDto>(
+                BoardHubEvents.CommentAdded, 
+                (comment) =>
             {
                 _logger.LogInformation(
                     "Received new comment via SignalR for card: {CardId}", 
@@ -153,13 +188,251 @@ internal class BoardHubService : IBoardHubService
                 OnCommentAdded?.Invoke(comment);
             });
 
-            _hubConnection.On<ActivityLogDto>(BoardHubEvents.ActivityLogAdded, (log) =>
+            _hubConnection.On<ActivityLogDto>(
+                BoardHubEvents.ActivityLogAdded, 
+                (log) =>
             {
                 _logger.LogInformation(
                     "Received new activity log via SignalR for card: {CardId}",
                     log.CardId);
 
                 OnActivityLogAdded?.Invoke(log);
+            });
+
+            _hubConnection.On<CardDueDateUpdateDto>(
+                BoardHubEvents.CardDueDateUpdated, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Card due date updated: {CardId} to {DueDate}",
+                    data.CardId,
+                    data.DueDate);
+
+                OnCardDueDateUpdated?.Invoke(data);
+            });
+
+            _hubConnection.On<LabelAddDto>(
+                BoardHubEvents.LabelAddedToCard, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received label attached to card via SignalR: " +
+                    "Label {LabelId} to Card {CardId}",
+                    data.Label.Id,
+                    data.CardId);
+
+                OnLabelAddedToCard?.Invoke(data.CardId, data.Label);
+            });
+
+            _hubConnection.On<LabelRemoveDto>(
+                BoardHubEvents.LabelRemovedFromCard, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received label removed from card via SignalR: " +
+                    "Label {LabelId} from Card {CardId}",
+                    data.LabelId,
+                    data.CardId);
+
+                OnLabelRemovedFromCard?.Invoke(data.CardId, data.LabelId);
+            });
+
+            _hubConnection.On<LabelDto>(
+                BoardHubEvents.LabelCreated, 
+                (label) =>
+            {
+                _logger.LogInformation(
+                    "Received new label created via SignalR: " +
+                    "{LabelName} (ID: {LabelId})",
+                    label.Name,
+                    label.Id);
+
+                OnLabelCreated?.Invoke(label);
+            });
+
+            _hubConnection.On<LabelDto>(
+                BoardHubEvents.LabelUpdated, 
+                (label) =>
+            {
+                _logger.LogInformation(
+                    "Received label updated via SignalR: " +
+                    "{LabelName} (ID: {LabelId})",
+                    label.Name,
+                    label.Id);
+
+                OnLabelUpdated?.Invoke(label);
+            });
+
+            _hubConnection.On<Guid>(
+                BoardHubEvents.LabelDeleted, 
+                (labelId) =>
+            {
+                _logger.LogInformation(
+                    "Received label deleted via SignalR: {LabelId}", 
+                    labelId);
+
+                OnLabelDeleted?.Invoke(labelId);
+            });
+
+            _hubConnection.On<AssigneeAddDto>(
+                BoardHubEvents.AssigneeAdded, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received new assignee via SignalR for card: {CardId}",
+                    data.CardId);
+
+                OnAssigneeAdded?.Invoke(data);
+            });
+
+            _hubConnection.On<AssigneeRemoveDto>(
+                BoardHubEvents.AssigneeRemoved, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received assignee removed via SignalR for card: " +
+                    "{CardId}, User: {UserId}",
+                    data.CardId,
+                    data.UserId);
+
+                OnAssigneeRemoved?.Invoke(data);
+            });
+
+            _hubConnection.On<CardMovedDto>(
+                BoardHubEvents.CardMoved, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received card moved via SignalR: " +
+                    "Card {CardId} to Section {SectionName}",
+                    data.CardId,
+                    data.NewSectionName);
+
+                OnCardMoved?.Invoke(data);
+            });
+
+            _hubConnection.On<CardDescriptionUpdateDto>(
+                BoardHubEvents.CardDescriptionUpdated, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received card description updated via SignalR " +
+                    "for card: {CardId}",
+                    data.CardId);
+
+                OnCardDescriptionUpdated?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistItemAddedDto>(
+                BoardHubEvents.ChecklistItemAdded, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist item added via SignalR " +
+                    "for checklist: {ChecklistId}",
+                    data.ChecklistId);
+
+                OnChecklistItemAdded?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistCreatedDto>(
+                BoardHubEvents.ChecklistCreated, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist created via SignalR " +
+                    "for card: {CardId}",
+                    data.CardId);
+
+                OnChecklistCreated?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistDeletedDto>(
+                BoardHubEvents.ChecklistDeleted, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist deleted via SignalR " +
+                    "for checklist: {ChecklistId}",
+                    data.ChecklistId);
+
+                OnChecklistDeleted?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistItemDeletedDto>(
+                BoardHubEvents.ChecklistItemDeleted, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist item deleted via SignalR " +
+                    "for item: {ItemId}",
+                    data.ItemId);
+
+                OnChecklistItemDeleted?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistRenamedDto>(
+                BoardHubEvents.ChecklistRenamed, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist renamed: {ChecklistId}", 
+                    data.ChecklistId);
+
+                OnChecklistRenamed?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistItemRenamedDto>(
+                BoardHubEvents.ChecklistItemRenamed, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist item renamed via SignalR: " +
+                    "Item {ItemId} in Checklist {ChecklistId} to '{NewTitle}'",
+                    data.ItemId,
+                    data.ChecklistId,
+                    data.NewTitle);
+
+                OnChecklistItemRenamed?.Invoke(data);
+            });
+
+            _hubConnection.On<ChecklistItemStatusUpdatedDto>(
+                BoardHubEvents.ChecklistItemStatusUpdated, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received checklist item status update: " +
+                    "Item {ItemId} to {IsDone}",
+                    data.ItemId,
+                    data.IsDone);
+
+                OnChecklistItemStatusUpdated?.Invoke(data);
+            });
+
+            _hubConnection.On<AttachmentAddedDto>(
+                BoardHubEvents.AttachmentAdded, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received new attachment via SignalR for Card: " +
+                    "{CardId}, File: {FileName}",
+                    data.CardId,
+                    data.Attachment.FileName);
+
+                OnAttachmentAdded?.Invoke(data);
+            });
+
+            _hubConnection.On<AttachmentDeletedDto>(
+                BoardHubEvents.AttachmentDeleted, 
+                (data) =>
+            {
+                _logger.LogInformation(
+                    "Received attachment deleted via SignalR for Card: " +
+                    "{CardId}, Attachment: {AttachmentId}",
+                    data.CardId,
+                    data.AttachmentId);
+
+                OnAttachmentDeleted?.Invoke(data);
             });
 
             await _hubConnection.StartAsync(cancellationToken);

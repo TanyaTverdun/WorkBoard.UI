@@ -18,36 +18,6 @@ public class AttachmentService : IAttachmentService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<AttachmentDto>> GetAttachmentsByCardAsync(
-        Guid cardId,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _attachmentApi.GetAttachmentsByCardAsync(
-                cardId, 
-                cancellationToken);
-        }
-        catch (ApiException apiEx)
-        {
-            _logger.LogError(
-                apiEx, 
-                "API error getting attachments for card {CardId}. " +
-                "Status: {StatusCode}", 
-                cardId, 
-                apiEx.StatusCode);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex, 
-                "Error getting attachments for card {CardId}", 
-                cardId);
-            throw;
-        }
-    }
-
     public async Task<AttachmentDto> UploadAttachmentAsync(
         Guid cardId, 
         StreamPart file, 
