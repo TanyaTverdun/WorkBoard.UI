@@ -78,6 +78,7 @@ public partial class CardDetails: ComponentBase, IDisposable
         BoardHubService.OnCardDescriptionUpdated += HandleDescriptionUpdated;
         BoardHubService.OnCardRenamed += HandleCardRenamed;
         BoardHubService.OnCardDeleted += HandleCardDeleted;
+        BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
@@ -390,6 +391,15 @@ public partial class CardDetails: ComponentBase, IDisposable
         }
     }
 
+    private void HandleActivityLogAdded(ActivityLogDto log)
+    {
+        if (log.CardId == Card.Id)
+        {
+            _activityLogs.Insert(0, log);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     public void Dispose()
     {
         _ = _jsModule?.DisposeAsync();
@@ -399,5 +409,6 @@ public partial class CardDetails: ComponentBase, IDisposable
         BoardHubService.OnCardDescriptionUpdated -= HandleDescriptionUpdated;
         BoardHubService.OnCardRenamed -= HandleCardRenamed;
         BoardHubService.OnCardDeleted -= HandleCardDeleted;
+        BoardHubService.OnActivityLogAdded -= HandleActivityLogAdded;
     }
 }
