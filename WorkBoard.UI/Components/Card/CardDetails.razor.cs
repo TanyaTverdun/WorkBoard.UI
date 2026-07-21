@@ -22,6 +22,9 @@ public partial class CardDetails: ComponentBase, IDisposable
     public KanbanTaskViewModel Card { get; set; } = default!;
 
     [Parameter]
+    public bool IsObserver { get; set; }
+
+    [Parameter]
     public Guid CurrentUserId { get; set; }
 
     [Inject]
@@ -78,6 +81,7 @@ public partial class CardDetails: ComponentBase, IDisposable
         BoardHubService.OnCardDescriptionUpdated += HandleDescriptionUpdated;
         BoardHubService.OnCardRenamed += HandleCardRenamed;
         BoardHubService.OnCardDeleted += HandleCardDeleted;
+        BoardHubService.OnActivityLogAdded += HandleActivityLogAdded;
 
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
@@ -131,6 +135,11 @@ public partial class CardDetails: ComponentBase, IDisposable
 
     private async Task LoadAndOpenPicker()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _isPickerLoaded = true;
         StateHasChanged();
 
@@ -141,6 +150,11 @@ public partial class CardDetails: ComponentBase, IDisposable
 
     private async Task OnDueDateChangedAsync(DateTime? newDate)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (_dueDate?.Date == newDate?.Date)
         {
             return;
@@ -192,6 +206,11 @@ public partial class CardDetails: ComponentBase, IDisposable
 
     private async Task ConfirmDeleteCardAsync()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         try
         {
             _isDeletingLocally = true;
@@ -209,6 +228,11 @@ public partial class CardDetails: ComponentBase, IDisposable
 
     private async Task SaveTitleAsync()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _isSavingTitle = true;
 
         if (string.IsNullOrWhiteSpace(_editedTitle))
@@ -274,6 +298,11 @@ public partial class CardDetails: ComponentBase, IDisposable
 
     private async Task SaveDescriptionAsync()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _isSavingDescription = true;
 
         var trimmedDesc = _editedDescription?.Trim() ?? string.Empty;
@@ -390,6 +419,15 @@ public partial class CardDetails: ComponentBase, IDisposable
         }
     }
 
+    private void HandleActivityLogAdded(ActivityLogDto log)
+    {
+        if (log.CardId == Card.Id)
+        {
+            _activityLogs.Insert(0, log);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     public void Dispose()
     {
         _ = _jsModule?.DisposeAsync();
@@ -399,5 +437,6 @@ public partial class CardDetails: ComponentBase, IDisposable
         BoardHubService.OnCardDescriptionUpdated -= HandleDescriptionUpdated;
         BoardHubService.OnCardRenamed -= HandleCardRenamed;
         BoardHubService.OnCardDeleted -= HandleCardDeleted;
+        BoardHubService.OnActivityLogAdded -= HandleActivityLogAdded;
     }
 }

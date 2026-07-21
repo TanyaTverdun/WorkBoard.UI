@@ -45,7 +45,7 @@
                         @_checklist?.Name
                     </MudText>
 
-                    @if (_isHoveringChecklistTitle)
+                    @if (!IsObserver && _isHoveringChecklistTitle)
                     {
                         <div class="d-flex align-center">
                             <MudIconButton Icon=@Icons.Material.Outlined.Edit
@@ -125,22 +125,25 @@
                     }
                     else
                     {
-                        <MudCheckBox T="bool"
-                                     Value=@item.IsDone
-                                     ValueChanged=@((bool val) => UpdateItemStatusAsync(item, val))
-                                     Color=@Color.Success
-                                     Dense="true"
-                                     Class="flex-grow-1 mr-2"
-                                     Style="min-width: 0;">
+                        <div class="d-flex align-start flex-grow-1 overflow-hidden" style="min-width: 0;">
+                            <MudCheckBox T="bool"
+                                         Value=@item.IsDone
+                                         ValueChanged=@((bool val) => UpdateItemStatusAsync(item, val))
+                                         Color=@Color.Success
+                                         Dense="true"
+                                         ReadOnly="@IsObserver"
+                                         Class="flex-grow-1 mr-2 overflow-hidden"
+                                         Style="min-width: 0;">
 
-                            <span style="word-break: break-all; white-space: normal; line-height: 1.2;">
-                                @item.Title
-                            </span>
-                        </MudCheckBox>
+                                <span style="word-break: break-all; white-space: normal; line-height: 1.2;">
+                                    @item.Title
+                                </span>
+                            </MudCheckBox>
+                        </div>
 
-                        @if (_hoveredItemId == item.Id)
-                        {
-                            <div class="d-flex align-center flex-shrink-0">
+                        <div class="d-flex align-center flex-shrink-0">
+                            @if (!IsObserver)
+                            {
                                 @if (_pendingDeleteChecklistItemId == item.Id)
                                 {
                                     <MudButton Variant=@Variant.Filled
@@ -164,58 +167,61 @@
                                                    Class="text-muted pa-1"
                                                    OnClick=@(() => _pendingDeleteChecklistItemId = item.Id) />
                                 }
-                            </div>
-                        }
+                            }
+                        </div>
                     }
                 </div>
             }
         </div>
 
-        @if (!_isAddingChecklistItem)
+        @if (!IsObserver)
         {
-            <MudButton Variant=@Variant.Text
-                       StartIcon=@Icons.Material.Rounded.Add
-                       Size=@Size.Small
-                       Class="text-muted text-none mt-1"
-                       OnClick=@ShowAddChecklistItemForm>
-                Add item
-            </MudButton>
-        }
-        else
-        {
-            <MudPaper Elevation="0"
-                      Class="d-flex align-center pa-2 mt-2 border-solid border mud-border-info rounded add-item-container">
-                <MudIcon Icon=@Icons.Material.Outlined.CheckBoxOutlineBlank
-                         Size=@Size.Small
-                         Class="text-muted mr-2 checklist-icon-placeholder" />
+            @if (!_isAddingChecklistItem)
+            {
+                <MudButton Variant=@Variant.Text
+                StartIcon=@Icons.Material.Rounded.Add
+                Size=@Size.Small
+                Class="text-muted text-none mt-1"
+                OnClick=@ShowAddChecklistItemForm>
+                    Add item
+                </MudButton>
+            }
+            else
+            {
+                <MudPaper Elevation="0"
+                Class="d-flex align-center pa-2 mt-2 border-solid border mud-border-info rounded add-item-container">
+                    <MudIcon Icon=@Icons.Material.Outlined.CheckBoxOutlineBlank
+                    Size=@Size.Small
+                    Class="text-muted mr-2 checklist-icon-placeholder" />
 
-                <MudTextField @bind-Value=@_newChecklistItemTitle
-                              Placeholder="Add item..."
-                              Margin=@Margin.None
-                              Class="flex-grow-1 mt-0 add-item-input"
-                              Immediate="true"
-                              MaxLength="200" />
+                    <MudTextField @bind-Value=@_newChecklistItemTitle
+                    Placeholder="Add item..."
+                    Margin=@Margin.None
+                    Class="flex-grow-1 mt-0 add-item-input"
+                    Immediate="true"
+                    MaxLength="200" />
 
-                <div class="d-flex align-center gap-1 ml-2">
-                    <MudButton Variant=@Variant.Filled
-                               Color=@Color.Info
-                               Size=@Size.Small
-                               Class="rounded text-none font-weight-bold px-3 btn-create"
-                               Disabled=@string.IsNullOrWhiteSpace(_newChecklistItemTitle)
-                               OnClick=@AddChecklistItem>
-                        Add
-                    </MudButton>
+                    <div class="d-flex align-center gap-1 ml-2">
+                        <MudButton Variant=@Variant.Filled
+                        Color=@Color.Info
+                        Size=@Size.Small
+                        Class="rounded text-none font-weight-bold px-3 btn-create"
+                        Disabled=@string.IsNullOrWhiteSpace(_newChecklistItemTitle)
+                        OnClick=@AddChecklistItem>
+                            Add
+                        </MudButton>
 
-                    <MudIconButton Icon="@Icons.Material.Rounded.Close"
-                                   Size="Size.Small"
-                                   Class="text-muted pa-1"
-                                   OnClick="CancelAddChecklistItem" />
-                </div>
-            </MudPaper>
+                        <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                        Size="Size.Small"
+                        Class="text-muted pa-1"
+                        OnClick="CancelAddChecklistItem" />
+                    </div>
+                </MudPaper>
+            }
         }
     </div>
 }
-else
+else if (!IsObserver)
 {
     <div class="mb-6">
         <MudButton Variant=@Variant.Outlined

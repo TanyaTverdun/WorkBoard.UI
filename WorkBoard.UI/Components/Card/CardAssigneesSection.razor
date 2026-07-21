@@ -27,92 +27,98 @@
                     @assignee.FullName
                 </MudText>
 
-                <MudIconButton Icon="@Icons.Material.Rounded.Close"
-                               Size="Size.Small"
-                               Class="pa-0 text-muted"
-                               OnClick="@(() => RemoveAssigneeAsync(assignee))" />
+                @if (!IsObserver)
+                {
+                    <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                                   Size="Size.Small"
+                                   Class="pa-0 text-muted"
+                                   OnClick="@(() => RemoveAssigneeAsync(assignee))" />
+                }
             </MudPaper>
         }
 
-        <MudButton Variant=@Variant.Outlined
-                   Size=@Size.Small
-                   StartIcon=@Icons.Material.Rounded.Add
-                   Class="rounded-pill border-dashed text-muted px-4 text-none"
-                   Style="text-transform: none"
-                   OnClick=@(() => _isPopoverOpen = !_isPopoverOpen)>
-            Add member
-        </MudButton>
+        @if (!IsObserver)
+        {
+            <MudButton Variant=@Variant.Outlined
+            Size=@Size.Small
+            StartIcon=@Icons.Material.Rounded.Add
+            Class="rounded-pill border-dashed text-muted px-4 text-none"
+            Style="text-transform: none"
+            OnClick=@(() => _isPopoverOpen = !_isPopoverOpen)>
+                Add member
+            </MudButton>
 
-        <MudPopover Open=@_isPopoverOpen
-                    AnchorOrigin=@Origin.BottomLeft
-                    TransformOrigin=@Origin.TopLeft
-                    Class="pa-3 mud-elevation-4 rounded-lg mt-1"
-                    Style="width: 280px; z-index: 9999;">
+            <MudPopover Open=@_isPopoverOpen
+            AnchorOrigin=@Origin.BottomLeft
+            TransformOrigin=@Origin.TopLeft
+            Class="pa-3 mud-elevation-4 rounded-lg mt-1"
+            Style="width: 280px; z-index: 9999;">
 
-            <div class="d-flex justify-space-between align-center mb-3">
-                <MudText Typo=@Typo.caption
-                         Class="text-muted font-weight-bold text-uppercase">Assign Member</MudText>
-
-                <MudIconButton Icon=@Icons.Material.Filled.Close
-                               Size=@Size.Small
-                               OnClick=@(() => _isPopoverOpen = false)
-                               Class="pa-0" />
-            </div>
-
-            <MudTextField @bind-Value=@_searchText
-                          Placeholder="Search by email or name..."
-                          Variant=@Variant.Outlined
-                          Margin=@Margin.Dense
-                          Adornment=@Adornment.Start
-                          AdornmentIcon=@Icons.Material.Filled.Search
-                          Size="Size.Small"
-                          Class="mb-2 bg-white rounded-lg compact-input"
-                          Immediate="true" />
-
-            <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar assignee-list-scroll">
-                @foreach (var member in FilteredAssignableUsers)
-                {
-                    var isAssigned = _assignees.Any(a => a.Email == member.Email);
-
-                    <div @key=@member.UserId
-                         class="d-flex align-center gap-3 pa-2 rounded-lg cursor-pointer mud-ripple assignee-row"
-                         @onclick=@(() => ToggleAssigneeAsync(member))>
-
-                        <MudAvatar Size=@Size.Medium
-                                   Color=@Color.Tertiary
-                                   Class="assignee-avatar">
-                            @member.Initials
-                        </MudAvatar>
-
-                        <div class="d-flex flex-column flex-grow-1">
-                            <MudText Typo=@Typo.body2
-                                     Class="font-weight-medium assignee-name">@member.FullName</MudText>
-
-                            <MudText Typo=@Typo.caption
-                                     Class="text-muted font-weight-medium">@member.Email</MudText>
-                        </div>
-
-                        @if (isAssigned)
-                        {
-                            <MudIcon Icon=@Icons.Material.Rounded.Check
-                                     Size=@Size.Small
-                                     Color=@Color.Info
-                                     Class="mr-1" />
-                        }
-                    </div>
-                }
-
-                @if (!FilteredAssignableUsers.Any())
-                {
+                <div class="d-flex justify-space-between align-center mb-3">
                     <MudText Typo=@Typo.caption
-                             Class="text-muted text-center py-3">No members found</MudText>
-                }
-            </div>
-        </MudPopover>
+                    Class="text-muted font-weight-bold text-uppercase">Assign Member</MudText>
 
-        <MudOverlay Visible=@_isPopoverOpen
+                    <MudIconButton Icon=@Icons.Material.Filled.Close
+                    Size=@Size.Small
                     OnClick=@(() => _isPopoverOpen = false)
-                    AutoClose="true"
-                    ZIndex="9998" />
+                    Class="pa-0" />
+                </div>
+
+                <MudTextField @bind-Value=@_searchText
+                Placeholder="Search by email or name..."
+                Variant=@Variant.Outlined
+                Margin=@Margin.Dense
+                Adornment=@Adornment.Start
+                AdornmentIcon=@Icons.Material.Filled.Search
+                Size="Size.Small"
+                Class="mb-2 bg-white rounded-lg compact-input"
+                Immediate="true" />
+
+                <div class="d-flex flex-column gap-1 overflow-y-auto custom-scrollbar assignee-list-scroll">
+                    @foreach (var member in FilteredAssignableUsers)
+                    {
+                        var isAssigned = _assignees.Any(a => a.Email == member.Email);
+
+                        <div @key=@member.UserId
+                        class="d-flex align-center gap-3 pa-2 rounded-lg cursor-pointer mud-ripple assignee-row"
+                        @onclick=@(() => ToggleAssigneeAsync(member))>
+
+                            <MudAvatar Size=@Size.Medium
+                            Color=@Color.Tertiary
+                            Class="assignee-avatar">
+                                @member.Initials
+                            </MudAvatar>
+
+                            <div class="d-flex flex-column flex-grow-1">
+                                <MudText Typo=@Typo.body2
+                                Class="font-weight-medium assignee-name">@member.FullName</MudText>
+
+                                <MudText Typo=@Typo.caption
+                                Class="text-muted font-weight-medium">@member.Email</MudText>
+                            </div>
+
+                            @if (isAssigned)
+                            {
+                                <MudIcon Icon=@Icons.Material.Rounded.Check
+                                Size=@Size.Small
+                                Color=@Color.Info
+                                Class="mr-1" />
+                            }
+                        </div>
+                    }
+
+                    @if (!FilteredAssignableUsers.Any())
+                    {
+                        <MudText Typo=@Typo.caption
+                        Class="text-muted text-center py-3">No members found</MudText>
+                    }
+                </div>
+            </MudPopover>
+
+            <MudOverlay Visible=@_isPopoverOpen
+            OnClick=@(() => _isPopoverOpen = false)
+            AutoClose="true"
+            ZIndex="9998" />
+        }
     </div>
 </div>

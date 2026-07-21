@@ -21,6 +21,9 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
     [Parameter]
     public EventCallback<List<LabelDto>> AppliedLabelsChanged { get; set; }
 
+    [Parameter]
+    public bool IsObserver { get; set; }
+
     [Inject]
     private IBoardHubService BoardHubService { get; set; } = default!;
 
@@ -71,6 +74,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private async Task ToggleLabelAsync(LabelDto label)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         var existingLabel = _labels.FirstOrDefault(x => x.Id == label.Id);
         if (existingLabel != null)
         {
@@ -109,6 +117,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private void InitiateDeleteLabel(Guid labelId)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _pendingDeleteLabelId = labelId;
     }
 
@@ -119,6 +132,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private async Task ConfirmDeleteLabelAsync(LabelDto label)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         try
         {
             await LabelService.DeleteLabelAsync(label.Id);
@@ -141,6 +159,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private void EditLabel(LabelDto label)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _editingLabelId = label.Id;
         _editingLabelName = label.Name;
         _editingLabelColor = new MudColor(label.Color ?? "#4a4388ff");
@@ -153,6 +176,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private async Task SaveEditLabelAsync()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_editingLabelName) || 
             _editingLabelId == null)
         {
@@ -182,6 +210,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private void ShowCreateLabelForm()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _isCreatingNewLabel = true;
         _newLabelName = string.Empty;
         _newLabelColor = new("#4a4388ff");
@@ -195,6 +228,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
 
     private async Task CreateNewLabelAsync()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_newLabelName))
         {
             return;

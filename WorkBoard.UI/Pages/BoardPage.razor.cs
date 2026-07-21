@@ -80,11 +80,119 @@ public partial class BoardPage
     private Guid? _currentUserId;
     private UserSearchDto? _selectedUserToAdd;
 
-    private bool IsWorkspaceObserver =>
-        WorkspaceStateProvider.CurrentRole == WorkspaceRole.Observer;
     private bool IsCurrentUserObserver =>
         _boardMembers?.FirstOrDefault(
             m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
+
+    private bool _isFilterPopoverOpen;
+    private bool _membersFilterExpanded;
+    private bool _labelsFilterExpanded;
+    private const int VisibleFiltersCount = 4;
+
+    private HashSet<Guid> _selectedFilterMembers = new();
+    private HashSet<Guid> _selectedFilterLabels = new();
+    private HashSet<string> _selectedFilterDueDates = new();
+
+    private IEnumerable<LabelDto> BoardUniqueLabels => _tasks
+        .SelectMany(t => t.Labels)
+        .GroupBy(l => l.Id)
+        .Select(g => g.First());
+
+    private readonly (string Name, string Icon, string Color)[] _dateFilters = new[]
+    {
+        ("No Due Date", Icons.Material.Outlined.EventBusy, "#64748b"),
+        ("Overdue", Icons.Material.Outlined.ErrorOutline, "#ef4444"),
+        ("Due Today", Icons.Material.Outlined.AccessTime, "#f97316"),
+        ("Next 24 Hours", Icons.Material.Outlined.CalendarToday, "#eab308"),
+        ("Next Month", Icons.Material.Outlined.CalendarMonth, "#3b82f6")
+    };
+
+    private bool HasActiveFilters =>
+        _selectedFilterMembers.Any() ||
+        _selectedFilterLabels.Any() ||
+        _selectedFilterDueDates.Any();
+
+    private int ActiveFiltersCount =>
+        _selectedFilterMembers.Count +
+        _selectedFilterLabels.Count +
+        _selectedFilterDueDates.Count;
+
+    private IEnumerable<KanbanTaskViewModel> FilteredTasks
+    {
+        get
+        {
+            var result = _tasks.AsEnumerable();
+
+            if (_selectedFilterMembers.Any())
+            {
+                bool includeNoAssignee = _selectedFilterMembers.Contains(Guid.Empty);
+
+                result = result.Where(t =>
+                    (includeNoAssignee && 
+                    (t.Assignees == null || !t.Assignees.Any())) ||
+                    (t.Assignees != null && 
+                    t.Assignees.Any(a => _selectedFilterMembers.Contains(a.UserId)))
+                );
+            }
+
+            if (_selectedFilterLabels.Any())
+            {
+                bool includeNoLabels = _selectedFilterLabels.Contains(Guid.Empty);
+
+                result = result.Where(t =>
+                    (includeNoLabels && 
+                    (t.Labels == null || !t.Labels.Any())) ||
+                    (t.Labels != null && 
+                    t.Labels.Any(l => _selectedFilterLabels.Contains(l.Id)))
+                );
+            }
+
+            if (_selectedFilterDueDates.Any())
+            {
+                var now = DateTime.Now;
+                var today = now.Date;
+
+                result = result.Where(t =>
+                {
+                    if (!t.DueDate.HasValue)
+                    {
+                        return _selectedFilterDueDates.Contains(_dateFilters[0].Name);
+                    }
+
+                    var date = t.DueDate.Value;
+                    bool isMatch = false;
+
+                    if (_selectedFilterDueDates.Contains(_dateFilters[1].Name) && 
+                        date < now)
+                    {
+                        isMatch = true;
+                    }
+
+                    if (_selectedFilterDueDates.Contains(_dateFilters[2].Name) && 
+                        date.Date == today)
+                    {
+                        isMatch = true;
+                    }
+
+                    if (_selectedFilterDueDates.Contains(_dateFilters[3].Name) && 
+                        date >= now && date <= now.AddHours(24))
+                    {
+                        isMatch = true;
+                    }
+
+                    if (_selectedFilterDueDates.Contains(_dateFilters[4].Name) && 
+                        date.Month == now.AddMonths(1).Month && date.Year == now.AddMonths(1).Year)
+                    {
+                        isMatch = true;
+                    }
+                       
+                    return isMatch;
+                });
+            }
+
+            return result;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -220,6 +328,11 @@ public partial class BoardPage
 
     private async Task TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (info.Item is null)
         {
             return;
@@ -233,9 +346,7 @@ public partial class BoardPage
             return;
         }
 
-        var targetSection = _sections
-            .FirstOrDefault(s => s.Id == targetSectionId);
-
+        var targetSection = _sections.FirstOrDefault(s => s.Id == targetSectionId);
         if (targetSection == null)
         {
             return;
@@ -244,30 +355,72 @@ public partial class BoardPage
         info.Item.SectionId = targetSectionId;
         info.Item.Status = targetSection.Name;
 
-        var cardsInSection = _tasks
+        var visibleCardsInSection = FilteredTasks
             .Where(t => t.SectionId == targetSectionId && t.Id != info.Item.Id)
             .OrderBy(t => t.Position)
             .ToList();
 
         double newPosition;
 
-        if (cardsInSection.Count == 0)
+        if (visibleCardsInSection.Count == 0)
         {
-            newPosition = 1.0;
+            var allCardsInSection = _tasks
+                .Where(t => 
+                    t.SectionId == targetSectionId && 
+                    t.Id != info.Item.Id)
+                .ToList();
+
+            newPosition = allCardsInSection.Any() ? allCardsInSection.Max(t => t.Position) + 1.0 : 1.0;
         }
         else if (info.IndexInZone <= 0)
         {
-            newPosition = cardsInSection.First().Position / 2.0;
+            var firstVisualCard = visibleCardsInSection.First();
+
+            var actualPrevCard = _tasks
+                .Where(t => 
+                    t.SectionId == targetSectionId && 
+                    t.Position < firstVisualCard.Position && 
+                    t.Id != info.Item.Id)
+                .OrderByDescending(t => t.Position)
+                .FirstOrDefault();
+
+            double prevPos = actualPrevCard?.Position ?? 0.0;
+            newPosition = (prevPos + firstVisualCard.Position) / 2.0;
         }
-        else if (info.IndexInZone >= cardsInSection.Count)
+        else if (info.IndexInZone >= visibleCardsInSection.Count)
         {
-            newPosition = cardsInSection.Last().Position + 1.0;
+            var lastVisualCard = visibleCardsInSection.Last();
+
+            var actualNextCard = _tasks
+                .Where(t => 
+                    t.SectionId == targetSectionId && 
+                    t.Position > lastVisualCard.Position && 
+                    t.Id != info.Item.Id)
+                .OrderBy(t => t.Position)
+                .FirstOrDefault();
+
+            if (actualNextCard != null)
+            {
+                newPosition = (lastVisualCard.Position + actualNextCard.Position) / 2.0;
+            }
+            else
+            {
+                newPosition = lastVisualCard.Position + 1.0;
+            }
         }
         else
         {
-            double prevPos = cardsInSection[info.IndexInZone - 1].Position;
-            double nextPos = cardsInSection[info.IndexInZone].Position;
-            newPosition = (prevPos + nextPos) / 2.0;
+            var visualPrevCard = visibleCardsInSection[info.IndexInZone - 1];
+
+            var actualNextCard = _tasks
+                .Where(t => 
+                    t.SectionId == targetSectionId && 
+                    t.Position > visualPrevCard.Position && 
+                    t.Id != info.Item.Id)
+                .OrderBy(t => t.Position)
+                .FirstOrDefault();
+
+            newPosition = (visualPrevCard.Position + actualNextCard!.Position) / 2.0;
         }
 
         info.Item.Position = newPosition;
@@ -277,7 +430,10 @@ public partial class BoardPage
 
         try
         {
-            await CardService.MoveCardAsync(BoardIdGuid, info.Item.Id, request);
+            await CardService.MoveCardAsync(
+                BoardIdGuid, 
+                info.Item.Id, 
+                request);
         }
         catch (Exception)
         {
@@ -286,12 +442,17 @@ public partial class BoardPage
             Snackbar.Add("Failed to move card", Severity.Error);
 
             StateHasChanged();
-            _dropContainer.Refresh();
+            _dropContainer?.Refresh();
         }
     }
 
     private async Task OnValidSectionSubmit(EditContext context)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         var request = new CreateSectionRequest
         {
             Name = newSectionModel.Name
@@ -312,6 +473,11 @@ public partial class BoardPage
 
     private async Task SaveRename(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(section.EditName))
         {
             section.IsRenaming = false;
@@ -348,6 +514,11 @@ public partial class BoardPage
 
     private async Task DeleteSection(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         try
         {
             await SectionService.DeleteSectionAsync(
@@ -362,6 +533,11 @@ public partial class BoardPage
 
     private void StartRename(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         section.EditName = section.Name;
         section.IsRenaming = true;
         section.MenuOpen = false;
@@ -369,6 +545,11 @@ public partial class BoardPage
 
     private void OpenAddNewSection()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         _addSectionOpen = true;
     }
 
@@ -380,6 +561,11 @@ public partial class BoardPage
 
     private async Task AddTask(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(section.NewTaskName))
         {
             return;
@@ -416,6 +602,11 @@ public partial class BoardPage
 
     private void OpenReorderPopover()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         _reorderList = _sections.ToList();
         _isReorderPopoverOpen = true;
     }
@@ -428,6 +619,11 @@ public partial class BoardPage
     private void SectionDropped(
         MudItemDropInfo<KanbanSectionViewModel> info)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         var item = info.Item;
 
         if (item is null)
@@ -453,6 +649,11 @@ public partial class BoardPage
 
     private async Task ApplySectionOrderAsync()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         var movedSections = _reorderList
             .Where(s => s.IsPositionChanged)
             .ToList();
@@ -497,6 +698,11 @@ public partial class BoardPage
         BoardMemberViewModel member, 
         BoardRole newRole)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (member.Dto.UserRole == newRole)
         {
             return;
@@ -537,6 +743,11 @@ public partial class BoardPage
 
     private async Task RemoveMemberAsync(BoardMemberViewModel member)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         try
         {
             await BoardMembersService.RemoveBoardMemberAsync(
@@ -553,6 +764,11 @@ public partial class BoardPage
 
     private async Task AddMemberAsync()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (_selectedUserToAdd == null || WorkspaceId == null)
         {
             return;
@@ -618,7 +834,8 @@ public partial class BoardPage
         var parameters = new DialogParameters<CardDetails>
     {
         { x => x.Card, card },
-        { x => x.CurrentUserId, _currentUserId ?? Guid.Empty }
+        { x => x.CurrentUserId, _currentUserId ?? Guid.Empty },
+        { x => x.IsObserver, IsCurrentUserObserver }
     };
 
         var options = new DialogOptions
@@ -629,12 +846,76 @@ public partial class BoardPage
             BackdropClick = true
         };
 
-        await DialogService.ShowAsync<CardDetails>(string.Empty, parameters, options);
+        await DialogService.ShowAsync<CardDetails>(
+            string.Empty, 
+            parameters, 
+            options);
+    }
+
+    private void ToggleFilterPopover()
+    {
+        _isFilterPopoverOpen = !_isFilterPopoverOpen;
+        if (!_isFilterPopoverOpen)
+        {
+            _membersFilterExpanded = false;
+            _labelsFilterExpanded = false;
+        }
+    }
+
+    private async Task ApplyFilterAsync()
+    {
+        StateHasChanged();
+
+        await Task.Delay(10);
+
+        _dropContainer?.Refresh();
+    }
+
+    private async Task ToggleMemberFilter(Guid memberId)
+    {
+        if (!_selectedFilterMembers.Add(memberId))
+        {
+            _selectedFilterMembers.Remove(memberId);
+        }
+
+        await ApplyFilterAsync();
+    }
+
+    private async Task ToggleLabelFilter(Guid labelId)
+    {
+        if (!_selectedFilterLabels.Add(labelId))
+        {
+            _selectedFilterLabels.Remove(labelId);
+        }
+
+        await ApplyFilterAsync();
+    }
+
+    private async Task ToggleDueDateFilter(string filter)
+    {
+        if (!_selectedFilterDueDates.Add(filter))
+        {
+            _selectedFilterDueDates.Remove(filter);
+        }
+
+        await ApplyFilterAsync();
+    }
+
+    private async Task ClearAllFiltersAsync()
+    {
+        _selectedFilterMembers.Clear();
+        _selectedFilterLabels.Clear();
+        _selectedFilterDueDates.Clear();
+
+        await ApplyFilterAsync();
     }
 
     private void HandleCardCreated(CardDto newCard)
     {
-        if (_tasks.Any(t => t.Id == newCard.Id)) return;
+        if (_tasks.Any(t => t.Id == newCard.Id))
+        {
+            return;
+        }
 
         var targetSection = _sections.FirstOrDefault(s => s.Id == newCard.SectionId);
 

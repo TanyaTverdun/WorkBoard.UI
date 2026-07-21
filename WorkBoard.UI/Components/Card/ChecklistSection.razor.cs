@@ -12,6 +12,9 @@ public partial class ChecklistSection : ComponentBase, IDisposable
     [Parameter]
     public Guid CardId { get; set; }
 
+    [Parameter]
+    public bool IsObserver { get; set; }
+
     [Inject]
     private IChecklistService ChecklistService { get; set; } = default!;
 
@@ -66,6 +69,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private void StartAddingChecklist()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _checklist = null;
         _editedChecklistTitle = string.Empty;
         _isEditingChecklistTitle = true;
@@ -74,6 +82,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private void EnableChecklistTitleEdit()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _editedChecklistTitle = _checklist?.Name ?? string.Empty;
         _isEditingChecklistTitle = true;
         _isPendingDeleteChecklist = false;
@@ -81,6 +94,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private async Task SaveChecklistTitle()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_editedChecklistTitle))
         {
             _isEditingChecklistTitle = false;
@@ -141,6 +159,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private async Task ConfirmDeleteChecklist()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (_checklist != null)
         {
             try
@@ -168,6 +191,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private void ShowAddChecklistItemForm()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _isAddingChecklistItem = true;
         _newChecklistItemTitle = string.Empty;
     }
@@ -180,6 +208,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private async Task AddChecklistItem()
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_newChecklistItemTitle)
             || _checklist == null)
         {
@@ -229,8 +262,15 @@ public partial class ChecklistSection : ComponentBase, IDisposable
         }
     }
 
-    private async Task UpdateItemStatusAsync(ChecklistItemDto item, bool isDone)
+    private async Task UpdateItemStatusAsync(
+        ChecklistItemDto item, 
+        bool isDone)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         item.IsDone = isDone;
         StateHasChanged();
 
@@ -261,6 +301,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private void EnableItemEdit(ChecklistItemDto item)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         _editingItemId = item.Id;
         _editedItemTitle = item.Title;
         _hoveredItemId = null;
@@ -274,6 +319,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private async Task SaveItemTitleAsync(ChecklistItemDto item)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(_editedItemTitle))
         {
             CancelItemEdit();
@@ -317,6 +367,11 @@ public partial class ChecklistSection : ComponentBase, IDisposable
 
     private async Task DeleteChecklistItemAsync(ChecklistItemDto item)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         try
         {
             await ChecklistService.DeleteChecklistItemAsync(item.Id);

@@ -19,6 +19,9 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
     [Parameter]
     public EventCallback<List<AttachmentDto>> AttachmentsChanged { get; set; }
 
+    [Parameter]
+    public bool IsObserver { get; set; }
+
     [Inject]
     private IAttachmentService AttachmentService { get; set; } = default!;
 
@@ -75,6 +78,11 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
 
     private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         var file = e.File;
         if (file == null)
         {
@@ -86,7 +94,15 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
 
     private async Task UploadFileAsync(IBrowserFile file)
     {
-        if (file == null) return;
+        if (IsObserver)
+        {
+            return;
+        }
+
+        if (file == null)
+        {
+            return;
+        }
 
         long maxFileSize = 100L * 1024 * 1024;
 
@@ -122,6 +138,11 @@ public partial class CardAttachmentsSection : ComponentBase, IDisposable
 
     private async Task ConfirmDeleteAttachmentAsync(Guid attachmentId)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         try
         {
             await AttachmentService.DeleteAttachmentAsync(
