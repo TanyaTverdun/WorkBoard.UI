@@ -20,6 +20,9 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
     [Parameter]
     public List<UserSearchDto> AssignableUsers { get; set; } = new();
 
+    [Parameter]
+    public bool IsObserver { get; set; }
+
     [Inject]
     private ICardService CardService { get; set; } = default!;
 
@@ -53,6 +56,11 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
 
     public async Task ToggleAssigneeAsync(UserSearchDto user)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         var existingAssignee = _assignees
             .FirstOrDefault(a => a.UserId == user.UserId);
 
@@ -68,6 +76,11 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
 
     private async Task AddAssigneeAsync(UserSearchDto user)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         try
         {
             var request = new AddCardAssigneeRequest(user.UserId);
@@ -95,6 +108,11 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
 
     private async Task RemoveAssigneeAsync(CardAssigneeDto assignee)
     {
+        if (IsObserver)
+        {
+            return;
+        }
+
         try
         {
             await CardService.RemoveAssigneeAsync(CardId, assignee.UserId);

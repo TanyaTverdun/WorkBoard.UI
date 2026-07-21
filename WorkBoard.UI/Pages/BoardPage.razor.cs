@@ -80,8 +80,6 @@ public partial class BoardPage
     private Guid? _currentUserId;
     private UserSearchDto? _selectedUserToAdd;
 
-    private bool IsWorkspaceObserver =>
-        WorkspaceStateProvider.CurrentRole == WorkspaceRole.Observer;
     private bool IsCurrentUserObserver =>
         _boardMembers?.FirstOrDefault(
             m => m.Dto.UserId == _currentUserId)?.Dto.UserRole == BoardRole.Observer;
@@ -330,7 +328,15 @@ public partial class BoardPage
 
     private async Task TaskUpdated(MudItemDropInfo<KanbanTaskViewModel> info)
     {
-        if (info.Item is null) return;
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
+        if (info.Item is null)
+        {
+            return;
+        }
 
         var oldSectionId = info.Item.SectionId;
         var oldSectionName = info.Item.Status;
@@ -442,6 +448,11 @@ public partial class BoardPage
 
     private async Task OnValidSectionSubmit(EditContext context)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         var request = new CreateSectionRequest
         {
             Name = newSectionModel.Name
@@ -462,6 +473,11 @@ public partial class BoardPage
 
     private async Task SaveRename(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(section.EditName))
         {
             section.IsRenaming = false;
@@ -498,6 +514,11 @@ public partial class BoardPage
 
     private async Task DeleteSection(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         try
         {
             await SectionService.DeleteSectionAsync(
@@ -512,6 +533,11 @@ public partial class BoardPage
 
     private void StartRename(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         section.EditName = section.Name;
         section.IsRenaming = true;
         section.MenuOpen = false;
@@ -519,6 +545,11 @@ public partial class BoardPage
 
     private void OpenAddNewSection()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         _addSectionOpen = true;
     }
 
@@ -530,6 +561,11 @@ public partial class BoardPage
 
     private async Task AddTask(KanbanSectionViewModel section)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(section.NewTaskName))
         {
             return;
@@ -566,6 +602,11 @@ public partial class BoardPage
 
     private void OpenReorderPopover()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         _reorderList = _sections.ToList();
         _isReorderPopoverOpen = true;
     }
@@ -578,6 +619,11 @@ public partial class BoardPage
     private void SectionDropped(
         MudItemDropInfo<KanbanSectionViewModel> info)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         var item = info.Item;
 
         if (item is null)
@@ -603,6 +649,11 @@ public partial class BoardPage
 
     private async Task ApplySectionOrderAsync()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         var movedSections = _reorderList
             .Where(s => s.IsPositionChanged)
             .ToList();
@@ -647,6 +698,11 @@ public partial class BoardPage
         BoardMemberViewModel member, 
         BoardRole newRole)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (member.Dto.UserRole == newRole)
         {
             return;
@@ -687,6 +743,11 @@ public partial class BoardPage
 
     private async Task RemoveMemberAsync(BoardMemberViewModel member)
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         try
         {
             await BoardMembersService.RemoveBoardMemberAsync(
@@ -703,6 +764,11 @@ public partial class BoardPage
 
     private async Task AddMemberAsync()
     {
+        if (IsCurrentUserObserver)
+        {
+            return;
+        }
+
         if (_selectedUserToAdd == null || WorkspaceId == null)
         {
             return;
@@ -768,7 +834,8 @@ public partial class BoardPage
         var parameters = new DialogParameters<CardDetails>
     {
         { x => x.Card, card },
-        { x => x.CurrentUserId, _currentUserId ?? Guid.Empty }
+        { x => x.CurrentUserId, _currentUserId ?? Guid.Empty },
+        { x => x.IsObserver, IsCurrentUserObserver }
     };
 
         var options = new DialogOptions

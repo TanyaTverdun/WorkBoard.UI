@@ -37,21 +37,24 @@
     }
 </div>
 
-<div class="d-flex gap-3 align-end mt-4">
-    <MudAvatar Color=@Color.Info
-               Size=@Size.Small
-               Class="mb-1">AP</MudAvatar>
+@if (!IsObserver)
+{
+    <div class="d-flex gap-3 align-end mt-4">
+        <MudAvatar Color=@Color.Info
+        Size=@Size.Small
+        Class="mb-1">AP</MudAvatar>
 
-    <MudTextField @bind-Value=@_newComment
-                  Placeholder="Write a comment..."
-                  Variant=@Variant.Outlined
-                  Margin=@Margin.Dense
-                  Class="flex-grow-1 bg-white rounded-lg" />
+        <MudTextField @bind-Value=@_newComment
+        Placeholder="Write a comment..."
+        Variant=@Variant.Outlined
+        Margin=@Margin.Dense
+        Class="flex-grow-1 bg-white rounded-lg" />
 
-    <MudIconButton Icon=@Icons.Material.Filled.Send
-                   Color=@Color.Primary
-                   Variant=@Variant.Filled
-                   Size=@Size.Small
-                   Class="rounded-lg mb-1"
-                   OnClick=@AddCommentAsync />
-</div>
+        <MudIconButton Icon=@Icons.Material.Filled.Send
+        Color=@Color.Primary
+        Variant=@Variant.Filled
+        Size=@Size.Small
+        Class="rounded-lg mb-1"
+        OnClick=@AddCommentAsync />
+    </div>
+}

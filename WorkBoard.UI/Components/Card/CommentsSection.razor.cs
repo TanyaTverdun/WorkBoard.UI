@@ -22,6 +22,9 @@ public partial class CommentsSection : ComponentBase, IDisposable
     [Parameter] 
     public List<CommentDto> Comments { get; set; } = new();
 
+    [Parameter]
+    public bool IsObserver { get; set; }
+
     [Inject]
     private ICommentService CommentService { get; set; } = default!;
 
@@ -66,7 +69,15 @@ public partial class CommentsSection : ComponentBase, IDisposable
 
     private async Task AddCommentAsync()
     {
-        if (string.IsNullOrWhiteSpace(_newComment)) return;
+        if (IsObserver)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_newComment))
+        {
+            return;
+        }
 
         try
         {

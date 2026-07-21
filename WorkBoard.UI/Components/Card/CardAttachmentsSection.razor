@@ -54,23 +54,29 @@
                         </div>
                     </a>
 
-                    <MudIconButton Icon=@Icons.Material.Rounded.Close
-                                   Size=@Size.Small
-                                   Class="text-muted flex-shrink-0"
-                                   OnClick=@(() => _pendingDeleteAttachmentId = file.Id) />
+                    @if (!IsObserver)
+                    {
+                        <MudIconButton Icon=@Icons.Material.Rounded.Close
+                                       Size=@Size.Small
+                                       Class="text-muted flex-shrink-0"
+                                       OnClick=@(() => _pendingDeleteAttachmentId = file.Id) />
+                    }
                 }
             </MudPaper>
         }
     </div>
 
-    <InputFile id="custom-file-upload" OnChange="OnFileSelected" hidden />
+    @if (!IsObserver)
+    {
+        <InputFile id="custom-file-upload" OnChange="OnFileSelected" hidden />
 
-    <MudButton HtmlTag="label"
-               for="custom-file-upload"
-               Variant="@Variant.Outlined"
-               Size="@Size.Small"
-               StartIcon="@Icons.Material.Rounded.Add"
-               Class="w-100 border-dashed text-muted rounded-lg mt-1 flex-shrink-0 cursor-pointer">
-        Upload file
-    </MudButton>
+        <MudButton HtmlTag="label"
+        for="custom-file-upload"
+        Variant="@Variant.Outlined"
+        Size="@Size.Small"
+        StartIcon="@Icons.Material.Rounded.Add"
+        Class="w-100 border-dashed text-muted rounded-lg mt-1 flex-shrink-0 cursor-pointer">
+            Upload file
+        </MudButton>
+    }
 </div>

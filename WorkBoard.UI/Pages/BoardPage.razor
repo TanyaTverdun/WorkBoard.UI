@@ -113,7 +113,7 @@
 														   Value=@member.Dto.UserRole
 														   ValueChanged=@(async (r) => await UpdateRoleAsync(member, r))
 														   Dense="true"
-														   Disabled=@(member.Dto.UserId == _currentUserId || IsWorkspaceObserver)
+														   Disabled=@(member.Dto.UserId == _currentUserId || IsCurrentUserObserver)
 														   Variant=@Variant.Outlined
 														   Margin=@Margin.Dense
 														   Class="role-select seagreen"
@@ -126,7 +126,7 @@
 
 											<MudIconButton Icon=@Icons.Material.Rounded.PersonRemove
 														   Size=@Size.Small
-														   Disabled=@(member.Dto.UserId == _currentUserId || IsWorkspaceObserver)
+														   Disabled=@(member.Dto.UserId == _currentUserId || IsCurrentUserObserver)
 														   Class="text-muted hover-error-btn"
 														   OnClick=@(() => member.IsConfirmingDelete = true) />
 										}
@@ -136,7 +136,7 @@
 						}
 					</div>
 
-					@if (!IsWorkspaceObserver)
+					@if (!IsCurrentUserObserver)
 					{
 						<MudDivider Class="mb-3" />
 
@@ -461,6 +461,7 @@
 
 							<MudDropContainer T=@KanbanSectionViewModel
 											  Items=@_reorderList
+											  ItemDisabled="@(_ => IsCurrentUserObserver)"
 											  ItemsSelector=@((item, zone) => true)
 											  ItemDropped=@SectionDropped
 											  Class="d-flex flex-column mb-4 overflow-y-auto pe-2 reorder-list-container">
@@ -612,9 +613,8 @@
 					<MudDropZone T=@KanbanTaskViewModel
 								 Identifier=@item.Id.ToString()
 								 Class="flex-grow-1 pb-4 drop-zone"
-								 AllowReorder="true" />
-
-					@if (item.NewTaskOpen)
+								 AllowReorder="@(!IsCurrentUserObserver)" />
+					@if (item.NewTaskOpen && !IsCurrentUserObserver)
 					{
 						<MudPaper Elevation="1"
 								  Class="pa-2 rounded-lg mt-2">
@@ -656,54 +656,58 @@
 				</MudPaper>
 			}
 
-			<MudPaper Class="pa-4 add-section-wrapper"
-					  Elevation="0"
-					  Width="17rem">
-				@if (_addSectionOpen)
-				{
-					<MudPaper Elevation="0"
-							  Width="17rem"
-							  Class="pa-4 d-flex flex-column mud-background-gray rounded-lg add-section-form-wrapper">
-						<EditForm Model=@newSectionModel
-								  OnValidSubmit=@OnValidSectionSubmit
-								  Class="add-section-form-wrapper">
-							<DataAnnotationsValidator />
+			@if (!IsCurrentUserObserver)
+			{
+				<MudPaper Class="pa-4 add-section-wrapper"
+				Elevation="0"
+				Width="17rem">
+					@if (_addSectionOpen)
+					{
+						<MudPaper Elevation="0"
+						Width="17rem"
+						Class="pa-4 d-flex flex-column mud-background-gray rounded-lg add-section-form-wrapper">
+							<EditForm Model=@newSectionModel
+							OnValidSubmit=@OnValidSectionSubmit
+							Class="add-section-form-wrapper">
+								<DataAnnotationsValidator />
 
-							<MudTextField @bind-Value="newSectionModel.Name"
-										  For=@(() => newSectionModel.Name)
-										  Placeholder="New section"
-										  Underline="false"
-										  Class="mb-4"
-										  MaxLength="50">
-							</MudTextField>
+								<MudTextField @bind-Value="newSectionModel.Name"
+								For=@(() => newSectionModel.Name)
+								Placeholder="New section"
+								Underline="false"
+								Class="mb-4"
+								MaxLength="50">
+								</MudTextField>
 
-							<div class="d-flex align-center justify-space-between gap-1">
-								<MudButton ButtonType=@ButtonType.Submit
-										   Variant=@Variant.Filled
-										   Size=@Size.Small
-										   Class="rounded-lg text-none px-3 custom-btn">
-									Add section
-								</MudButton>
+								<div class="d-flex align-center justify-space-between gap-1">
+									<MudButton ButtonType=@ButtonType.Submit
+									Variant=@Variant.Filled
+									Size=@Size.Small
+									Class="rounded-lg text-none px-3 custom-btn">
+										Add section
+									</MudButton>
 
-								<MudIconButton Icon=@Icons.Material.Rounded.Close
-											   Size=@Size.Small
-											   Class="text-muted"
-											   OnClick=@CloseAddNewSection />
-							</div>
-						</EditForm>
-					</MudPaper>
-				}
-				else
-				{
-					<MudButton OnClick=@OpenAddNewSection
-							   StartIcon=@Icons.Material.Filled.Add
-							   DisableElevation="true"
-							   Class="rounded-lg py-2 px-5 text-none add-section-btn">
-						Add Section
-					</MudButton>
-				}
-			</MudPaper>
+									<MudIconButton Icon=@Icons.Material.Rounded.Close
+									Size=@Size.Small
+									Class="text-muted"
+									OnClick=@CloseAddNewSection />
+								</div>
+							</EditForm>
+						</MudPaper>
+					}
+					else
+					{
+						<MudButton OnClick=@OpenAddNewSection
+						StartIcon=@Icons.Material.Filled.Add
+						DisableElevation="true"
+						Class="rounded-lg py-2 px-5 text-none add-section-btn">
+							Add Section
+						</MudButton>
+					}
+				</MudPaper>
+			}
 		</ChildContent>
+
 		<ItemRenderer>
 			<MudPaper Elevation="0"
 					  Class="pa-3 rounded-lg my-3 task-item cursor-pointer d-flex flex-column"
