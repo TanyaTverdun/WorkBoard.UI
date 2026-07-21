@@ -251,8 +251,8 @@
 						Class="pa-4 pt-2 mud-elevation-25 rounded-lg"
 						Style="width: 320px; max-height: 80vh; overflow-y: auto; z-index: 9999;">
 
-				<div class="d-flex justify-space-between align-center mb-4">
-					<MudText Typo=@Typo.subtitle1 
+				<div class="d-flex justify-space-between align-center mb-2">
+					<MudText Typo=@Typo.subtitle1
 							 Class="font-weight-bold text-dark">Filter Cards</MudText>
 
 					<MudIconButton Icon=@Icons.Material.Rounded.Close
@@ -261,157 +261,161 @@
 								   Class="text-muted" />
 				</div>
 
-				<div class="mb-5">
-					<MudText Typo=@Typo.caption 
-							 Class="text-muted font-weight-bold d-block mb-3">
-						FILTER BY MEMBER
-					</MudText>
+				<div class="overflow-y-auto custom-scrollbar pr-2 pb-4" style="max-height: 65vh; overflow-x: hidden;">
 
-					<div class="d-flex flex-wrap gap-2">
-						@{
-							var displayMembers = _membersFilterExpanded
-								? _boardMembers
-								: _boardMembers?.Take(VisibleFiltersCount).ToList();
-							var hiddenMembersCount = (_boardMembers?.Count ?? 0) - VisibleFiltersCount;
+					<div class="mb-5">
+						<MudText Typo=@Typo.caption
+								 Class="text-muted font-weight-bold d-block mb-3">
+							FILTER BY MEMBER
+						</MudText>
 
-							bool isNoAssigneeSelected = _selectedFilterMembers.Contains(Guid.Empty);
-						}
+						<div class="d-flex flex-wrap gap-2">
+							@{
+								var displayMembers = _membersFilterExpanded
+									? _boardMembers
+									: _boardMembers?.Take(VisibleFiltersCount).ToList();
+								var hiddenMembersCount = (_boardMembers?.Count ?? 0) - VisibleFiltersCount;
 
-						<MudPaper Elevation="0"
-								  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isNoAssigneeSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
-								  @onclick=@(async () => await ToggleMemberFilter(Guid.Empty))>
+								bool isNoAssigneeSelected = _selectedFilterMembers.Contains(Guid.Empty);
+							}
 
-							<MudIcon Icon=@Icons.Material.Outlined.PersonOff
-									 Size=@Size.Small
-									 Style=@($"color: {(isNoAssigneeSelected ? "white" : "#64748b")}; font-size: 1.1rem;") />
-							<span style="font-size: 0.8125rem;">No Assignee</span>
-						</MudPaper>
+							<MudPaper Elevation="0"
+									  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isNoAssigneeSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
+									  @onclick=@(async () => await ToggleMemberFilter(Guid.Empty))>
 
-						@if (displayMembers != null)
-						{
-							@foreach (var member in displayMembers)
+								<MudIcon Icon=@Icons.Material.Outlined.PersonOff
+										 Size=@Size.Small
+										 Style=@($"color: {(isNoAssigneeSelected ? "white" : "#64748b")}; font-size: 1.1rem;") />
+								<span style="font-size: 0.8125rem;">No Assignee</span>
+							</MudPaper>
+
+							@if (displayMembers != null)
 							{
-								bool isSelected = _selectedFilterMembers.Contains(member.Dto.UserId);
+								@foreach (var member in displayMembers)
+								{
+									bool isSelected = _selectedFilterMembers.Contains(member.Dto.UserId);
 
-								<MudPaper @key=@member.Dto.UserId
+									<MudPaper @key=@member.Dto.UserId
+											  Elevation="0"
+											  Class=@($"filtered-items d-flex align-center rounded-pill px-2 gap-2 border-solid border cursor-pointer {(isSelected ? "mud-theme-primary mud-border-primary" : "bg-transparent mud-border-lines-default")}")
+											  @onclick=@(async () => await ToggleMemberFilter(member.Dto.UserId))>
+
+										<MudAvatar Size=@Size.Small
+												   Color=@(isSelected ? Color.Surface : Color.Tertiary)
+												   Style="height: 20px; width: 20px; font-size: 0.65rem;">
+											@member.Dto.Initials
+										</MudAvatar>
+
+										<MudText Typo=@Typo.body2
+												 Class="text-truncate"
+												 Style="max-width: 120px;">
+											@member.Dto.FullName
+										</MudText>
+									</MudPaper>
+								}
+
+								@if (!_membersFilterExpanded && hiddenMembersCount > 0)
+								{
+									<MudPaper Elevation="0"
+											  Class="filtered-items d-flex align-center rounded-pill px-3 border-solid border mud-border-lines-default bg-transparent cursor-pointer"
+											  @onclick=@(() => _membersFilterExpanded = true)>
+										<span style="font-size: 0.8125rem; color: #64748b;">+@hiddenMembersCount</span>
+									</MudPaper>
+								}
+							}
+						</div>
+					</div>
+
+					<div class="mb-5">
+						<MudText Typo=@Typo.caption
+								 Class="text-muted font-weight-bold d-block mb-3">
+							FILTER BY DUE DATE
+						</MudText>
+
+						<div class="d-flex flex-wrap gap-2">
+
+							@foreach (var filter in _dateFilters)
+							{
+								bool isSelected = _selectedFilterDueDates.Contains(filter.Name);
+
+								<MudPaper @key=@filter.Name
 										  Elevation="0"
-										  Class=@($"filtered-items d-flex align-center rounded-pill px-2 gap-2 border-solid border cursor-pointer {(isSelected ? "mud-theme-primary mud-border-primary" : "bg-transparent mud-border-lines-default")}")
-										  @onclick=@(async () => await ToggleMemberFilter(member.Dto.UserId))>
+										  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
+										  @onclick=@(async () => await ToggleDueDateFilter(filter.Name))>
 
-									<MudAvatar Size=@Size.Small
-											   Color=@(isSelected ? Color.Surface : Color.Tertiary)
-											   Style="height: 20px; width: 20px; font-size: 0.65rem;">
-										@member.Dto.Initials
-									</MudAvatar>
+									<MudIcon Icon=@filter.Icon
+											 Size=@Size.Small
+											 Style=@($"color: {(isSelected ? "white" : filter.Color)}; font-size: 1.1rem;") />
 
-									<MudText Typo=@Typo.body2 
-											 Class="text-truncate" 
-											 Style="max-width: 120px;">
-										@member.Dto.FullName
-									</MudText>
+									<span style="font-size: 0.8125rem;">@filter.Name</span>
+								</MudPaper>
+							}
+						</div>
+					</div>
+
+					<div class="mb-2">
+						<MudText Typo=@Typo.caption
+								 Class="text-muted font-weight-bold d-block mb-3">
+							FILTER BY LABEL
+						</MudText>
+
+						<div class="d-flex flex-wrap gap-2">
+							@{
+								var allLabels = BoardUniqueLabels.ToList();
+								var displayLabels = _labelsFilterExpanded
+									? allLabels
+									: allLabels.Take(VisibleFiltersCount).ToList();
+								var hiddenLabelsCount = allLabels.Count - VisibleFiltersCount;
+
+								bool isNoLabelSelected = _selectedFilterLabels.Contains(Guid.Empty);
+							}
+
+							<MudPaper Elevation="0"
+									  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isNoLabelSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
+									  @onclick=@(async () => await ToggleLabelFilter(Guid.Empty))>
+
+								<MudIcon Icon=@Icons.Material.Outlined.LabelOff
+										 Size=@Size.Small
+										 Style=@($"color: {(isNoLabelSelected ? "white" : "#64748b")}; font-size: 1.1rem;") />
+								<span style="font-size: 0.8125rem;">No Labels</span>
+							</MudPaper>
+
+							@foreach (var label in displayLabels)
+							{
+								bool isSelected = _selectedFilterLabels.Contains(label.Id);
+								var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
+
+								var chipStyle = isSelected
+														? $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); color: white; border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); height: 32px; cursor: pointer;"
+														: $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.5); height: 32px; cursor: pointer;";
+
+								var dotColor = isSelected ? "white" : (label.Color ?? "#808080");
+
+								<MudPaper @key=@label.Id
+										  Elevation="0"
+										  Style=@chipStyle
+										  Class="d-flex align-center rounded-pill px-3 py-1 gap-2"
+										  @onclick=@(async () => await ToggleLabelFilter(label.Id))>
+
+									<div class="rounded-circle lable-point"
+										 style="background-color: @dotColor;">
+									</div>
+
+									<span style="font-size: 0.8125rem;">@label.Name</span>
 								</MudPaper>
 							}
 
-							@if (!_membersFilterExpanded && hiddenMembersCount > 0)
+							@if (!_labelsFilterExpanded && hiddenLabelsCount > 0)
 							{
 								<MudPaper Elevation="0"
-										  Class="filtered-items d-flex align-center rounded-pill px-3 border-solid border mud-border-lines-default bg-transparent cursor-pointer"
-										  @onclick=@(() => _membersFilterExpanded = true)>
-									<span style="font-size: 0.8125rem; color: #64748b;">+@hiddenMembersCount</span>
+										  Class="d-flex align-center rounded-pill px-3 border-solid border mud-border-lines-default bg-transparent cursor-pointer filtered-items"
+										  @onclick=@(() => _labelsFilterExpanded = true)>
+									<span clas="hidden-labels-count">+@hiddenLabelsCount</span>
 								</MudPaper>
 							}
-						}
+						</div>
 					</div>
-				</div>
 
-				<div class="mb-5">
-					<MudText Typo=@Typo.caption 
-							 Class="text-muted font-weight-bold d-block mb-3">
-						FILTER BY DUE DATE
-					</MudText>
-
-					<div class="d-flex flex-wrap gap-2">
-
-						@foreach (var filter in _dateFilters)
-						{
-							bool isSelected = _selectedFilterDueDates.Contains(filter.Name);
-
-							<MudPaper @key=@filter.Name
-									  Elevation="0"
-									  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
-									  @onclick=@(async () => await ToggleDueDateFilter(filter.Name))>
-
-								<MudIcon Icon=@filter.Icon
-										 Size=@Size.Small
-										 Style=@($"color: {(isSelected ? "white" : filter.Color)}; font-size: 1.1rem;") />
-
-								<span style="font-size: 0.8125rem;">@filter.Name</span>
-							</MudPaper>
-						}
-					</div>
-				</div>
-
-				<div class="mb-2">
-					<MudText Typo=@Typo.caption 
-							 Class="text-muted font-weight-bold d-block mb-3">
-						FILTER BY LABEL
-					</MudText>
-
-					<div class="d-flex flex-wrap gap-2">
-						@{
-							var allLabels = BoardUniqueLabels.ToList();
-							var displayLabels = _labelsFilterExpanded
-								? allLabels
-								: allLabels.Take(VisibleFiltersCount).ToList();
-							var hiddenLabelsCount = allLabels.Count - VisibleFiltersCount;
-
-							bool isNoLabelSelected = _selectedFilterLabels.Contains(Guid.Empty);
-						}
-
-						<MudPaper Elevation="0"
-								  Class=@($"filtered-items d-flex align-center rounded-pill px-3 gap-2 border-solid border cursor-pointer {(isNoLabelSelected ? "mud-theme-primary mud-border-primary text-white" : "bg-transparent mud-border-lines-default")}")
-								  @onclick=@(async () => await ToggleLabelFilter(Guid.Empty))>
-
-							<MudIcon Icon=@Icons.Material.Outlined.LabelOff
-									 Size=@Size.Small
-									 Style=@($"color: {(isNoLabelSelected ? "white" : "#64748b")}; font-size: 1.1rem;") />
-							<span style="font-size: 0.8125rem;">No Labels</span>
-						</MudPaper>
-
-						@foreach (var label in displayLabels)
-						{
-							bool isSelected = _selectedFilterLabels.Contains(label.Id);
-							var mudColor = new MudBlazor.Utilities.MudColor(label.Color ?? "#808080");
-
-							var chipStyle = isSelected
-													? $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); color: white; border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); height: 32px; cursor: pointer;"
-													: $"background-color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.15); color: rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 1); border: 1px solid rgba({mudColor.R}, {mudColor.G}, {mudColor.B}, 0.5); height: 32px; cursor: pointer;";
-
-							var dotColor = isSelected ? "white" : (label.Color ?? "#808080");
-
-							<MudPaper @key=@label.Id
-									  Elevation="0"
-									  Style=@chipStyle
-									  Class="d-flex align-center rounded-pill px-3 py-1 gap-2"
-									  @onclick=@(async () => await ToggleLabelFilter(label.Id))>
-
-								<div class="rounded-circle lable-point" 
-									 style="background-color: @dotColor;">
-								</div>
-
-								<span style="font-size: 0.8125rem;">@label.Name</span>
-							</MudPaper>
-						}
-
-						@if (!_labelsFilterExpanded && hiddenLabelsCount > 0)
-						{
-							<MudPaper Elevation="0"
-									  Class="d-flex align-center rounded-pill px-3 border-solid border mud-border-lines-default bg-transparent cursor-pointer filtered-items"
-									  @onclick=@(() => _labelsFilterExpanded = true)>
-								<span clas="hidden-labels-count">+@hiddenLabelsCount</span>
-							</MudPaper>
-						}
-					</div>
 				</div>
 
 			</MudPopover>
@@ -659,38 +663,38 @@
 			@if (!IsCurrentUserObserver)
 			{
 				<MudPaper Class="pa-4 add-section-wrapper"
-				Elevation="0"
-				Width="17rem">
+						  Elevation="0"
+						  Width="17rem">
 					@if (_addSectionOpen)
 					{
 						<MudPaper Elevation="0"
-						Width="17rem"
-						Class="pa-4 d-flex flex-column mud-background-gray rounded-lg add-section-form-wrapper">
+								  Width="17rem"
+								  Class="pa-4 d-flex flex-column mud-background-gray rounded-lg add-section-form-wrapper">
 							<EditForm Model=@newSectionModel
-							OnValidSubmit=@OnValidSectionSubmit
-							Class="add-section-form-wrapper">
+									  OnValidSubmit=@OnValidSectionSubmit
+									  Class="add-section-form-wrapper">
 								<DataAnnotationsValidator />
 
 								<MudTextField @bind-Value="newSectionModel.Name"
-								For=@(() => newSectionModel.Name)
-								Placeholder="New section"
-								Underline="false"
-								Class="mb-4"
-								MaxLength="50">
+											  For=@(() => newSectionModel.Name)
+											  Placeholder="New section"
+											  Underline="false"
+											  Class="mb-4"
+											  MaxLength="50">
 								</MudTextField>
 
 								<div class="d-flex align-center justify-space-between gap-1">
 									<MudButton ButtonType=@ButtonType.Submit
-									Variant=@Variant.Filled
-									Size=@Size.Small
-									Class="rounded-lg text-none px-3 custom-btn">
+											   Variant=@Variant.Filled
+											   Size=@Size.Small
+											   Class="rounded-lg text-none px-3 custom-btn">
 										Add section
 									</MudButton>
 
 									<MudIconButton Icon=@Icons.Material.Rounded.Close
-									Size=@Size.Small
-									Class="text-muted"
-									OnClick=@CloseAddNewSection />
+												   Size=@Size.Small
+												   Class="text-muted"
+												   OnClick=@CloseAddNewSection />
 								</div>
 							</EditForm>
 						</MudPaper>
@@ -698,9 +702,9 @@
 					else
 					{
 						<MudButton OnClick=@OpenAddNewSection
-						StartIcon=@Icons.Material.Filled.Add
-						DisableElevation="true"
-						Class="rounded-lg py-2 px-5 text-none add-section-btn">
+								   StartIcon=@Icons.Material.Filled.Add
+								   DisableElevation="true"
+								   Class="rounded-lg py-2 px-5 text-none add-section-btn">
 							Add Section
 						</MudButton>
 					}
