@@ -5,6 +5,7 @@ using Refit;
 using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Services;
+using WorkBoard.Services.Abstraction.StateProviders;
 using WorkBoard.Services.Hubs;
 using WorkBoard.Services.Servises.Attachment;
 using WorkBoard.Services.Servises.Auth;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         }
 
         services.AddScoped<WorkspaceStateProvider>();
+        services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
         services.AddSingleton<BoardStateService>();
 
         services.AddScoped<IBoardHubService, BoardHubService>();
