@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using WorkBoard.Domain.Constants;
 using WorkBoard.Services.Abstraction.StateProviders;
 
@@ -8,6 +9,9 @@ public partial class Sidebar
 {
     [Inject]
     private ICurrentUserProvider CurrentUserProvider { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
 
     protected string Username { get; private set; } = UiConstants.Auth.LoadingText;
     protected string Initials { get; private set; } = string.Empty;
@@ -64,14 +68,12 @@ public partial class Sidebar
     private void GoToProfile()
     {
         _isProfileMenuOpen = false;
-        // Твоя логіка переходу на сторінку профілю
-        // NavigationManager.NavigateTo("/profile");
     }
 
     private async Task SignOut()
     {
         _isProfileMenuOpen = false;
-        // Твоя логіка виходу (наприклад, очищення токену Azure AD)
-        // await AuthService.LogoutAsync();
+
+        NavigationManager.NavigateToLogout("authentication/logout");
     }
 }
