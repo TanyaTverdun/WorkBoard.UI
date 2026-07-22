@@ -68,12 +68,14 @@ public partial class Sidebar
     private void GoToProfile()
     {
         _isProfileMenuOpen = false;
+
+        NavigationManager.NavigateTo(AppRoutes.Profile);
     }
 
     private async Task SignOut()
     {
         _isProfileMenuOpen = false;
 
-        NavigationManager.NavigateToLogout("authentication/logout");
+        NavigationManager.NavigateToLogout(AppRoutes.Logout);
     }
 }
