@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.Services.Servises.Users;

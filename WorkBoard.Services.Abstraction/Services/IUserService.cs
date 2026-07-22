@@ -1,4 +1,4 @@
-﻿using WorkBoard.Services.Abstraction.DTOs;
+﻿using WorkBoard.Services.Abstraction.DTOs.Users;
 
 namespace WorkBoard.Services.Abstraction.Services;
 

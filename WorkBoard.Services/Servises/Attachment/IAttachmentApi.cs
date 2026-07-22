@@ -1,5 +1,5 @@
 ﻿using Refit;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Attachments;
 
 namespace WorkBoard.Services.Servises.Attachment;
 

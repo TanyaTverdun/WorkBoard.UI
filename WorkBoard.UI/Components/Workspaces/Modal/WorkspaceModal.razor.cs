@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requests.Workspaces;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.UI.Components.Workspaces.Modal;

@@ -1,5 +1,5 @@
-﻿using WorkBoard.Services.Abstraction.DTOs;
-using WorkBoard.Services.Abstraction.Requests;
+﻿using WorkBoard.Services.Abstraction.DTOs.Labels;
+using WorkBoard.Services.Abstraction.Requests.Labels;
 
 namespace WorkBoard.Services.Abstraction.Services;
 
