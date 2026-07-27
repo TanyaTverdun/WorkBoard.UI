@@ -4,10 +4,29 @@
 <div class="sidebar d-flex flex-column justify-content-between text-white">
     <div class="sidebar-top-content flex-grow-1 overflow-y-auto custom-scrollbar">
         <div class="user-section d-flex align-items-center gap-2 px-3 mb-4">
-            <div class="avatar-circle d-flex align-items-center justify-content-center bg-primary fw-bold text-white">
-                @Initials
+            <div class="avatar-circle d-flex align-items-center justify-content-center fw-bold text-white">
+                <MudAvatar Size=@Size.Medium
+                           Style=@($"height: 32px; width: 32px; font-size: 0.25rem; background-color: {(string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarColor) ? "#64748b" : CurrentUserProvider.Profile?.AvatarColor)}; color: white;")
+                           Class="assignee-avatar">
+
+                    @if (!string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarUrl))
+                    {
+                        <img src=@CurrentUserProvider.Profile?.AvatarUrl
+                             alt="Profile Avatar"
+                             style="width: 100%; height: 100%; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <span style="font-size: 14px;">
+                            @CurrentUserProvider.Profile?.Initials
+                        </span>
+                    }
+                </MudAvatar>
             </div>
-            <span class="user-name fw-medium">@Username</span>
+
+            <span class="user-name fw-medium">
+                @(CurrentUserProvider.Profile?.FullName ?? "Loading...")
+            </span>
         </div>
 
         <div class="px-3 mb-3">
@@ -65,17 +84,37 @@
 
             <div class="pa-4">
                 <div class="d-flex align-center gap-3">
-                    <MudAvatar Color=@Color.Primary 
-                               Size=@Size.Medium>@Initials</MudAvatar>
+                    
+                        <MudAvatar Size=@Size.Medium
+                               Style=@($"height: 32px; width: 32px; background-color: {(string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarColor) ? "#64748b" : CurrentUserProvider.Profile?.AvatarColor)}; color: white;")
+                                   Class="assignee-avatar">
+
+                            @if (!string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarUrl))
+                            {
+                                <img src=@CurrentUserProvider.Profile?.AvatarUrl
+                                     alt="Profile Avatar"
+                                     style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <span style="font-size: 14px;">
+                                    @CurrentUserProvider.Profile?.Initials
+                                </span>
+                            }
+                        </MudAvatar>
 
                     <div class="d-flex flex-column overflow-hidden">
                         <MudText Typo=@Typo.subtitle1
                                  Class="text-white font-weight-bold text-truncate"
-                                 Style="line-height: 1.2;">@Username</MudText>
+                                 Style="line-height: 1.2;">
+                                    @(CurrentUserProvider.Profile?.FullName ?? "Unknown")
+                        </MudText>
 
                         <MudText Typo=@Typo.caption
                                  Class="text-truncate"
-                                 Style="color: #94a3b8; font-size: 0.85rem">@UserEmail</MudText>
+                                 Style="color: #94a3b8; font-size: 0.85rem">
+                                    @(CurrentUserProvider.Profile?.Email ?? "")
+                        </MudText>
                     </div>
                 </div>
             </div>

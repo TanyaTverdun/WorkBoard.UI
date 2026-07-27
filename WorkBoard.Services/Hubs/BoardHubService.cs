@@ -51,6 +51,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<ChecklistItemStatusUpdatedDto>? OnChecklistItemStatusUpdated;
     public event Action<AttachmentAddedDto>? OnAttachmentAdded;
     public event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
+    public event Action<UserAvatarUpdatedDto>? OnUserAvatarUpdated;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -441,6 +442,17 @@ internal class BoardHubService : IBoardHubService
 
                 OnAttachmentDeleted?.Invoke(data);
             });
+
+            _hubConnection.On<UserAvatarUpdatedDto>(
+                BoardHubEvents.UserAvatarUpdated,
+                (data) =>
+                {
+                    _logger.LogInformation(
+                        "Received user avatar color update via SignalR for user: {UserId}",
+                        data.UserId);
+
+                    OnUserAvatarUpdated?.Invoke(data);
+                });
 
             await _hubConnection.StartAsync(cancellationToken);
 

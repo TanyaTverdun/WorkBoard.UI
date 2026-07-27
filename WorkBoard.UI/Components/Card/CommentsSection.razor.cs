@@ -2,9 +2,11 @@
 using Microsoft.JSInterop;
 using MudBlazor;
 using WorkBoard.Services.Abstraction.DTOs.Comments;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Requests.Comments;
 using WorkBoard.Services.Abstraction.Services;
+using WorkBoard.Services.Abstraction.StateProviders;
 
 namespace WorkBoard.UI.Components.Card;
 
@@ -24,6 +26,9 @@ public partial class CommentsSection : ComponentBase, IDisposable
 
     [Parameter]
     public bool IsObserver { get; set; }
+
+    [Inject]
+    private ICurrentUserProvider CurrentUserProvider { get; set; } = default!;
 
     [Inject]
     private ICommentService CommentService { get; set; } = default!;
@@ -46,6 +51,8 @@ public partial class CommentsSection : ComponentBase, IDisposable
     protected override async Task OnInitializedAsync()
     {
         BoardHubService.OnCommentAdded += HandleNewComment;
+        CurrentUserProvider.OnProfileChanged += HandleProfileChanged;
+        BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
     }
 
     protected override void OnParametersSet()
@@ -162,9 +169,48 @@ public partial class CommentsSection : ComponentBase, IDisposable
         }
     }
 
+    private void HandleProfileChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleUserAvatarUpdated(UserAvatarUpdatedDto data)
+    {
+        bool changed = false;
+
+        for (int i = 0; i < _comments.Count; i++)
+        {
+            if (_comments[i].UserId == data.UserId)
+            {
+                _comments[i].UserAvatarColor = data.AvatarColor;
+                _comments[i].UserAvatarUrl = data.AvatarUrl;
+
+                changed = true;
+            }
+        }
+
+        for (int i = 0; i < Comments.Count; i++)
+        {
+            if (Comments[i].UserId == data.UserId)
+            {
+                Comments[i].UserAvatarColor = data.AvatarColor;
+                Comments[i].UserAvatarUrl = data.AvatarUrl;
+
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     public void Dispose()
     {
         BoardHubService.OnCommentAdded -= HandleNewComment;
+        CurrentUserProvider.OnProfileChanged -= HandleProfileChanged;
+        BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
 
         _ = _jsModule?.DisposeAsync();
     }

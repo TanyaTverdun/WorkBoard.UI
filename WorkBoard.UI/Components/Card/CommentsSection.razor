@@ -1,7 +1,7 @@
 ﻿@using MudBlazor
 
-<div @ref=@_scrollContainer 
-     class="mt-4 pr-4 pl-5 overflow-y-auto custom-scrollbar" 
+<div @ref=@_scrollContainer
+     class="mt-4 pr-4 pl-5 overflow-y-auto custom-scrollbar"
      style="max-height: 400px;">
     @foreach (var comment in _comments)
     {
@@ -9,10 +9,19 @@
 
         <div class="d-flex gap-3 @(isCurrentUser ? "flex-row-reverse" : "")">
 
-            <MudAvatar Color=@Color.Surface
-                       Size=@Size.Small
-                       Class="mt-1 flex-shrink-0">
-                @comment.Initials
+            <MudAvatar Size="@Size.Small"
+                       Class="mt-1 flex-shrink-0"
+                       Style="@($"background-color: {(string.IsNullOrEmpty(comment.UserAvatarColor) ? "#64748b" : comment.UserAvatarColor)}; color: white;")">
+                @if (!string.IsNullOrEmpty(comment.UserAvatarUrl))
+                {
+                    <img src=@comment.UserAvatarUrl
+                         alt="Profile Avatar"
+                         style="width: 100%; height: 100%; object-fit: cover;" />
+                }
+                else
+                {
+                    @comment.Initials
+                }
             </MudAvatar>
 
             <MudPaper Elevation="0"
@@ -40,21 +49,32 @@
 @if (!IsObserver)
 {
     <div class="d-flex gap-3 align-end mt-4">
-        <MudAvatar Color=@Color.Info
-        Size=@Size.Small
-        Class="mb-1">AP</MudAvatar>
+        <MudAvatar Size="@Size.Small"
+                   Class="mb-1"
+                   Style="@($"background-color: {(string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarColor) ? "#64748b" : CurrentUserProvider.Profile?.AvatarColor)}; color: white;")">
+            @if (!string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarUrl))
+            {
+                <img src=@CurrentUserProvider.Profile?.AvatarUrl
+                     alt="Profile Avatar"
+                     style="width: 100%; height: 100%; object-fit: cover;" />
+            }
+            else
+            {
+                @CurrentUserProvider.Profile?.Initials
+            }
+        </MudAvatar>
 
         <MudTextField @bind-Value=@_newComment
-        Placeholder="Write a comment..."
-        Variant=@Variant.Outlined
-        Margin=@Margin.Dense
-        Class="flex-grow-1 bg-white rounded-lg" />
+                      Placeholder="Write a comment..."
+                      Variant=@Variant.Outlined
+                      Margin=@Margin.Dense
+                      Class="flex-grow-1 bg-white rounded-lg" />
 
         <MudIconButton Icon=@Icons.Material.Filled.Send
-        Color=@Color.Primary
-        Variant=@Variant.Filled
-        Size=@Size.Small
-        Class="rounded-lg mb-1"
-        OnClick=@AddCommentAsync />
+                       Color=@Color.Primary
+                       Variant=@Variant.Filled
+                       Size=@Size.Small
+                       Class="rounded-lg mb-1"
+                       OnClick=@AddCommentAsync />
     </div>
 }

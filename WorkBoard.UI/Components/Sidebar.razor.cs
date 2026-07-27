@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using WorkBoard.Domain.Constants;
+using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.StateProviders;
 
 namespace WorkBoard.UI.Components;
 
-public partial class Sidebar
+public partial class Sidebar : IDisposable
 {
     [Inject]
     private ICurrentUserProvider CurrentUserProvider { get; set; } = default!;
@@ -13,52 +15,17 @@ public partial class Sidebar
     [Inject]
     private NavigationManager NavigationManager { get; set; } = default!;
 
-    protected string Username { get; private set; } = UiConstants.Auth.LoadingText;
-    protected string Initials { get; private set; } = string.Empty;
-    protected string UserEmail { get; private set; } = string.Empty;
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
+
     protected string SearchQuery { get; set; } = string.Empty;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var fullName = await CurrentUserProvider.GetFullNameAsync();
-        var email = await CurrentUserProvider.GetEmailAsync();
-
-        if (!string.IsNullOrEmpty(fullName))
-        {
-            Username = fullName;
-            SetInitials(Username);
-        }
-        else
-        {
-            Username = UiConstants.Auth.DefaultUsername;
-        }
-
-        UserEmail = email ?? string.Empty;
-    }
-
-    private void SetInitials(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name) ||
-            name == UiConstants.Auth.LoadingText)
-        {
-            return;
-        }
-
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        if (parts.Length >= 2)
-        {
-            Initials = $"{parts[0][0]}{parts[1][0]}".ToUpper();
-        }
-        else if (parts.Length == 1)
-        {
-            Initials = parts[0].Length >= 2
-                ? parts[0][..2].ToUpper()
-                : parts[0][0].ToString().ToUpper();
-        }
-    }
-
     private bool _isProfileMenuOpen = false;
+    protected override void OnInitialized()
+    {
+        CurrentUserProvider.OnProfileChanged += HandleProfileChanged;
+        BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
+    }
 
     private void ToggleProfileMenu()
     {
@@ -77,5 +44,27 @@ public partial class Sidebar
         _isProfileMenuOpen = false;
 
         NavigationManager.NavigateToLogout(AppRoutes.Logout);
+    }
+
+    private void HandleProfileChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleUserAvatarUpdated(UserAvatarUpdatedDto data)
+    {
+        if (CurrentUserProvider.Profile != null &&
+            CurrentUserProvider.Profile.Id == data.UserId)
+        {
+            CurrentUserProvider.Profile.AvatarColor = data.AvatarColor;
+            CurrentUserProvider.Profile.AvatarUrl = data.AvatarUrl;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        CurrentUserProvider.OnProfileChanged -= HandleProfileChanged;
+        BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
     }
 }

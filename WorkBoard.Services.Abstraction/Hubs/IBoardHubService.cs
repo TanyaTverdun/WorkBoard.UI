@@ -72,6 +72,8 @@ public interface IBoardHubService : IAsyncDisposable
 
     event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
 
+    event Action<UserAvatarUpdatedDto>? OnUserAvatarUpdated;
+
     Task StartConnectionAsync(
         string backendUrl,
         Guid boardId,
