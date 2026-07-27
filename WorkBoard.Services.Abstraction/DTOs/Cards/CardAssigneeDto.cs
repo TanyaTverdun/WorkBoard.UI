@@ -5,6 +5,6 @@ public record CardAssigneeDto(
     string FullName,
     string Email,
     string? AvatarUrl,
-    string AvatarColor,
+    string? AvatarColor,
     string Initials
 );

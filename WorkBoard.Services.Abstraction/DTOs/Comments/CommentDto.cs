@@ -16,7 +16,7 @@ public class CommentDto
 
     public string? UserAvatarUrl { get; set; }
 
-    public required string UserAvatarColor { get; set; }
+    public string? UserAvatarColor { get; set; }
 
     public required string Initials { get; set; }
 }

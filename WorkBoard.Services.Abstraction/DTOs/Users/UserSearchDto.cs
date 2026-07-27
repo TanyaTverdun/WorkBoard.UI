@@ -6,6 +6,6 @@ public class UserSearchDto
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
-    public string AvatarColor { get; set; } = string.Empty;
+    public string? AvatarColor { get; set; }
     public string? Initials { get; set; }
 }
