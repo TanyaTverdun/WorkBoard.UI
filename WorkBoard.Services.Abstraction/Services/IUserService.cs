@@ -8,4 +8,17 @@ public interface IUserService
         Guid boardId,
         string searchTerm,
         CancellationToken cancellationToken = default);
+
+    Task<UserProfileDto> GetCurrentUserProfileAsync(
+        CancellationToken cancellationToken = default);
+
+    Task UpdateAvatarColorAsync(
+        string color,
+        CancellationToken cancellationToken = default);
+
+    Task UploadAvatarImageAsync(
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken = default);
 }
