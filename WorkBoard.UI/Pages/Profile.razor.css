@@ -1,0 +1,70 @@
+﻿.profile-container {
+    color: #f8fafc;
+    max-width: 48rem;
+}
+
+::deep .profile-avatar {
+    width: 5rem !important;
+    height: 5rem !important;
+    font-size: 1.5rem !important;
+    transition: background-color 0.3s ease !important;
+}
+
+::deep .profile-text-muted {
+    color: #94a3b8 !important;
+}
+
+.profile-setting-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 1.5rem;
+}
+
+.profile-setting-label {
+    width: 15.5rem;
+    flex-shrink: 0;
+}
+
+.color-swatch {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.color-swatch-selected {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+.color-swatch-rainbow {
+    background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+}
+
+.swatch-icon {
+    color: #ffffff;
+    font-size: 1.125rem;
+}
+
+.swatch-icon-picker {
+    color: #ffffff;
+    font-size: 1.125rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.swatch-icon-add {
+    font-size: 1.25rem;
+}
+
+::deep .custom-cancel-btn {
+    background-color: #22477a !important;
+    color: white !important;
+    text-transform: none !important;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+}
+
+    ::deep .custom-cancel-btn:hover {
+        text-transform: none !important;
+        background-color: #1e3d69 !important;
+    }

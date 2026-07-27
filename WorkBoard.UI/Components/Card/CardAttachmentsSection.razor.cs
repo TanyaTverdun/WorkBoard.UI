@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using Refit;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Attachments;
 using WorkBoard.Services.Abstraction.Hubs;
 using WorkBoard.Services.Abstraction.Services;
 

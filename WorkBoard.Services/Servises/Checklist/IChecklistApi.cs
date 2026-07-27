@@ -1,6 +1,6 @@
 ﻿using Refit;
-using WorkBoard.Services.Abstraction.DTOs;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.DTOs.Checklists;
+using WorkBoard.Services.Abstraction.Requests.Checklists;
 
 namespace WorkBoard.Services.Servises.Checklist;
 

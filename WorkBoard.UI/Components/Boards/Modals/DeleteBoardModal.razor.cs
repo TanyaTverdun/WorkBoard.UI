@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 

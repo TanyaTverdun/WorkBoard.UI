@@ -3,7 +3,14 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using WorkBoard.Domain.Constants;
 using WorkBoard.Domain.Enums;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.ActivityLogs;
+using WorkBoard.Services.Abstraction.DTOs.Attachments;
+using WorkBoard.Services.Abstraction.DTOs.Cards;
+using WorkBoard.Services.Abstraction.DTOs.Checklists;
+using WorkBoard.Services.Abstraction.DTOs.Comments;
+using WorkBoard.Services.Abstraction.DTOs.Labels;
+using WorkBoard.Services.Abstraction.DTOs.Sections;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Hubs;
 
 namespace WorkBoard.Services.Hubs;
@@ -44,6 +51,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<ChecklistItemStatusUpdatedDto>? OnChecklistItemStatusUpdated;
     public event Action<AttachmentAddedDto>? OnAttachmentAdded;
     public event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
+    public event Action<UserAvatarUpdatedDto>? OnUserAvatarUpdated;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -434,6 +442,17 @@ internal class BoardHubService : IBoardHubService
 
                 OnAttachmentDeleted?.Invoke(data);
             });
+
+            _hubConnection.On<UserAvatarUpdatedDto>(
+                BoardHubEvents.UserAvatarUpdated,
+                (data) =>
+                {
+                    _logger.LogInformation(
+                        "Received user avatar color update via SignalR for user: {UserId}",
+                        data.UserId);
+
+                    OnUserAvatarUpdated?.Invoke(data);
+                });
 
             await _hubConnection.StartAsync(cancellationToken);
 

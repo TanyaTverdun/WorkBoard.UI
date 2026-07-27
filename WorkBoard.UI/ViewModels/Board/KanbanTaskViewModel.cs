@@ -1,4 +1,5 @@
-﻿using WorkBoard.Services.Abstraction.DTOs;
+﻿using WorkBoard.Services.Abstraction.DTOs.Cards;
+using WorkBoard.Services.Abstraction.DTOs.Labels;
 
 namespace WorkBoard.UI.ViewModels.Board;
 

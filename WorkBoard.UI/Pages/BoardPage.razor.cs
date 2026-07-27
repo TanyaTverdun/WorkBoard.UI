@@ -5,10 +5,17 @@ using Microsoft.Extensions.Options;
 using MudBlazor;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Domain.Options;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Attachments;
+using WorkBoard.Services.Abstraction.DTOs.Cards;
+using WorkBoard.Services.Abstraction.DTOs.Checklists;
+using WorkBoard.Services.Abstraction.DTOs.Comments;
+using WorkBoard.Services.Abstraction.DTOs.Labels;
+using WorkBoard.Services.Abstraction.DTOs.Sections;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Hubs;
-using WorkBoard.Services.Abstraction.Requests;
-using WorkBoard.Services.Abstraction.Requestsж;
+using WorkBoard.Services.Abstraction.Requests.BoardMembers;
+using WorkBoard.Services.Abstraction.Requests.Cards;
+using WorkBoard.Services.Abstraction.Requests.Sections;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 using WorkBoard.UI.Components.Card;
@@ -237,6 +244,7 @@ public partial class BoardPage
         BoardHubService.OnChecklistItemDeleted += HandleChecklistItemDeleted;
         BoardHubService.OnChecklistItemStatusUpdated += HandleChecklistItemStatusUpdated;
         BoardHubService.OnCommentAdded += HandleNewComment;
+        BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -1381,6 +1389,54 @@ public partial class BoardPage
         });
     }
 
+    private void HandleUserAvatarUpdated(UserAvatarUpdatedDto data)
+    {
+        bool changed = false;
+
+        if (_boardMembers != null)
+        {
+            var index = _boardMembers.FindIndex(m => 
+                m.Dto.UserId == data.UserId);
+            if (index != -1)
+            {
+                var updatedDto = _boardMembers[index].Dto with 
+                { 
+                    AvatarColor = data.AvatarColor,
+                    AvatarUrl = data.AvatarUrl
+                };
+                _boardMembers[index] = new BoardMemberViewModel(updatedDto);
+                changed = true;
+            }
+        }
+
+        foreach (var task in _tasks)
+        {
+            if (task.Assignees != null)
+            {
+                for (int i = 0; i < task.Assignees.Count; i++)
+                {
+                    if (task.Assignees[i].UserId == data.UserId)
+                    {
+                        task.Assignees[i] = task.Assignees[i] with {
+                            AvatarColor = data.AvatarColor,
+                            AvatarUrl = data.AvatarUrl
+                        };
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        if (changed)
+        {
+            InvokeAsync(() =>
+            {
+                StateHasChanged();
+                _dropContainer?.Refresh();
+            });
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -1408,6 +1464,7 @@ public partial class BoardPage
         BoardHubService.OnChecklistItemDeleted -= HandleChecklistItemDeleted;
         BoardHubService.OnChecklistItemStatusUpdated -= HandleChecklistItemStatusUpdated;
         BoardHubService.OnCommentAdded -= HandleNewComment;
+        BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }

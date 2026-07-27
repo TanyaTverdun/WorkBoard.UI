@@ -4,6 +4,8 @@ public static class AppRoutes
 {
     public const string Home = "/";
     public const string Login = "login";
+    public const string Logout = "authentication/logout";
+    public const string Profile = "profile";
     public const string NotFound = "not-found";
 
     public static class Auth

@@ -4,10 +4,29 @@
 <div class="sidebar d-flex flex-column justify-content-between text-white">
     <div class="sidebar-top-content flex-grow-1 overflow-y-auto custom-scrollbar">
         <div class="user-section d-flex align-items-center gap-2 px-3 mb-4">
-            <div class="avatar-circle d-flex align-items-center justify-content-center bg-primary fw-bold text-white">
-                @Initials
+            <div class="avatar-circle d-flex align-items-center justify-content-center fw-bold text-white">
+                <MudAvatar Size=@Size.Medium
+                           Style=@($"height: 32px; width: 32px; font-size: 0.25rem; background-color: {(string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarColor) ? "#64748b" : CurrentUserProvider.Profile?.AvatarColor)}; color: white;")
+                           Class="assignee-avatar">
+
+                    @if (!string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarUrl))
+                    {
+                        <img src=@CurrentUserProvider.Profile?.AvatarUrl
+                             alt="Profile Avatar"
+                             style="width: 100%; height: 100%; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <span style="font-size: 14px;">
+                            @CurrentUserProvider.Profile?.Initials
+                        </span>
+                    }
+                </MudAvatar>
             </div>
-            <span class="user-name fw-medium">@Username</span>
+
+            <span class="user-name fw-medium">
+                @(CurrentUserProvider.Profile?.FullName ?? "Loading...")
+            </span>
         </div>
 
         <div class="px-3 mb-3">
@@ -50,10 +69,81 @@
 
     </div>
 
-    <div class="sidebar-footer p-3 border-top border-secondary flex-shrink-0">
+    <div class="sidebar-footer p-3 border-top border-secondary flex-shrink-0 position-relative">
         <a class="nav-link text-white-50 d-flex align-items-center gap-2 py-2 px-3 rounded"
-           href="#">
+           style="cursor: pointer;"
+           @onclick="ToggleProfileMenu">
             <i class="bi bi-person"></i> Profile
         </a>
+
+        <MudPopover Open=@_isProfileMenuOpen
+                    AnchorOrigin=@Origin.TopLeft
+                    TransformOrigin=@Origin.BottomLeft
+                    Class="mud-elevation-25 rounded-3 border border-secondary"
+                    Style="width: 260px; background-color: #0d1117; z-index: 9999;">
+
+            <div class="pa-4">
+                <div class="d-flex align-center gap-3">
+                    
+                        <MudAvatar Size=@Size.Medium
+                               Style=@($"height: 32px; width: 32px; background-color: {(string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarColor) ? "#64748b" : CurrentUserProvider.Profile?.AvatarColor)}; color: white;")
+                                   Class="assignee-avatar">
+
+                            @if (!string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarUrl))
+                            {
+                                <img src=@CurrentUserProvider.Profile?.AvatarUrl
+                                     alt="Profile Avatar"
+                                     style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <span style="font-size: 14px;">
+                                    @CurrentUserProvider.Profile?.Initials
+                                </span>
+                            }
+                        </MudAvatar>
+
+                    <div class="d-flex flex-column overflow-hidden">
+                        <MudText Typo=@Typo.subtitle1
+                                 Class="text-white font-weight-bold text-truncate"
+                                 Style="line-height: 1.2;">
+                                    @(CurrentUserProvider.Profile?.FullName ?? "Unknown")
+                        </MudText>
+
+                        <MudText Typo=@Typo.caption
+                                 Class="text-truncate"
+                                 Style="color: #94a3b8; font-size: 0.85rem">
+                                    @(CurrentUserProvider.Profile?.Email ?? "")
+                        </MudText>
+                    </div>
+                </div>
+            </div>
+
+            <MudDivider Class="mx-0 border-secondary" />
+
+            <div class="d-flex flex-column py-2">
+                <MudButton StartIcon=@Icons.Material.Outlined.Person
+                           Class="justify-start px-4 py-2 text-none"
+                           FullWidth="true"
+                           Style="color: #cbd5e1; font-weight: 500; text-transform: none"
+                           OnClick=@GoToProfile>
+                    Edit Profile
+                </MudButton>
+
+                <MudButton StartIcon=@Icons.Material.Outlined.Close
+                           Class="justify-start px-4 py-2 text-none text-error"
+                           FullWidth="true"
+                           Color=@Color.Error
+                           Style="font-weight: 500; text-transform: none"
+                           OnClick=@SignOut>
+                    Sign Out
+                </MudButton>
+            </div>
+        </MudPopover>
     </div>
+
+<MudOverlay Visible=@_isProfileMenuOpen
+            OnClick=@ToggleProfileMenu
+            AutoClose="true"
+            ZIndex="9998" />
 </div>

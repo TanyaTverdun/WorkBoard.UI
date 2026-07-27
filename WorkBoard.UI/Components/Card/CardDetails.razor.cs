@@ -1,9 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.ActivityLogs;
+using WorkBoard.Services.Abstraction.DTOs.Attachments;
+using WorkBoard.Services.Abstraction.DTOs.Cards;
+using WorkBoard.Services.Abstraction.DTOs.Checklists;
+using WorkBoard.Services.Abstraction.DTOs.Comments;
+using WorkBoard.Services.Abstraction.DTOs.Labels;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Hubs;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requests.Cards;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.UI.ViewModels.Board;
 

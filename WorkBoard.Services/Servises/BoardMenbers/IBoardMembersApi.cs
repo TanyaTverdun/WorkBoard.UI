@@ -1,6 +1,6 @@
 ﻿using Refit;
-using WorkBoard.Services.Abstraction.DTOs;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.DTOs.BoardMembers;
+using WorkBoard.Services.Abstraction.Requests.BoardMembers;
 
 namespace WorkBoard.Services.Servises.BoardMenbers;
 

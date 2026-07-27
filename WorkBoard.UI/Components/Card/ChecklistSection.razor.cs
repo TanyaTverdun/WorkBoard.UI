@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Checklists;
 using WorkBoard.Services.Abstraction.Hubs;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requests.Checklists;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.UI.Components.Card;

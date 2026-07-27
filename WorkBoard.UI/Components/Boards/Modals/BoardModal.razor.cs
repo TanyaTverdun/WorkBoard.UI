@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requests.Boards;
 using WorkBoard.Services.Abstraction.Services;
 using WorkBoard.Services.StateProviders;
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
-using WorkBoard.Services.Abstraction.DTOs;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.DTOs.Comments;
+using WorkBoard.Services.Abstraction.Requests.Comments;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.Services.Servises.Comment;

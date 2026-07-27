@@ -1,4 +1,4 @@
-﻿using WorkBoard.Services.Abstraction.DTOs;
+﻿using WorkBoard.Services.Abstraction.DTOs.BoardMembers;
 
 namespace WorkBoard.UI.ViewModels.Board;
 

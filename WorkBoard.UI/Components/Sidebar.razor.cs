@@ -1,54 +1,70 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using WorkBoard.Domain.Constants;
+using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.Hubs;
+using WorkBoard.Services.Abstraction.StateProviders;
 
 namespace WorkBoard.UI.Components;
 
-public partial class Sidebar
+public partial class Sidebar : IDisposable
 {
-    [CascadingParameter]
-    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+    [Inject]
+    private ICurrentUserProvider CurrentUserProvider { get; set; } = default!;
 
-    protected string Username { get; private set; } = UiConstants.Auth.LoadingText;
-    protected string Initials { get; private set; } = string.Empty;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
 
     protected string SearchQuery { get; set; } = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    private bool _isProfileMenuOpen = false;
+    protected override void OnInitialized()
     {
-        if (AuthenticationStateTask is not null)
+        CurrentUserProvider.OnProfileChanged += HandleProfileChanged;
+        BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
+    }
+
+    private void ToggleProfileMenu()
+    {
+        _isProfileMenuOpen = !_isProfileMenuOpen;
+    }
+
+    private void GoToProfile()
+    {
+        _isProfileMenuOpen = false;
+
+        NavigationManager.NavigateTo(AppRoutes.Profile);
+    }
+
+    private async Task SignOut()
+    {
+        _isProfileMenuOpen = false;
+
+        NavigationManager.NavigateToLogout(AppRoutes.Logout);
+    }
+
+    private void HandleProfileChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleUserAvatarUpdated(UserAvatarUpdatedDto data)
+    {
+        if (CurrentUserProvider.Profile != null &&
+            CurrentUserProvider.Profile.Id == data.UserId)
         {
-            var authState = await AuthenticationStateTask;
-            var user = authState.User;
-
-            if (user.Identity is { IsAuthenticated: true })
-            {
-                Username = user.Identity.Name ?? UiConstants.Auth.DefaultUsername;
-
-                SetInitials(Username);
-            }
+            CurrentUserProvider.Profile.AvatarColor = data.AvatarColor;
+            CurrentUserProvider.Profile.AvatarUrl = data.AvatarUrl;
+            InvokeAsync(StateHasChanged);
         }
     }
 
-    private void SetInitials(string name)
+    public void Dispose()
     {
-        if (string.IsNullOrWhiteSpace(name) ||
-            name == UiConstants.Auth.LoadingText)
-        {
-            return;
-        }
-
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        if (parts.Length >= 2)
-        {
-            Initials = $"{parts[0][0]}{parts[1][0]}".ToUpper();
-        }
-        else if (parts.Length == 1)
-        {
-            Initials = parts[0].Length >= 2
-                ? parts[0][..2].ToUpper()
-                : parts[0][0].ToString().ToUpper();
-        }
+        CurrentUserProvider.OnProfileChanged -= HandleProfileChanged;
+        BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
     }
 }

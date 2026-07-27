@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.Cards;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Hubs;
-using WorkBoard.Services.Abstraction.Requests;
+using WorkBoard.Services.Abstraction.Requests.Cards;
 using WorkBoard.Services.Abstraction.Services;
 
 namespace WorkBoard.UI.Components.Card;
@@ -44,6 +45,7 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
     {
         BoardHubService.OnAssigneeAdded += HandleAssigneeAdded;
         BoardHubService.OnAssigneeRemoved += HandleAssigneeRemoved;
+        BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
     }
 
     protected override void OnParametersSet()
@@ -92,6 +94,7 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
                 user.FullName,
                 user.Email,
                 user.AvatarUrl,
+                user.AvatarColor,
                 user.Initials ?? "Un");
 
             _assignees.Add(newAssignee);
@@ -163,9 +166,57 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
         }
     }
 
+    private void HandleUserAvatarUpdated(UserAvatarUpdatedDto data)
+    {
+        bool changed = false;
+
+        for (int i = 0; i < _assignees.Count; i++)
+        {
+            if (_assignees[i].UserId == data.UserId)
+            {
+                _assignees[i] = _assignees[i] with
+                {
+                    AvatarColor = data.AvatarColor ?? _assignees[i].AvatarColor,
+                    AvatarUrl = data.AvatarUrl
+                };
+                changed = true;
+            }
+        }
+
+        for (int i = 0; i < Assignees.Count; i++)
+        {
+            if (Assignees[i].UserId == data.UserId)
+            {
+                Assignees[i] = Assignees[i] with
+                {
+                    AvatarColor = data.AvatarColor ?? Assignees[i].AvatarColor,
+                    AvatarUrl = data.AvatarUrl
+                };
+                changed = true;
+            }
+        }
+
+        for (int i = 0; i < AssignableUsers.Count; i++)
+        {
+            if (AssignableUsers[i].UserId == data.UserId)
+            {
+                AssignableUsers[i].AvatarColor = data.AvatarColor;
+                AssignableUsers[i].AvatarUrl = data.AvatarUrl;
+
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     public void Dispose()
     {
         BoardHubService.OnAssigneeAdded -= HandleAssigneeAdded;
         BoardHubService.OnAssigneeRemoved -= HandleAssigneeRemoved;
+        BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
     }
 }

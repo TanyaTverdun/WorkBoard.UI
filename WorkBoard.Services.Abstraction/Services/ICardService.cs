@@ -1,6 +1,6 @@
-﻿using WorkBoard.Services.Abstraction.DTOs;
-using WorkBoard.Services.Abstraction.Requests;
-using WorkBoard.Services.Abstraction.Requestsж;
+﻿using WorkBoard.Services.Abstraction.DTOs.Cards;
+using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.Requests.Cards;
 
 namespace WorkBoard.Services.Abstraction.Services;
 

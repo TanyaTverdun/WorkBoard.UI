@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
-using WorkBoard.Services.Abstraction.DTOs;
+using WorkBoard.Services.Abstraction.DTOs.ActivityLogs;
+using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.Hubs;
 
 namespace WorkBoard.UI.Components.Card;
 
@@ -8,13 +10,37 @@ public partial class ActivityLogSection : ComponentBase
     [Parameter]
     public List<ActivityLogDto> ActivityLogs { get; set; } = new();
 
-    private List<ActivityLogDto> _activityLogs = new();
+    [Inject]
+    private IBoardHubService BoardHubService { get; set; } = default!;
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
-        if (ActivityLogs != null)
+        BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
+    }
+
+    private void HandleUserAvatarUpdated(UserAvatarUpdatedDto data)
+    {
+        bool changed = false;
+
+        for (int i = 0; i < ActivityLogs.Count; i++)
         {
-            _activityLogs = ActivityLogs.ToList();
+            if (ActivityLogs[i].UserId == data.UserId)
+            {
+                ActivityLogs[i].AvatarColor = data.AvatarColor;
+                ActivityLogs[i].AvatarUrl = data.AvatarUrl;
+
+                changed = true;
+            }
         }
+
+        if (changed)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
     }
 }
