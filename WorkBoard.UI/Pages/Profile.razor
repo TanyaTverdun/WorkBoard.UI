@@ -1,0 +1,155 @@
+﻿@page "/profile"
+
+<div class="px-8 py-6 mx-auto profile-container">
+
+
+    <div class="mt-20 d-flex align-center mb-8">
+        <MudAvatar Class="profile-avatar font-weight-bold text-white mr-5"
+                   Style="@($"background-color: {(!string.IsNullOrEmpty(SelectedColor) ? SelectedColor : (CurrentUserProvider.Profile?.AvatarColor ?? "#64748b"))};")">
+
+            @if (!string.IsNullOrEmpty(CurrentUserProvider.Profile?.AvatarUrl) && !HasUnsavedChanges)
+            {
+                <img src="@CurrentUserProvider.Profile.AvatarUrl"
+                     alt="Profile Avatar"
+                     style="width: 100%; height: 100%; object-fit: cover;" />
+            }
+            else
+            {
+                @(CurrentUserProvider.Profile?.Initials ?? "??")
+            }
+        </MudAvatar>
+
+        <div class="d-flex flex-column justify-center">
+            <MudText Typo=@Typo.h5
+                     class="font-weight-bold mb-1">@(CurrentUserProvider.Profile?.FullName ?? "Unknown")</MudText>
+
+            <MudText Typo=@Typo.body1
+                     Class="profile-text-muted">@(CurrentUserProvider.Profile?.Email ?? "")</MudText>
+        </div>
+    </div>
+
+    <MudDivider Class="mb-2" />
+
+    <div class="d-flex flex-wrap align-start py-6 profile-setting-row">
+
+        <div class="profile-setting-label">
+            <MudText Typo=@Typo.subtitle1
+                     Class="font-weight-bold mb-1">Profile Photo</MudText>
+
+            <MudText Typo=@Typo.body2
+                     Class="profile-text-muted">Replaces the color avatar.</MudText>
+        </div>
+
+        <div class="d-flex flex-grow-1 align-center">
+
+            <InputFile id="profile-photo-upload"
+                       OnChange=@UploadAvatarAsync
+                       accept=".png, .jpg, .jpeg"
+                       hidden />
+
+            <MudButton HtmlTag="label"
+                       for="profile-photo-upload"
+                       Variant=@Variant.Filled
+                       Size=@Size.Small
+                       StartIcon=@Icons.Material.Rounded.Add
+                       Class="text-none rounded-lg px-8 py-2 custom-btn cursor-pointer shadow-none">
+                Upload file
+            </MudButton>
+
+        </div>
+        
+    </div>
+
+    <div class="d-flex flex-wrap align-start py-6 profile-setting-row">
+        
+        <div class="profile-setting-label">
+            <MudText Typo=@Typo.subtitle1
+                     Class="font-weight-bold mb-1">Avatar Color</MudText>
+
+            <MudText Typo=@Typo.body2
+                     Class="profile-text-muted">Used when no photo is set.</MudText>
+        </div>
+
+        <div class="d-flex flex-grow-1">
+            <div class="d-flex flex-wrap gap-3">
+                @foreach (var color in AvatarColors)
+                {
+                    var isSelected = SelectedColor == color;
+
+                    <div class="d-flex justify-center align-center color-swatch @(isSelected ? "color-swatch-selected" : "")"
+                         style="background-color: @color;"
+                         @onclick=@(() => SelectColor(color))>
+                        @if (isSelected)
+                        {
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Class="swatch-icon" />
+                        }
+                    </div>
+                }
+
+                @{
+                    var isCustomSelected = !AvatarColors.Contains(SelectedColor);
+                }
+
+                <div class="position-relative d-flex justify-center align-center">
+
+                    <div class="d-flex justify-center align-center color-swatch color-swatch-rainbow @(isCustomSelected ? "color-swatch-selected" : "")"
+                         @onclick=@ToggleColorPicker>
+
+                        @if (isCustomSelected)
+                        {
+                            <MudIcon Icon=@Icons.Material.Filled.Check
+                                     Class="swatch-icon-picker" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon=@Icons.Material.Rounded.Add
+                                     Class="swatch-icon-picker swatch-icon-add" />
+                        }
+                    </div>
+
+                    <MudPopover Open=@_isPickerOpen
+                                AnchorOrigin=@Origin.BottomCenter
+                                TransformOrigin=@Origin.TopCenter>
+
+                        <div @onclick:stopPropagation="true">
+                            <MudColorPicker @bind-Text="SelectedColor"
+                                            Style="background-color: #0d1117;"
+                                            PickerVariant=@PickerVariant.Static
+                                            Rounded="true"
+                                            Elevation="12"
+                                            ShowInputs="false" />
+                        </div>
+
+                    </MudPopover>
+                </div>
+
+                @if (_isPickerOpen)
+                {
+                    <MudOverlay Visible="true" 
+                                OnClick="ToggleColorPicker" 
+                                ZIndex="999" />
+                }
+            </div>
+        </div>
+
+    </div>
+
+    @if (HasUnsavedChanges)
+    {
+        <div class="d-flex justify-end gap-3 py-4 mt-6">
+            <MudButton Variant=@Variant.Outlined
+                       Class="text-none rounded-lg px-6 py-2 shadow-none custom-cancel-btn"
+                       OnClick=@CancelChanges>
+                Cancel
+            </MudButton>
+
+            <MudButton Variant=@Variant.Filled
+                       Color=@Color.Primary
+                       Class="text-none rounded-lg px-6 py-2 shadow-none custom-btn"
+                       OnClick=@SaveChangesAsync>
+                Save changes
+            </MudButton>
+        </div>
+    }
+</div>

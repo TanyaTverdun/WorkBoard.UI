@@ -153,14 +153,14 @@ custom-date-picker .mud-input-slot {
     flex-grow: 1;
 }
 
-.custom-btn {
+.mud-button-filled.custom-btn {
     background-color: #5C6BC0 !important;
     color: white !important;
     text-transform: none !important;
     transition: background-color 0.2s ease-in-out;
 }
 
-    .custom-btn:hover {
+    .mud-button-filled.custom-btn:hover {
         text-transform: none !important;
         background-color: #3949AB !important;
     }
