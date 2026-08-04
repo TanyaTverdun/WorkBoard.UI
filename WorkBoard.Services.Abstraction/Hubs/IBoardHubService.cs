@@ -1,6 +1,7 @@
 ﻿using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction.DTOs.ActivityLogs;
 using WorkBoard.Services.Abstraction.DTOs.Attachments;
+using WorkBoard.Services.Abstraction.DTOs.Board;
 using WorkBoard.Services.Abstraction.DTOs.Cards;
 using WorkBoard.Services.Abstraction.DTOs.Checklists;
 using WorkBoard.Services.Abstraction.DTOs.Comments;
@@ -73,6 +74,8 @@ public interface IBoardHubService : IAsyncDisposable
     event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
 
     event Action<UserAvatarUpdatedDto>? OnUserAvatarUpdated;
+
+    event Action<BoardArchiveStatusUpdatedDto>? OnBoardArchiveStatusUpdated;
 
     Task StartConnectionAsync(
         string backendUrl,
