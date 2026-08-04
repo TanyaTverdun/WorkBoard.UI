@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Options;
 using MudBlazor;
+using WorkBoard.Domain.Constants;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Domain.Options;
 using WorkBoard.Services.Abstraction.DTOs.Attachments;
+using WorkBoard.Services.Abstraction.DTOs.Board;
 using WorkBoard.Services.Abstraction.DTOs.Cards;
 using WorkBoard.Services.Abstraction.DTOs.Checklists;
 using WorkBoard.Services.Abstraction.DTOs.Comments;
@@ -245,6 +247,7 @@ public partial class BoardPage
         BoardHubService.OnChecklistItemStatusUpdated += HandleChecklistItemStatusUpdated;
         BoardHubService.OnCommentAdded += HandleNewComment;
         BoardHubService.OnUserAvatarUpdated += HandleUserAvatarUpdated;
+        BoardHubService.OnBoardArchiveStatusUpdated += HandleBoardArchiveStatusUpdated;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -1437,6 +1440,25 @@ public partial class BoardPage
         }
     }
 
+    private void HandleBoardArchiveStatusUpdated(BoardArchiveStatusUpdatedDto data)
+    {
+        if (data.BoardId != BoardIdGuid || !data.IsArchived)
+        {
+            return;
+        }
+
+        var boardName = BoardStateService.CurrentBoardName;
+        var message = string.IsNullOrWhiteSpace(boardName)
+            ? "This board has been archived."
+            : $"The board '{boardName}' has been archived.";
+
+        InvokeAsync(() =>
+        {
+            Snackbar.Add(message, Severity.Warning);
+            NavigationManager.NavigateTo(AppRoutes.Home);
+        });
+    }
+
     public async ValueTask DisposeAsync()
     {
         BoardStateService.OnBoardNameChanged -= StateHasChanged;
@@ -1465,6 +1487,7 @@ public partial class BoardPage
         BoardHubService.OnChecklistItemStatusUpdated -= HandleChecklistItemStatusUpdated;
         BoardHubService.OnCommentAdded -= HandleNewComment;
         BoardHubService.OnUserAvatarUpdated -= HandleUserAvatarUpdated;
+        BoardHubService.OnBoardArchiveStatusUpdated -= HandleBoardArchiveStatusUpdated;
 
         await BoardHubService.StopConnectionAsync(BoardIdGuid);
     }
