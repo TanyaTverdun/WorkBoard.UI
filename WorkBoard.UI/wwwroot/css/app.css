@@ -168,3 +168,25 @@ custom-date-picker .mud-input-slot {
 .text-btn {
     text-transform: none !important;
 }
+
+.dark-popover,
+.dark-popover .mud-list {
+    background-color: #234b7a !important;
+    color: #f8fafc !important;
+    border: 1px solid #4a6fa5 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+
+    .dark-popover .mud-list-item {
+        color: #f8fafc !important;
+    }
+
+        .dark-popover .mud-list-item:hover {
+            background-color: #2a5688 !important;
+        }
+
+    .dark-popover .mud-list-item-selected,
+    .dark-popover .mud-selected-item {
+        background-color: rgba(96, 165, 250, 0.15) !important;
+        color: #93c5fd !important;
+    }
