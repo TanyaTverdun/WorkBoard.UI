@@ -1,4 +1,5 @@
-﻿using WorkBoard.Services.Abstraction.DTOs.Users;
+﻿using WorkBoard.Services.Abstraction.DTOs.Board;
+using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Requests.Boards;
 
 namespace WorkBoard.Services.Abstraction.Services;
@@ -28,5 +29,16 @@ public interface IBoardService
     Task<BoardDto> GetBoardAsync(
         Guid workspaceId, 
         Guid boardId, 
+        CancellationToken cancellationToken = default);
+
+    Task ArchiveBoardAsync(
+        Guid boardId,
+        CancellationToken cancellationToken = default);
+
+    Task RestoreBoardAsync(
+        Guid boardId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
         CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,299 @@
+﻿.archivation-page {
+    background-color: #1a365d;
+    min-height: 100vh;
+}
+
+    ::deep .header-icon-bg,
+    .archivation-page ::deep .mud-avatar.header-icon-bg {
+        background-color: #6366f1 !important;
+        color: white !important;
+    }
+
+    .archivation-page ::deep .text-light {
+        color: #f8fafc !important;
+    }
+
+::deep .text-muted-dark {
+    color: #a3b3cc !important;
+}
+
+::deep .summary-cards-container .summary-card,
+::deep .summary-card {
+    flex: 1;
+    background-color: #234b7a !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.75rem !important;
+    min-height: 7.5rem;
+    color: #f8fafc !important;
+}
+
+    ::deep .summary-card:hover {
+        background-color: #2a5688 !important;
+        transform: translateY(-0.125rem);
+    }
+
+::deep .card-active .card-icon,
+::deep .card-active .card-label {
+    color: #2dd4bf !important;
+}
+
+::deep .card-active.selected {
+    border: 1px solid #2dd4bf !important;
+    box-shadow: 0 0 0.625rem rgba(45, 212, 191, 0.15);
+}
+
+::deep .card-archiving .card-icon,
+::deep .card-archiving .card-label {
+    color: #60a5fa !important;
+}
+
+::deep .card-archiving.selected {
+    border: 1px solid #60a5fa !important;
+    box-shadow: 0 0 0.625rem rgba(96, 165, 250, 0.15);
+}
+
+::deep .card-archived .card-icon,
+::deep .card-archived .card-label {
+    color: #4ade80 !important;
+}
+
+::deep .card-archived.selected {
+    border: 1px solid #4ade80 !important;
+    box-shadow: 0 0 0.625rem rgba(74, 222, 128, 0.15);
+}
+
+::deep .card-restore .card-icon,
+::deep .card-restore .card-label {
+    color: #fb923c !important;
+}
+
+::deep .card-restore.selected {
+    border: 1px solid #fb923c !important;
+    box-shadow: 0 0 0.625rem rgba(251, 146, 60, 0.15);
+}
+
+::deep .job-row {
+    background-color: #1e3a5f !important;
+}
+
+::deep .border-default-dark {
+    border-color: #2d4a73 !important;
+}
+
+::deep .border-teal-dark {
+    border-color: #0f766e !important;
+}
+
+::deep .border-blue-dark {
+    border-color: #1e3a8a !important;
+}
+
+::deep .border-green-dark {
+    border-color: #14532d !important;
+}
+
+::deep .border-orange-dark {
+    border-color: #7c2d12 !important;
+}
+
+::deep .icon-bg-teal-dark {
+    background-color: rgba(45, 212, 191, 0.12) !important;
+}
+
+::deep .icon-color-teal-dark {
+    color: #2dd4bf !important;
+}
+
+::deep .icon-bg-blue-dark {
+    background-color: rgba(96, 165, 250, 0.12) !important;
+}
+
+::deep .icon-color-blue-dark {
+    color: #60a5fa !important;
+}
+
+::deep .icon-bg-green-dark {
+    background-color: rgba(74, 222, 128, 0.12) !important;
+}
+
+::deep .icon-color-green-dark {
+    color: #4ade80 !important;
+}
+
+::deep .icon-bg-orange-dark {
+    background-color: rgba(251, 146, 60, 0.12) !important;
+}
+
+::deep .icon-color-orange-dark {
+    color: #fb923c !important;
+}
+
+::deep .min-w-stats {
+    min-width: 6.25rem;
+}
+
+::deep .stat-col {
+    width: 9.375rem;
+    min-width: 9.375rem;
+    flex-shrink: 0;
+}
+
+::deep .action-col {
+    width: 8.125rem;
+    min-width: 8.125rem;
+    flex-shrink: 0;
+}
+
+::deep .action-btn-compact.mud-button-root {
+    padding: 0.25rem 0.75rem !important;
+    min-height: 1.875rem !important;
+    height: 1.875rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+    border-radius: 0.5rem !important;
+}
+
+::deep .action-btn-compact .mud-button-label {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em;
+}
+
+::deep .action-btn-compact .mud-icon-root {
+    font-size: 1rem !important;
+}
+
+::deep .action-btn-compact .mud-button-start-icon {
+    margin-right: 0.25rem !important;
+}
+
+::deep .custom-header-btn {
+    border: 1px solid #2d4a73 !important;
+    background-color: #1e3a5f !important;
+    color: #cbd5e1 !important;
+    height: 2.25rem !important;
+}
+
+    ::deep .custom-header-btn .mud-button-label,
+    ::deep .custom-header-btn .mud-icon-root {
+        color: #cbd5e1 !important;
+    }
+
+::deep .custom-hover-btn:hover {
+    background-color: #2a5688 !important;
+}
+
+::deep .compact-input .mud-input {
+    font-size: 0.875rem !important;
+    min-height: 2.25rem !important;
+    color: #f8fafc !important;
+}
+
+::deep .dark-select .mud-input-slot {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    min-height: 2.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+    ::deep .dark-select .mud-select-input,
+    ::deep .dark-select .mud-input-slot input,
+    ::deep .dark-select .mud-select-input-label {
+        color: #f8fafc !important;
+    }
+
+.archivation-page ::deep .dark-select .mud-input-outlined-border {
+    border-color: #4a6fa5 !important;
+    border-width: 1px !important;
+}
+
+.archivation-page ::deep .dark-select.mud-input-focused .mud-input-outlined-border,
+.archivation-page ::deep .dark-select .mud-input-outlined-focus .mud-input-outlined-border {
+    border-color: #60a5fa !important;
+    border-width: 2px !important;
+}
+
+::deep .dark-select .mud-icon-root {
+    color: #a3b3cc !important;
+}
+
+.archivation-page ::deep .mud-chip.badge-teal-dark {
+    background-color: rgba(45, 212, 191, 0.15) !important;
+    border: 1px solid rgba(45, 212, 191, 0.5) !important;
+}
+
+    .archivation-page ::deep .mud-chip.badge-teal-dark .mud-chip-content {
+        color: #5eead4 !important;
+        font-weight: 600;
+    }
+
+.archivation-page ::deep .mud-chip.badge-blue-dark {
+    background-color: rgba(96, 165, 250, 0.15) !important;
+    border: 1px solid rgba(96, 165, 250, 0.5) !important;
+}
+
+    .archivation-page ::deep .mud-chip.badge-blue-dark .mud-chip-content {
+        color: #93c5fd !important;
+        font-weight: 600;
+    }
+
+.archivation-page ::deep .mud-chip.badge-green-dark {
+    background-color: rgba(74, 222, 128, 0.15) !important;
+    border: 1px solid rgba(74, 222, 128, 0.5) !important;
+}
+
+    .archivation-page ::deep .mud-chip.badge-green-dark .mud-chip-content {
+        color: #86efac !important;
+        font-weight: 600;
+    }
+
+.archivation-page ::deep .mud-chip.badge-orange-dark {
+    background-color: rgba(251, 146, 60, 0.15) !important;
+    border: 1px solid rgba(251, 146, 60, 0.5) !important;
+}
+
+    .archivation-page ::deep .mud-chip.badge-orange-dark .mud-chip-content {
+        color: #fdba74 !important;
+        font-weight: 600;
+    }
+
+.archivation-page ::deep .mud-button-root.action-btn-active {
+    border-color: #2dd4bf !important;
+    background-color: rgba(45, 212, 191, 0.08) !important;
+}
+
+    .archivation-page ::deep .mud-button-root.action-btn-active .mud-button-label,
+    .archivation-page ::deep .mud-button-root.action-btn-active .mud-icon-root,
+    .archivation-page ::deep .mud-button-root.action-btn-active .mud-icon-root svg,
+    .archivation-page ::deep .mud-button-root.action-btn-active svg path {
+        color: #2dd4bf !important;
+        fill: #2dd4bf !important;
+        opacity: 1 !important;
+    }
+
+    .archivation-page ::deep .mud-button-root.action-btn-active:hover {
+        background-color: rgba(45, 212, 191, 0.18) !important;
+    }
+
+.archivation-page ::deep .mud-button-root.action-btn-restore {
+    border-color: #4ade80 !important;
+    background-color: rgba(74, 222, 128, 0.08) !important;
+}
+
+    .archivation-page ::deep .mud-button-root.action-btn-restore .mud-button-label,
+    .archivation-page ::deep .mud-button-root.action-btn-restore .mud-icon-root,
+    .archivation-page ::deep .mud-button-root.action-btn-restore .mud-icon-root svg,
+    .archivation-page ::deep .mud-button-root.action-btn-restore svg path {
+        color: #4ade80 !important;
+        fill: #4ade80 !important;
+        opacity: 1 !important;
+    }
+
+    .archivation-page ::deep .mud-button-root.action-btn-restore:hover {
+        background-color: rgba(74, 222, 128, 0.18) !important;
+    }
+
+::deep .dark-select .mud-input-outlined-border legend {
+    display: none;
+}

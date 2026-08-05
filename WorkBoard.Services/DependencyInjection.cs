@@ -46,6 +46,8 @@ public static class DependencyInjection
         services.AddSingleton<BoardStateService>();
 
         services.AddScoped<IBoardHubService, BoardHubService>();
+        services.AddScoped<IArchivationHubService, ArchivationHubService>();
+        services.AddScoped<IAppHubService, AppHubService>();
 
         services.AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))

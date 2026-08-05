@@ -34,4 +34,5 @@ public static class BoardHubEvents
     public const string AttachmentAdded = "AttachmentAdded";
     public const string AttachmentDeleted = "AttachmentDeleted";
     public const string UserAvatarUpdated = "UserAvatarUpdated";
+    public const string BoardArchiveStatusUpdated = "BoardArchiveStatusUpdated";
 }

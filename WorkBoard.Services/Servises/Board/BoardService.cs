@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
+using WorkBoard.Services.Abstraction.DTOs.Board;
 using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Requests.Boards;
 using WorkBoard.Services.Abstraction.Services;
@@ -188,6 +189,93 @@ internal class BoardService : IBoardService
                 "workspace {WorkspaceId}",
                 boardId,
                 workspaceId);
+            throw;
+        }
+    }
+
+    public async Task ArchiveBoardAsync(
+        Guid boardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _boardApi.ArchiveBoardAsync(
+                boardId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while archiving board {BoardId}. " +
+                "Status: {StatusCode}",
+                boardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while archiving board {BoardId}",
+                boardId);
+            throw;
+        }
+    }
+
+    public async Task RestoreBoardAsync(
+        Guid boardId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _boardApi.RestoreBoardAsync(
+                boardId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while restoring board {BoardId}. " +
+                "Status: {StatusCode}",
+                boardId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while restoring board {BoardId}",
+                boardId);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _boardApi.GetBoardsForArchivationAsync(
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching boards " +
+                "for archivation management. Status: {StatusCode}",
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching boards " +
+                "for archivation management.");
             throw;
         }
     }

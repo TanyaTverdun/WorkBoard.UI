@@ -5,6 +5,7 @@ using WorkBoard.Domain.Constants;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction.DTOs.ActivityLogs;
 using WorkBoard.Services.Abstraction.DTOs.Attachments;
+using WorkBoard.Services.Abstraction.DTOs.Board;
 using WorkBoard.Services.Abstraction.DTOs.Cards;
 using WorkBoard.Services.Abstraction.DTOs.Checklists;
 using WorkBoard.Services.Abstraction.DTOs.Comments;
@@ -52,6 +53,7 @@ internal class BoardHubService : IBoardHubService
     public event Action<AttachmentAddedDto>? OnAttachmentAdded;
     public event Action<AttachmentDeletedDto>? OnAttachmentDeleted;
     public event Action<UserAvatarUpdatedDto>? OnUserAvatarUpdated;
+    public event Action<BoardArchiveStatusUpdatedDto>? OnBoardArchiveStatusUpdated;
 
     public BoardHubService(
         ILogger<BoardHubService> logger,
@@ -448,10 +450,24 @@ internal class BoardHubService : IBoardHubService
                 (data) =>
                 {
                     _logger.LogInformation(
-                        "Received user avatar color update via SignalR for user: {UserId}",
+                        "Received user avatar color update " +
+                        "via SignalR for user: {UserId}",
                         data.UserId);
 
                     OnUserAvatarUpdated?.Invoke(data);
+                });
+
+            _hubConnection.On<BoardArchiveStatusUpdatedDto>(
+                BoardHubEvents.BoardArchiveStatusUpdated,
+                (data) =>
+                {
+                    _logger.LogInformation(
+                        "Received board archive status updated via SignalR: " +
+                        "{BoardId}, IsArchived: {IsArchived}",
+                        data.BoardId,
+                        data.IsArchived);
+
+                    OnBoardArchiveStatusUpdated?.Invoke(data);
                 });
 
             await _hubConnection.StartAsync(cancellationToken);

@@ -1,0 +1,197 @@
+﻿@page "/archivation"
+
+@using MudBlazor
+@using WorkBoard.Domain.Enums
+
+<div class="pa-6 m-5 archivation-page">
+    <div class="d-flex justify-space-between align-start mb-8">
+        <div class="d-flex gap-4 align-center">
+            <MudAvatar Variant=@Variant.Filled
+                       Size=@Size.Large
+                       Class="rounded-lg header-icon-bg">
+                <MudIcon Icon=@Icons.Material.Outlined.Inventory2 
+                         Color=@Color.Inherit />
+            </MudAvatar>
+
+            <div>
+                <MudText Typo=@Typo.h6
+                         Class="font-weight-bold text-light">Archivation Status Tracker</MudText>
+            </div>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center align-center" 
+             style="height: 50vh;">
+            <MudProgressCircular Color=@Color.Primary 
+                                 Indeterminate="true" 
+                                 Size=@Size.Large />
+        </div>
+    }
+    else
+    {
+        <div class="d-flex gap-4 mb-8 summary-cards-container">
+            <MudPaper Elevation="0"
+                      Class=@($"summary-card card-active {(_currentFilter == BoardArchiveStatus.Active ? "selected" : "")} d-flex flex-column align-center justify-center pa-4 cursor-pointer transition-all")
+                      @onclick=@(() => SetFilter(BoardArchiveStatus.Active))>
+                <MudIcon Icon=@Icons.Material.Outlined.Storage 
+                         Class="mb-1 card-icon" />
+
+                <MudText Typo=@Typo.h5 
+                         Class="font-weight-bold">@GetBoardsCount(BoardArchiveStatus.Active)</MudText>
+
+                <MudText Typo=@Typo.caption 
+                         Class="font-weight-bold text-uppercase card-label">Active</MudText>
+            </MudPaper>
+
+            <MudPaper Elevation="0"
+                      Class=@($"summary-card card-archiving {(_currentFilter == BoardArchiveStatus.Pending ? "selected" : "")} d-flex flex-column align-center justify-center pa-4 cursor-pointer transition-all")
+                      @onclick=@(() => SetFilter(BoardArchiveStatus.Pending))>
+                <MudIcon Icon=@Icons.Material.Outlined.Sync 
+                         Class="mb-1 card-icon" />
+
+                <MudText Typo=@Typo.h5 
+                         Class="font-weight-bold">@GetBoardsCount(BoardArchiveStatus.Pending)</MudText>
+
+                <MudText Typo=@Typo.caption 
+                         Class="font-weight-bold text-uppercase card-label">Archiving</MudText>
+            </MudPaper>
+
+            <MudPaper Elevation="0"
+                      Class=@($"summary-card card-archived {(_currentFilter == BoardArchiveStatus.Archived ? "selected" : "")} d-flex flex-column align-center justify-center pa-4 cursor-pointer transition-all")
+                      @onclick=@(() => SetFilter(BoardArchiveStatus.Archived))>
+                <MudIcon Icon=@Icons.Material.Outlined.CheckCircleOutline 
+                         Class="mb-1 card-icon" />
+
+                <MudText Typo=@Typo.h5 
+                         Class="font-weight-bold">@GetBoardsCount(BoardArchiveStatus.Archived)</MudText>
+
+                <MudText Typo=@Typo.caption 
+                         Class="font-weight-bold text-uppercase card-label">Archived</MudText>
+            </MudPaper>
+
+            <MudPaper Elevation="0"
+                      Class=@($"summary-card card-restore {(_currentFilter == BoardArchiveStatus.RestorePending ? "selected" : "")} d-flex flex-column align-center justify-center pa-4 cursor-pointer transition-all")
+                      @onclick=@(() => SetFilter(BoardArchiveStatus.RestorePending))>
+                <MudIcon Icon=@Icons.Material.Outlined.SettingsBackupRestore 
+                         Class="mb-1 card-icon" />
+
+                <MudText Typo=@Typo.h5 
+                         Class="font-weight-bold">@GetBoardsCount(BoardArchiveStatus.RestorePending)</MudText>
+
+                <MudText Typo=@Typo.caption 
+                         Class="font-weight-bold text-uppercase card-label">Restore Pending</MudText>
+            </MudPaper>
+        </div>
+
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudText Typo=@Typo.body2 
+                     Class="text-muted-dark font-weight-medium">
+                Showing @FilteredBoards.Count() of @_allBoards.Count() boards
+            </MudText>
+
+            <div style="width: 220px;">
+                <MudSelect T="BoardArchiveStatus?"
+                           Value=@_currentFilter
+                           ValueChanged=@OnFilterChanged
+                           Variant=@Variant.Outlined
+                           Margin=@Margin.Dense
+                           Dense="true"
+                           Class="compact-input dark-select rounded-lg filter-select"
+                           PopoverClass="dark-popover">
+                    <MudSelectItem T=BoardArchiveStatus?"
+                                   Value="null">All</MudSelectItem>
+
+                    <MudSelectItem T="BoardArchiveStatus?" 
+                                   Value=@BoardArchiveStatus.Active>Active</MudSelectItem>
+
+                    <MudSelectItem T="BoardArchiveStatus?" 
+                                   Value=@BoardArchiveStatus.Pending>Archiving</MudSelectItem>
+
+                    <MudSelectItem T="BoardArchiveStatus?" 
+                                   Value=@BoardArchiveStatus.Archived>Archived</MudSelectItem>
+
+                    <MudSelectItem T="BoardArchiveStatus?" 
+                                   Value=@BoardArchiveStatus.RestorePending>Restore Pending</MudSelectItem>
+                </MudSelect>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column gap-4">
+            @foreach (var board in FilteredBoards)
+            {
+                <MudPaper Elevation="0" 
+                          Class="@($"job-row border-solid border rounded-xl pa-4 px-8 d-flex align-center justify-space-between {GetRowBorderClass(board.ArchiveStatus)}")">
+
+                    <div class="d-flex gap-4 align-center flex-grow-1">
+                        <div class=@($"job-icon-wrapper rounded-circle d-flex align-center justify-center {GetRowIconBgClass(board.ArchiveStatus)}") 
+                             style="width: 40px; height: 40px;">
+                            <MudIcon Icon=@GetRowIcon(board.ArchiveStatus) 
+                                     Class=@GetRowIconColorClass(board.ArchiveStatus) 
+                                     Size=@Size.Small />
+                        </div>
+
+                        <div class="d-flex flex-column">
+                            <div class="d-flex align-center gap-2 mb-1">
+                                <MudText Typo=@Typo.body1 
+                                         Class="font-weight-medium text-light">@board.Name</MudText>
+
+                                <MudChip T="string" 
+                                         Size=@Size.Small 
+                                         Class=@($"ma-0 {GetBadgeClass(board.ArchiveStatus)}")
+                                         Variant=@Variant.Filled>@GetBadgeText(board.ArchiveStatus)</MudChip>
+                            </div>
+
+                            <MudText Typo=@Typo.caption 
+                            Class="text-muted-dark">@board.WorkspaceName</MudText>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-center gap-8">
+                        <div class="action-col d-flex justify-end">
+                            @if (board.ArchiveStatus == BoardArchiveStatus.Active)
+                            {
+                                <MudButton Variant=@Variant.Outlined
+                                           Size=@Size.Small
+                                           StartIcon=@Icons.Material.Outlined.Archive
+                                           Class="action-btn-active action-btn-compact rounded-lg text-none"
+                                           @onclick=@(() => OnArchiveClickAsync(board.Id))>
+                                    Archive
+                                </MudButton>
+                            }
+                            else if (board.ArchiveStatus == BoardArchiveStatus.Archived)
+                            {
+                                <MudButton Variant=@Variant.Outlined
+                                           Size=@Size.Small
+                                           StartIcon=@Icons.Material.Outlined.Restore
+                                           Class="action-btn-restore action-btn-compact rounded-lg text-none"
+                                           @onclick=@(() => OnRestoreClickAsync(board.Id))>
+                                    Restore
+                                </MudButton>
+                            }
+                            else if (board.ArchiveStatus == BoardArchiveStatus.Pending || 
+                                     board.ArchiveStatus == BoardArchiveStatus.Queued)
+                            {
+                                <div class="d-flex align-center gap-1" 
+                                     style="color: #60a5fa;">
+                                    <MudIcon Icon=@Icons.Material.Outlined.Schedule" 
+                                             Size=@Size.Small />
+
+                                    <MudText Typo=@Typo.body2
+                                             Class="font-weight-medium">In progress...</MudText>
+                                </div>
+                            }
+                            else if (board.ArchiveStatus == BoardArchiveStatus.RestorePending)
+                            {
+                                <MudText Typo=@Typo.body2 
+                                         Class="font-weight-medium" 
+                                         Style="color: #fb923c;">Processing...</MudText>
+                            }
+                        </div>
+                    </div>
+                </MudPaper>
+            }
+        </div>
+    }
+</div>
