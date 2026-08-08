@@ -1,0 +1,145 @@
+﻿<div class="ai-chat-widget-container">
+    @if (_isOpen)
+    {
+        <MudPaper Elevation="4" 
+                  Class="ai-chat-window d-flex flex-column rounded-xl overflow-hidden">
+            <div class="ai-chat-header d-flex align-center justify-space-between pa-3 text-white">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon=@Icons.Material.Rounded.SmartToy 
+                             Size=@Size.Small />
+
+                    <MudText Typo=@Typo.subtitle2 
+                             Class="font-weight-bold">AI Assistant</MudText>
+                </div>
+                <div class="d-flex gap-1">
+                    <MudIconButton Icon=@Icons.Material.Rounded.Close 
+                                   Size=@Size.Small 
+                                   Class="text-white" 
+                                   OnClick=@ToggleChat />
+                </div>
+            </div>
+
+            <div class="ai-chat-messages flex-grow-1 overflow-y-auto pa-4 d-flex flex-column gap-3 custom-scrollbar">
+                @if (!_messages.Any())
+                {
+                    <div class="d-flex gap-2">
+                        <MudAvatar Size=@Size.Small 
+                                   Color=@Color.Primary 
+                                   Class="mt-1">
+                            <MudIcon Icon=@Icons.Material.Rounded.SmartToy 
+                                     Size=@Size.Small />
+                        </MudAvatar>
+
+                        <MudPaper Elevation="0" 
+                                  Class="pa-3 mud-theme-gray rounded-lg rounded-tl-none">
+                            <MudText Typo=@Typo.body2>
+                                Hi! I am your AI Assistant. You can ask me about board, workspace or anything in the FAQ.
+                            </MudText>
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted d-block mt-1">@DateTime.Now.ToString("HH:mm")</MudText>
+                        </MudPaper>
+                    </div>
+                }
+
+                @foreach (var msg in _messages)
+                {
+                    bool isUser = msg.Role == "User";
+                    <div class="d-flex gap-2 @(isUser ? "flex-row-reverse" : "")">
+                        @if (!isUser)
+                        {
+                            <MudAvatar Size=@Size.Small 
+                                       Color=@Color.Primary 
+                                       Class="mt-1 flex-shrink-0">
+                                <MudIcon Icon=@Icons.Material.Rounded.SmartToy 
+                                         Size=@Size.Small />
+                            </MudAvatar>
+                        }
+
+                        <MudPaper Elevation="0" 
+                                  Class=@($"pa-3 rounded-lg {(isUser ? "mud-theme-primary text-white rounded-tr-none" : "mud-theme-gray rounded-tl-none")}") 
+                                  Style="max-width: 85%;">
+                            <MudText Typo=@Typo.body2 
+                                     Style="white-space: pre-wrap;">@msg.Content</MudText>
+                        </MudPaper>
+                    </div>
+                }
+
+                @if (_isLoading)
+                {
+                    <div class="d-flex gap-2">
+                        <MudAvatar Size=@Size.Small 
+                                   Color=@Color.Primary 
+                                   Class="mt-1">
+                            <MudIcon Icon=@Icons.Material.Rounded.SmartToy 
+                                     Size=@Size.Small />
+                        </MudAvatar>
+
+                        <div class="d-flex align-center pa-3">
+                            <MudProgressCircular Color=@Color.Primary 
+                                                 Size=@Size.Small 
+                                                 Indeterminate="true" />
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (!_messages.Any())
+            {
+                <div class="pa-3 pt-0 d-flex flex-wrap gap-2">
+                    <MudChip T="string" 
+                             Size=@Size.Small 
+                             Variant=@Variant.Outlined 
+                             Color=@Color.Info 
+                             OnClick=@(() => SendSuggestion("What are the user roles?"))>What are the user roles?</MudChip>
+                             
+                    <MudChip T="string" 
+                             Size=@Size.Small 
+                             Variant=@Variant.Outlined 
+                             Color=@Color.Info 
+                             OnClick=@(() => SendSuggestion("How does archivation work?"))>How does archivation work?</MudChip>
+
+                    <MudChip T="string" 
+                             Size=@Size.Small 
+                             Variant=@Variant.Outlined 
+                             Color=@Color.Info 
+                             OnClick=@(() => SendSuggestion("Tell me about subscriptions"))>Tell me about subscriptions</MudChip>
+                </div>
+            }
+
+            <div class="pa-3 border-t mud-border-lines-default">
+                @if (WorkspaceState.SelectedWorkspaceId == null)
+                {
+                    <MudAlert Severity="Severity.Warning" 
+                              Dense="true" 
+                              Class="mb-0 rounded-lg">
+                        Please select a workspace to use the chat.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTextField @bind-Value=@_currentInput
+                                  Placeholder="Ask about roles, features, FAQ..."
+                                  Variant=@Variant.Outlined
+                                  Margin=@Margin.Dense
+                                  Immediate="true"
+                                  Disabled=@_isLoading
+                                  Adornment=@Adornment.End
+                                  AdornmentIcon=@Icons.Material.Filled.Send
+                                  AdornmentColor=@Color.Primary
+                                  OnAdornmentClick=@SendMessageAsync
+                                  Class="chat-input" />
+                }
+            </div>
+        </MudPaper>
+    }
+
+    <div class="chat-fab-wrapper">
+        <MudFab Color=@Color.Primary
+                StartIcon=@Icons.Material.Rounded.SmartToy
+                Size=@Size.Medium
+                OnClick=@ToggleChat
+                Class="chat-fab-btn" />
+        <div class="chat-status-dot"></div>
+    </div>
+</div>
