@@ -19,7 +19,8 @@
                 </div>
             </div>
 
-            <div class="ai-chat-messages flex-grow-1 overflow-y-auto pa-4 d-flex flex-column gap-3 custom-scrollbar">
+            <div @ref="_messagesContainer"
+                 class="ai-chat-messages flex-grow-1 overflow-y-auto pa-4 d-flex flex-column gap-3 custom-scrollbar">
                 @if (!_messages.Any())
                 {
                     <div class="d-flex gap-2">

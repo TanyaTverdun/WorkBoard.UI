@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction.DTOs.Chat;
 using WorkBoard.Services.Abstraction.Requests.Chat;
@@ -14,6 +15,14 @@ namespace WorkBoard.UI.Components.Chat
         [Inject] 
         private WorkspaceStateProvider WorkspaceState { get; set; } = null!;
 
+        [Inject]
+        private IJSRuntime JSRuntime { get; set; } = null!;
+
+        private const string ScrollToBottomJsFunction = "scrollToBottom";
+
+        private ElementReference _messagesContainer;
+        private bool _shouldScrollToBottom = false;
+
         private bool _isOpen = false;
         private bool _isLoading = false;
         private string _currentInput = string.Empty;
@@ -28,6 +37,18 @@ namespace WorkBoard.UI.Components.Chat
             WorkspaceState.OnWorkspaceChanged += HandleWorkspaceChanged;
         }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (_shouldScrollToBottom && _isOpen)
+            {
+                _shouldScrollToBottom = false;
+                await JSRuntime.InvokeVoidAsync(
+                    ScrollToBottomJsFunction, 
+                    _messagesContainer);
+
+            }
+        }
+
         private void HandleWorkspaceChanged(
             Guid? workspaceId, 
             WorkspaceRole? role)
@@ -37,7 +58,14 @@ namespace WorkBoard.UI.Components.Chat
             InvokeAsync(StateHasChanged);
         }
 
-        private void ToggleChat() => _isOpen = !_isOpen;
+        private void ToggleChat()
+        {
+            _isOpen = !_isOpen;
+            if (_isOpen)
+            {
+                _shouldScrollToBottom = true;
+            }
+        }
 
         private async Task SendSuggestion(string text)
         {
@@ -64,6 +92,7 @@ namespace WorkBoard.UI.Components.Chat
 
             _currentInput = string.Empty;
             _isLoading = true;
+            _shouldScrollToBottom = true;
             StateHasChanged();
 
             try
@@ -94,6 +123,7 @@ namespace WorkBoard.UI.Components.Chat
             finally
             {
                 _isLoading = false;
+                _shouldScrollToBottom = true;
                 StateHasChanged();
             }
         }
