@@ -25,4 +25,27 @@ internal interface IWorkspaceApi
     Task DeleteWorkspaceAsync(
         Guid id,
         CancellationToken cancellationToken = default);
+
+    [Get("/api/workspaces/UserWorkspaces")]
+    Task<IReadOnlyList<UserWorkspaceDto>> GetWorkspacesForRoleManagementAsync(
+        CancellationToken cancellationToken = default);
+
+    [Put("/api/workspaces/{id}/members/{memberId}/role")]
+    Task UpdateWorkspaceMemberRoleAsync(
+        Guid id,
+        Guid memberId,
+        [Body] UpdateWorkspaceMemberRoleRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/api/workspaces/{id}/members")]
+    Task AddWorkspaceMemberAsync(
+        Guid id,
+        [Body] AddWorkspaceMemberRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Delete("/api/workspaces/{id}/members/{memberId}")]
+    Task RemoveWorkspaceMemberAsync(
+        Guid id,
+        Guid memberId,
+        CancellationToken cancellationToken = default);
 }

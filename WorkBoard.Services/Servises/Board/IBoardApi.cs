@@ -8,7 +8,7 @@ namespace WorkBoard.Services.Servises.Board;
 internal interface IBoardApi
 {
     [Get("/api/workspaces/{workspaceId}/boards")]
-    Task<IReadOnlyList<BoardDto>> GetWorkspaceBoardsAsync(
+    Task<IReadOnlyList<BoardDto>> GetWorkspaceBoardsForUserAsync(
         Guid workspaceId,
         CancellationToken cancellationToken = default);
 
@@ -49,5 +49,10 @@ internal interface IBoardApi
 
     [Get("/api/boards/archivation")]
     Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
+        CancellationToken cancellationToken = default);
+
+    [Get("/api/workspaces/{workspaceId}/boards/all")]
+    Task<IReadOnlyList<BoardDto>> GetBoardsByWorkspaceAsync(
+        Guid workspaceId,
         CancellationToken cancellationToken = default);
 }

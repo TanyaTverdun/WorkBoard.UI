@@ -20,4 +20,23 @@ public interface IWorkspaceService
     Task DeleteWorkspaceAsync(
         Guid id,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<UserWorkspaceDto>> GetWorkspacesForRoleManagementAsync(
+        CancellationToken cancellationToken = default);
+
+    Task UpdateWorkspaceMemberRoleAsync(
+        Guid workspaceId,
+        Guid memberId,
+        UpdateWorkspaceMemberRoleRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task AddWorkspaceMemberAsync(
+        Guid workspaceId,
+        AddWorkspaceMemberRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task RemoveWorkspaceMemberAsync(
+        Guid workspaceId,
+        Guid memberId,
+        CancellationToken cancellationToken = default);
 }

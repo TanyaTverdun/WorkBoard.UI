@@ -136,4 +136,137 @@ internal class WorkspaceService : IWorkspaceService
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<UserWorkspaceDto>> GetWorkspacesForRoleManagementAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _workspaceApi.GetWorkspacesForRoleManagementAsync(
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching workspaces for role management. " +
+                "Status: {StatusCode}",
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching workspaces for role management.");
+            throw;
+        }
+    }
+
+    public async Task UpdateWorkspaceMemberRoleAsync(
+        Guid workspaceId,
+        Guid memberId,
+        UpdateWorkspaceMemberRoleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _workspaceApi.UpdateWorkspaceMemberRoleAsync(
+                workspaceId,
+                memberId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while updating role for member {MemberId} " +
+                "in workspace {WorkspaceId}. Status: {StatusCode}",
+                memberId,
+                workspaceId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while updating role for member {MemberId} " +
+                "in workspace {WorkspaceId}",
+                memberId,
+                workspaceId);
+            throw;
+        }
+    }
+
+    public async Task AddWorkspaceMemberAsync(
+        Guid workspaceId,
+        AddWorkspaceMemberRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _workspaceApi.AddWorkspaceMemberAsync(
+                workspaceId,
+                request,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while adding member {UserId} " +
+                "to workspace {WorkspaceId}. Status: {StatusCode}",
+                request.UserId,
+                workspaceId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while adding member {UserId} " +
+                "to workspace {WorkspaceId}",
+                request.UserId,
+                workspaceId);
+            throw;
+        }
+    }
+
+    public async Task RemoveWorkspaceMemberAsync(
+        Guid workspaceId,
+        Guid memberId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _workspaceApi.RemoveWorkspaceMemberAsync(
+                workspaceId,
+                memberId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while removing member {MemberId} " +
+                "from workspace {WorkspaceId}. Status: {StatusCode}",
+                memberId,
+                workspaceId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while removing member {MemberId} " +
+                "from workspace {WorkspaceId}",
+                memberId,
+                workspaceId);
+            throw;
+        }
+    }
 }
