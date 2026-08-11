@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Refit;
 using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.DTOs.Workspaces;
 using WorkBoard.Services.Abstraction.Requests.Workspaces;
 using WorkBoard.Services.Abstraction.Services;
 
@@ -265,6 +266,72 @@ internal class WorkspaceService : IWorkspaceService
                 "Error occurred while removing member {MemberId} " +
                 "from workspace {WorkspaceId}",
                 memberId,
+                workspaceId);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<WorkspaceMemberDto>> GetWorkspaceMembersAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _workspaceApi.GetWorkspaceMembersAsync(
+                workspaceId,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while fetching " +
+                "members for workspace {WorkspaceId}. " +
+                "Status: {StatusCode}",
+                workspaceId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while fetching members " +
+                "for workspace {WorkspaceId}",
+                workspaceId);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<UserSearchDto>> SearchAssignableUsersAsync(
+        Guid workspaceId,
+        string searchTerm,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _workspaceApi.SearchAssignableUsersAsync(
+                workspaceId,
+                searchTerm,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while searching assignable " +
+                "users for workspace {WorkspaceId}. " +
+                "Status: {StatusCode}",
+                workspaceId,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while searching assignable users " +
+                "for workspace {WorkspaceId}",
                 workspaceId);
             throw;
         }

@@ -1,5 +1,6 @@
 ﻿using Refit;
 using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.DTOs.Workspaces;
 using WorkBoard.Services.Abstraction.Requests.Workspaces;
 
 namespace WorkBoard.Services.Servises.Workspace;
@@ -47,5 +48,16 @@ internal interface IWorkspaceApi
     Task RemoveWorkspaceMemberAsync(
         Guid id,
         Guid memberId,
+        CancellationToken cancellationToken = default);
+
+    [Get("/api/workspaces/{id}/members")]
+    Task<IReadOnlyList<WorkspaceMemberDto>> GetWorkspaceMembersAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    [Get("/api/workspaces/{id}/assignable-users")]
+    Task<IReadOnlyList<UserSearchDto>> SearchAssignableUsersAsync(
+        Guid id,
+        [Query] string searchTerm,
         CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,5 @@
 ﻿using WorkBoard.Services.Abstraction.DTOs.Users;
+using WorkBoard.Services.Abstraction.DTOs.Workspaces;
 using WorkBoard.Services.Abstraction.Requests.Workspaces;
 
 namespace WorkBoard.Services.Abstraction.Services;
@@ -38,5 +39,14 @@ public interface IWorkspaceService
     Task RemoveWorkspaceMemberAsync(
         Guid workspaceId,
         Guid memberId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<WorkspaceMemberDto>> GetWorkspaceMembersAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<UserSearchDto>> SearchAssignableUsersAsync(
+        Guid workspaceId,
+        string searchTerm,
         CancellationToken cancellationToken = default);
 }
