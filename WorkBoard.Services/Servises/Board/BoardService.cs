@@ -279,35 +279,4 @@ internal class BoardService : IBoardService
             throw;
         }
     }
-
-    public async Task<IReadOnlyList<BoardDto>> GetBoardsByWorkspaceAsync(
-        Guid workspaceId,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            return await _boardApi.GetBoardsByWorkspaceAsync(
-                workspaceId,
-                cancellationToken);
-        }
-        catch (ApiException apiEx)
-        {
-            _logger.LogError(
-                apiEx,
-                "API error occurred while fetching ALL boards for workspace management " +
-                "{WorkspaceId}. Status: {StatusCode}",
-                workspaceId,
-                apiEx.StatusCode);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Error occurred while fetching ALL boards for workspace management " +
-                "{WorkspaceId}",
-                workspaceId);
-            throw;
-        }
-    }
 }

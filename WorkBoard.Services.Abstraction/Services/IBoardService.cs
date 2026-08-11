@@ -41,8 +41,4 @@ public interface IBoardService
 
     Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
         CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<BoardDto>> GetBoardsByWorkspaceAsync(
-        Guid workspaceId,
-        CancellationToken cancellationToken = default);
 }

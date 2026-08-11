@@ -50,9 +50,4 @@ internal interface IBoardApi
     [Get("/api/boards/archivation")]
     Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
         CancellationToken cancellationToken = default);
-
-    [Get("/api/workspaces/{workspaceId}/boards/all")]
-    Task<IReadOnlyList<BoardDto>> GetBoardsByWorkspaceAsync(
-        Guid workspaceId,
-        CancellationToken cancellationToken = default);
 }
