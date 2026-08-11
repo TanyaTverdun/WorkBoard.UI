@@ -4,5 +4,5 @@ namespace WorkBoard.Services.Abstraction.Requests.Workspaces;
 
 public class UpdateWorkspaceMemberRoleRequest
 {
-    public WorkspaceRole NewRole { get; set; }
+    public int NewRole { get; set; }
 }
