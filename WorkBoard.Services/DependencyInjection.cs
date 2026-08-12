@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IBoardHubService, BoardHubService>();
         services.AddScoped<IArchivationHubService, ArchivationHubService>();
         services.AddScoped<IAppHubService, AppHubService>();
+        services.AddScoped<IWorkspaceHubService, WorkspaceHubService>();
 
         services.AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
