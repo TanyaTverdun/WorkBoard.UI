@@ -12,6 +12,7 @@ using WorkBoard.Services.Servises.Auth;
 using WorkBoard.Services.Servises.Board;
 using WorkBoard.Services.Servises.BoardMenbers;
 using WorkBoard.Services.Servises.Card;
+using WorkBoard.Services.Servises.Chat;
 using WorkBoard.Services.Servises.Checklist;
 using WorkBoard.Services.Servises.Comment;
 using WorkBoard.Services.Servises.Label;
@@ -115,6 +116,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IAttachmentService, AttachmentService>();
+
+        services.AddRefitClient<IChatApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<IChatService, ChatService>();
 
         return services;
     }

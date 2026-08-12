@@ -204,8 +204,8 @@
                         Style="font-size: 0.9rem"
                         Immediate="true" />
 
-                        <div class="custom-color-wrapper" style="@($"--selected-color: {_editingLabelColor.Value}; --icon-color: {GetContrastColor(_editingLabelColor)};")">
-                            <MudColorPicker @bind-Value=@_editingLabelColor
+                        <div class="custom-color-wrapper" style="@($"--selected-color: {_newLabelColor.Value}; --icon-color: {GetContrastColor(_newLabelColor)};")">
+                            <MudColorPicker @bind-Value=@_newLabelColor
                             ShowToolbar="true"
                             PickerVariant=@PickerVariant.Dialog
                             Margin=@Margin.Dense
