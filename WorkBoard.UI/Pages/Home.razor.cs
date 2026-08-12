@@ -61,7 +61,7 @@ public partial class Home
                     firstWorkspace.Id, 
                     firstWorkspace.UserRole);
 
-                var boards = await BoardService.GetWorkspaceBoardsAsync(
+                var boards = await BoardService.GetWorkspaceBoardsForUserAsync(
                     firstWorkspace.Id);
 
                 if (boards != null && boards.Any())

@@ -190,3 +190,58 @@ custom-date-picker .mud-input-slot {
         background-color: rgba(96, 165, 250, 0.15) !important;
         color: #93c5fd !important;
     }
+
+.invite-autocomplete-popover,
+.invite-autocomplete-popover.mud-paper,
+.invite-autocomplete-popover .mud-paper,
+.invite-autocomplete-popover .mud-popover-content {
+    background-color: #1e3a5f !important;
+    border: 1px solid #2d4a73 !important;
+    overflow: hidden;
+}
+
+    .invite-autocomplete-popover .mud-list {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    .invite-autocomplete-popover .mud-list-item,
+    .invite-autocomplete-popover .mud-list-item-clickable,
+    .invite-autocomplete-popover li {
+        background-color: transparent !important;
+        padding: 4px 10px !important;
+        min-height: unset !important;
+        height: unset !important;
+        line-height: 1.1 !important;
+        transition: background-color 0.1s ease;
+    }
+
+        .invite-autocomplete-popover .mud-list-item:hover,
+        .invite-autocomplete-popover .mud-list-item-clickable:hover,
+        .invite-autocomplete-popover .mud-list-item-clickable.mud-selected-item,
+        .invite-autocomplete-popover li:hover {
+            background-color: #2a5688 !important;
+        }
+
+    .invite-autocomplete-popover .mud-typography,
+    .invite-autocomplete-popover .text-light {
+        color: #f8fafc !important;
+        line-height: 1.2 !important;
+    }
+
+    .invite-autocomplete-popover .text-muted-dark {
+        color: #a3b3cc !important;
+        line-height: 1.2 !important;
+    }
+
+    .invite-autocomplete-popover .d-flex.flex-column {
+        gap: 1px !important;
+    }
+
+    .invite-autocomplete-popover .avatar-tiny {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.625rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
