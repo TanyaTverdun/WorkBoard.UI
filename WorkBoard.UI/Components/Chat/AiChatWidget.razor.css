@@ -1,0 +1,45 @@
+﻿.ai-chat-widget-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+::deep .ai-chat-window {
+    width: 22.5rem !important;
+    height: 31.25rem !important;
+    box-shadow: 0 0.625rem 2.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.ai-chat-header {
+    background-color: #1e40af;
+}
+
+.chat-fab-wrapper {
+    position: relative;
+}
+
+.chat-fab-btn {
+    background-color: #3b82f6 !important;
+}
+
+.chat-status-dot {
+    position: absolute;
+    top: 0;
+    right: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: #22c55e;
+    border: 0.0625rem solid white;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+.mud-theme-gray {
+    background-color: #f1f5f9;
+    color: #334155;
+}
