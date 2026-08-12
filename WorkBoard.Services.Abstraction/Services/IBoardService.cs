@@ -6,7 +6,7 @@ namespace WorkBoard.Services.Abstraction.Services;
 
 public interface IBoardService
 {
-    Task<IReadOnlyList<BoardDto>> GetWorkspaceBoardsAsync(
+    Task<IReadOnlyList<BoardDto>> GetWorkspaceBoardsForUserAsync(
         Guid workspaceId,
         CancellationToken cancellationToken = default);
 

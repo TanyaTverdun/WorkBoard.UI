@@ -1,0 +1,429 @@
+﻿.roles-page {
+    background-color: #1a365d;
+    min-height: 100vh;
+}
+
+    ::deep .header-icon-bg,
+    .roles-page ::deep .mud-avatar.header-icon-bg {
+        background-color: #6366f1 !important;
+        color: white !important;
+    }
+
+::deep .text-light {
+    color: #f8fafc !important;
+}
+
+::deep .text-muted-dark {
+    color: #a3b3cc !important;
+}
+
+::deep .role-legend-container .role-legend-card {
+    flex: 1;
+    background-color: #234b7a !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.75rem !important;
+    color: #f8fafc !important;
+}
+
+::deep .role-legend-icon {
+    font-size: 1.25rem !important;
+}
+
+::deep .role-owner .role-legend-icon,
+::deep .role-owner .role-legend-title {
+    color: #fbbf24 !important;
+}
+
+::deep .role-owner {
+    border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+::deep .role-member .role-legend-icon,
+::deep .role-member .role-legend-title {
+    color: #4ade80 !important;
+}
+
+::deep .role-member {
+    border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+::deep .role-observer .role-legend-icon,
+::deep .role-observer .role-legend-title {
+    color: #94a3b8 !important;
+}
+
+::deep .role-observer {
+    border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+::deep .workspace-switcher-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+::deep .workspace-card {
+    background-color: #1e3a5f !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.75rem !important;
+    width: 100%;
+    transition: background-color 0.15s ease;
+}
+
+    ::deep .workspace-card:hover {
+        background-color: #234b7a !important;
+    }
+
+::deep .workspace-icon-bg {
+    background-color: #6366f1 !important;
+    color: white !important;
+}
+
+::deep .expand-icon {
+    color: #a3b3cc !important;
+    transition: transform 0.15s ease;
+}
+
+::deep .expand-icon-open {
+    transform: rotate(180deg);
+}
+
+::deep .workspace-switcher-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: transparent;
+}
+
+::deep .workspace-switcher-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    z-index: 31;
+    width: 100%;
+    background-color: #234b7a !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+
+::deep .workspace-menu-header {
+    border-bottom: 1px solid #2d4a73 !important;
+}
+
+::deep .workspace-menu-item {
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+    ::deep .workspace-menu-item:hover {
+        background-color: #2a5688 !important;
+    }
+
+    ::deep .workspace-menu-item:not(:last-child) {
+        border-bottom: 1px solid #2d4a73;
+    }
+
+::deep .workspace-icon-bg-sm {
+    background-color: #6366f1 !important;
+    color: white !important;
+    width: 2rem;
+    height: 2rem;
+}
+
+::deep .workspace-check-icon {
+    color: #4ade80 !important;
+}
+
+::deep .mud-chip.badge-premium-sm {
+    background-color: rgba(168, 85, 247, 0.15) !important;
+    border: 1px solid rgba(168, 85, 247, 0.5) !important;
+    height: 1.125rem !important;
+}
+
+    ::deep .mud-chip.badge-premium-sm .mud-chip-content {
+        color: #d8b4fe !important;
+        font-weight: 600;
+        font-size: 0.625rem;
+        padding: 0 0.375rem;
+    }
+
+.roles-page ::deep .mud-chip.badge-premium {
+    background-color: rgba(168, 85, 247, 0.15) !important;
+    border: 1px solid rgba(168, 85, 247, 0.5) !important;
+}
+
+    .roles-page ::deep .mud-chip.badge-premium .mud-chip-content {
+        color: #d8b4fe !important;
+        font-weight: 600;
+        font-size: 0.6875rem;
+    }
+
+::deep .members-card {
+    background-color: #1e3a5f !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.75rem !important;
+}
+
+::deep .members-card-header {
+    border-bottom: 1px solid #2d4a73 !important;
+}
+
+.roles-page ::deep .mud-chip.count-chip {
+    background-color: rgba(96, 165, 250, 0.15) !important;
+    border: 1px solid rgba(96, 165, 250, 0.5) !important;
+}
+
+    .roles-page ::deep .mud-chip.count-chip .mud-chip-content {
+        color: #93c5fd !important;
+        font-weight: 600;
+    }
+
+.roles-page ::deep .mud-button-root.invite-btn {
+    background-color: #6366f1 !important;
+    color: white !important;
+}
+
+    .roles-page ::deep .mud-button-root.invite-btn:hover {
+        background-color: #4f46e5 !important;
+    }
+
+::deep .member-row {
+    border-bottom: 1px solid #2d4a73 !important;
+}
+
+    ::deep .member-row:last-child {
+        border-bottom: none !important;
+    }
+
+    ::deep .member-row:hover {
+        background-color: #234b7a !important;
+    }
+
+::deep .member-avatar {
+    color: white !important;
+    font-weight: 600;
+}
+
+.roles-page ::deep .mud-chip.badge-you {
+    background-color: rgba(96, 165, 250, 0.15) !important;
+    border: 1px solid rgba(96, 165, 250, 0.5) !important;
+}
+
+    .roles-page ::deep .mud-chip.badge-you .mud-chip-content {
+        color: #93c5fd !important;
+        font-weight: 600;
+        font-size: 0.6875rem;
+    }
+
+::deep .role-col {
+    width: 10rem;
+    min-width: 10rem;
+    flex-shrink: 0;
+}
+
+::deep .role-select .mud-input-slot {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 2.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+    ::deep .role-select .mud-select-input,
+    ::deep .role-select .mud-input-slot input {
+        font-size: 0.8125rem !important;
+        font-weight: 600 !important;
+    }
+
+::deep .role-select .mud-input-outlined-border {
+    border-color: #2d4a73 !important;
+}
+
+::deep .role-select.role-member-color .mud-select-input {
+    color: #4ade80 !important;
+}
+
+::deep .role-select.role-observer-color .mud-select-input {
+    color: #94a3b8 !important;
+}
+
+::deep .role-select .mud-icon-root {
+    color: #a3b3cc !important;
+}
+
+::deep .role-select .mud-input-outlined-border legend {
+    display: none;
+}
+
+.roles-page ::deep .mud-chip.role-static-badge {
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: default;
+}
+
+    .roles-page ::deep .mud-chip.role-static-badge.role-owner-color {
+        background-color: rgba(251, 191, 36, 0.15) !important;
+        border: 1px solid rgba(251, 191, 36, 0.5) !important;
+    }
+
+        .roles-page ::deep .mud-chip.role-static-badge.role-owner-color .mud-chip-content,
+        .roles-page ::deep .mud-chip.role-static-badge.role-owner-color .mud-icon-root {
+            color: #fbbf24 !important;
+        }
+
+    .roles-page ::deep .mud-chip.role-static-badge.role-member-color {
+        background-color: rgba(74, 222, 128, 0.15) !important;
+        border: 1px solid rgba(74, 222, 128, 0.5) !important;
+    }
+
+        .roles-page ::deep .mud-chip.role-static-badge.role-member-color .mud-chip-content,
+        .roles-page ::deep .mud-chip.role-static-badge.role-member-color .mud-icon-root {
+            color: #86efac !important;
+        }
+
+    .roles-page ::deep .mud-chip.role-static-badge.role-observer-color {
+        background-color: rgba(148, 163, 184, 0.15) !important;
+        border: 1px solid rgba(148, 163, 184, 0.5) !important;
+    }
+
+        .roles-page ::deep .mud-chip.role-static-badge.role-observer-color .mud-chip-content,
+        .roles-page ::deep .mud-chip.role-static-badge.role-observer-color .mud-icon-root {
+            color: #cbd5e1 !important;
+        }
+
+::deep .dark-popover {
+    background-color: #234b7a !important;
+}
+
+::deep .invite-btn-wrapper {
+    position: relative;
+}
+
+::deep .invite-popover-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: transparent;
+}
+
+::deep .invite-popover {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 31;
+    width: 20rem;
+    background-color: #1a365d !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.4);
+}
+
+::deep .invite-popover-icon {
+    color: #a3b3cc !important;
+}
+
+::deep .invite-popover-title {
+    color: #a3b3cc !important;
+    letter-spacing: 0.04em;
+    font-size: 0.6875rem;
+}
+
+::deep .invite-email-field {
+    background-color: #234b7a !important;
+    border: 1px solid #2d4a73 !important;
+    border-radius: 0.5rem !important;
+    height: 2.5rem;
+    padding: 0 0.25rem 0 0.75rem;
+}
+
+::deep .invite-email-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    font-size: 0.875rem;
+}
+
+    ::deep .invite-email-input::placeholder {
+        color: #64748b;
+    }
+
+::deep .invite-email-clear {
+    color: #a3b3cc !important;
+}
+
+::deep .invite-role-select {
+    flex: 1;
+}
+
+    ::deep .invite-role-select .mud-input-slot {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+        min-height: 2.25rem !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+        ::deep .invite-role-select .mud-select-input,
+        ::deep .invite-role-select .mud-input-slot input {
+            font-size: 0.8125rem !important;
+            font-weight: 600 !important;
+            color: #f8fafc !important;
+            line-height: normal !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+
+    ::deep .invite-role-select .mud-input-outlined-border {
+        border-color: #2d4a73 !important;
+    }
+
+        ::deep .invite-role-select .mud-input-outlined-border legend {
+            display: none;
+        }
+
+.roles-page ::deep .mud-button-root.invite-confirm-btn {
+    background-color: #6366f1 !important;
+    color: white !important;
+    min-width: 4.5rem;
+    border: 1px solid #818cf8 !important;
+    flex-shrink: 0;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+    .roles-page ::deep .mud-button-root.invite-confirm-btn:hover {
+        background-color: #4f46e5 !important;
+        border-color: #a5b4fc !important;
+    }
+
+    .roles-page ::deep .mud-button-root.invite-confirm-btn.btn-disable {
+        background-color: #1a365d !important;
+        color: #64748b !important;
+        border-color: #2d4a73 !important;
+        box-shadow: none !important;
+    }
+
+
+::deep .invite-autocomplete .mud-input-slot {
+    color: #f8fafc !important;
+    font-size: 0.875rem !important;
+}
+
+::deep .invite-autocomplete .mud-input-outlined-border {
+    border-color: #2d4a73 !important;
+}
+
+::deep .member-row-deleting {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border-left: 4px solid #ef4444 !important;
+}
+
+::deep .delete-confirm-text {
+    color: #fca5a5 !important;
+    font-weight: 600;
+}

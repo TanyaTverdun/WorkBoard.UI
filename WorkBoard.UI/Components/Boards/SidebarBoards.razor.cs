@@ -106,7 +106,7 @@ public partial class SidebarBoards : ComponentBase, IDisposable
     {
         try
         {
-            Boards = await BoardService.GetWorkspaceBoardsAsync(workspaceId);
+            Boards = await BoardService.GetWorkspaceBoardsForUserAsync(workspaceId);
 
             if (SelectedBoardId.HasValue && !Boards.Any(b => b.Id == SelectedBoardId.Value))
             {

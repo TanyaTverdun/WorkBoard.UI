@@ -1,7 +1,9 @@
 ﻿@page "/archivation"
 
+@using Microsoft.AspNetCore.Authorization
 @using MudBlazor
 @using WorkBoard.Domain.Enums
+@attribute [Authorize]
 
 <div class="pa-6 m-5 archivation-page">
     <div class="d-flex justify-space-between align-start mb-8">

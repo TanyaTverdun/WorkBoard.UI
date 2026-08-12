@@ -31,6 +31,7 @@ public partial class SidebarWorkspaces : IDisposable
     protected override async Task OnInitializedAsync()
     {
         WorkspaceStateProvider.OnWorkspaceChanged += HandleWorkspaceChanged;
+        WorkspaceStateProvider.OnWorkspacesListChanged += HandleWorkspacesListChanged;
 
         if (AuthenticationStateTask is not null)
         {
@@ -146,8 +147,37 @@ public partial class SidebarWorkspaces : IDisposable
         await LoadWorkspacesAsync();
     }
 
+    private void HandleWorkspacesListChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadWorkspacesAsync();
+
+            if (SelectedWorkspaceId.HasValue && 
+                Workspaces != null && 
+                !Workspaces.Any(w => w.Id == SelectedWorkspaceId.Value))
+            {
+                SelectedWorkspaceId = null;
+                WorkspaceStateProvider.SetActiveWorkspace(null, null);
+
+                if (Workspaces.Any())
+                {
+                    SelectWorkspace(Workspaces.First().Id);
+                }
+            }
+            else if (SelectedWorkspaceId == null && 
+                    Workspaces != null && Workspaces.Any())
+            {
+                SelectWorkspace(Workspaces.First().Id);
+            }
+
+            StateHasChanged();
+        });
+    }
+
     public void Dispose()
     {
         WorkspaceStateProvider.OnWorkspaceChanged -= HandleWorkspaceChanged;
+        WorkspaceStateProvider.OnWorkspacesListChanged -= HandleWorkspacesListChanged;
     }
 }

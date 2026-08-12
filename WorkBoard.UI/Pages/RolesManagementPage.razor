@@ -1,0 +1,425 @@
+﻿@page "/roles-management"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using WorkBoard.Domain.Enums
+@using WorkBoard.Services.Abstraction.DTOs.Users
+@attribute [Authorize]
+
+<div class="pa-6 m-5 roles-page">
+    <div class="d-flex justify-space-between align-start mb-8">
+        <div class="d-flex gap-4 align-center">
+            <MudAvatar Variant=@Variant.Filled
+                       Size=@Size.Large
+                       Class="rounded-lg header-icon-bg">
+                <MudIcon Icon=@Icons.Material.Outlined.Shield
+                         Color=@Color.Inherit />
+            </MudAvatar>
+
+            <div>
+                <MudText Typo=@Typo.h6
+                         Class="font-weight-bold text-light">Roles &amp; Member Management</MudText>
+
+                <MudText Typo=@Typo.body2
+                         Class="text-muted-dark">Manage workspace members and their access levels</MudText>
+            </div>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center align-center" 
+             style="height: 50vh;">
+            <MudProgressCircular Color=@Color.Primary 
+                                 Indeterminate="true" 
+                                 Size=@Size.Large />
+        </div>
+    }
+    else if (_workspace == null)
+    {
+        <div class="d-flex flex-column align-center justify-center" 
+             style="height: 40vh;">
+            <MudIcon Icon=@Icons.Material.Outlined.WorkOff 
+                     Size=@Size.Large 
+                     Class="text-muted-dark mb-4" 
+                     Style="font-size: 4rem;" />
+
+            <MudText Typo=@Typo.h5 
+                     Class="font-weight-bold text-light mb-2">No Workspaces Found</MudText>
+
+            <MudText Typo=@Typo.body1 
+                     Class="text-muted-dark">You are not a member of any workspace yet.</MudText>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex gap-4 mb-8 role-legend-container">
+            <MudPaper Elevation="0" 
+                      Class="role-legend-card role-owner d-flex flex-column pa-4">
+                <div class="d-flex align-center gap-2 mb-1">
+                    <MudIcon Icon=@Icons.Material.Filled.WorkspacePremium 
+                             Class="role-legend-icon" 
+                             Size=@Size.Small />
+
+                    <MudText Typo=@Typo.subtitle2 
+                             Class="font-weight-bold role-legend-title">Owner</MudText>
+                </div>
+
+                <MudText Typo=@Typo.caption 
+                         Class="text-muted-dark">Full control over workspace</MudText>
+            </MudPaper>
+
+            <MudPaper Elevation="0" 
+                      Class="role-legend-card role-member d-flex flex-column pa-4">
+                <div class="d-flex align-center gap-2 mb-1">
+                    <MudIcon Icon=@Icons.Material.Filled.Group 
+                             Class="role-legend-icon" 
+                             Size=@Size.Small />
+
+                    <MudText Typo=@Typo.subtitle2 
+                             Class="font-weight-bold role-legend-title">Member</MudText>
+                </div>
+
+                <MudText Typo=@Typo.caption 
+                         Class="text-muted-dark">Manage boards in Workspace</MudText>
+            </MudPaper>
+
+            <MudPaper Elevation="0" 
+                      Class="role-legend-card role-observer d-flex flex-column pa-4">
+                <div class="d-flex align-center gap-2 mb-1">
+                    <MudIcon Icon=@Icons.Material.Outlined.Visibility 
+                             Class="role-legend-icon" 
+                             Size=@Size.Small />
+
+                    <MudText Typo=@Typo.subtitle2 
+                             Class="font-weight-bold role-legend-title">Observer</MudText>
+                </div>
+
+                <MudText Typo=@Typo.caption 
+                         Class="text-muted-dark">View-only access</MudText>
+            </MudPaper>
+        </div>
+
+        <div class="workspace-switcher-wrapper mb-8">
+            <MudPaper Elevation="0" 
+                      Class="workspace-card d-flex align-center justify-space-between pa-4 cursor-pointer" 
+                      @onclick="ToggleWorkspaceMenu">
+                <div class="d-flex align-center gap-4">
+                    <MudAvatar Variant=@Variant.Filled 
+                               Size=@Size.Medium 
+                               Class="rounded-lg workspace-icon-bg">
+                        <MudIcon Icon=@Icons.Material.Filled.Work 
+                                 Color=@Color.Inherit 
+                                 Size=@Size.Small />
+                    </MudAvatar>
+
+                    <div class="d-flex flex-column">
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo=@Typo.body1 
+                                     Class="font-weight-bold text-light">@_workspace.Name</MudText>
+
+                            <MudChip T="string" 
+                                     Size=@Size.Small 
+                                     Class="ma-0 badge-premium" 
+                                     Variant=@Variant.Filled>@_workspace.SubscriptionTier</MudChip>
+                        </div>
+                    </div>
+                </div>
+
+                <MudIcon Icon=@Icons.Material.Filled.ExpandMore 
+                         Class=@($"expand-icon {(_isWorkspaceMenuOpen ? "expand-icon-open" : "")}") 
+                         Size=@Size.Small />
+            </MudPaper>
+
+            @if (_isWorkspaceMenuOpen)
+            {
+                <div class="workspace-switcher-backdrop" 
+                     @onclick="CloseWorkspaceMenu"></div>
+                <MudPaper Elevation="0" 
+                          Class="workspace-switcher-dropdown pa-0">
+                    <div class="workspace-menu-header px-4 pt-3 pb-2">
+                        <MudText Typo=@Typo.caption 
+                                 Class="text-muted-dark font-weight-bold text-uppercase">Switch workspace</MudText>
+                    </div>
+
+                    @foreach (var ws in _workspaces)
+                    {
+                        <div class="workspace-menu-item d-flex align-center justify-space-between gap-3 pa-3 px-4"
+                             @onclick="@(() => SelectWorkspace(ws))"
+                             @onclick:stopPropagation="true">
+                            <div class="d-flex align-center gap-3">
+                                <MudAvatar Variant=@Variant.Filled 
+                                           Size=@Size.Small \
+                                           Class="rounded-lg workspace-icon-bg-sm">
+                                    <MudIcon Icon=@Icons.Material.Filled.Work 
+                                             Color=@Color.Inherit 
+                                             Size=@Size.Small />
+                                </MudAvatar>
+
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex align-center gap-2">
+                                        <MudText Typo=@Typo.body2 
+                                                 Class="font-weight-medium text-light">@ws.Name</MudText>
+
+                                        <MudChip T="string" 
+                                                 Size=@Size.Small 
+                                                 Class="ma-0 badge-premium-sm" 
+                                                 Variant=@Variant.Filled>@ws.SubscriptionTier</MudChip>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (ws == _workspace)
+                            {
+                                <MudIcon Icon=@Icons.Material.Filled.Check 
+                                         Class="workspace-check-icon" 
+                                         Size=@Size.Small />
+                            }
+                        </div>
+                    }
+                </MudPaper>
+            }
+        </div>
+
+        <MudPaper Elevation="0" 
+                  Class="members-card pa-0">
+            <div class="d-flex justify-space-between align-center pa-4 members-card-header">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon=@Icons.Material.Outlined.People 
+                             Class="text-muted-dark" 
+                             Size=@Size.Small />
+
+                    <MudText Typo=@Typo.body1 
+                             Class="font-weight-bold text-light">Workspace Members</MudText>
+
+                    @if (!_isLoadingMembers)
+                    {
+                        <MudChip T="string" 
+                                 Size=@Size.Small 
+                                 Class="ma-0 count-chip" 
+                                 Variant=@Variant.Filled>@_currentWorkspaceMembers.Count</MudChip>
+                    }
+                </div>
+
+                @if (!IsCurrentUserObserver)
+                {
+                    <div class="invite-btn-wrapper">
+                        <MudButton Variant=@Variant.Filled
+                                   Size=@Size.Small
+                                   StartIcon=@Icons.Material.Outlined.Email
+                                   Class="invite-btn rounded-lg text-none"
+                                   @onclick="ToggleInvitePopup">
+                            Invite Member
+                        </MudButton>
+
+                        @if (_isInviteOpen)
+                        {
+                            <div class="invite-popover-backdrop" 
+                                 @onclick="CloseInvitePopup"></div>
+
+                            <MudPaper Elevation="0"
+                                      Class="invite-popover pa-4"
+                                      @onclick:stopPropagation="true">
+                                <div class="d-flex align-center gap-2 mb-3">
+                                    <MudIcon Icon=@Icons.Material.Outlined.Email
+                                             Size=@Size.Small
+                                             Class="invite-popover-icon" />
+
+                                    <MudText Typo=@Typo.caption 
+                                             Class="font-weight-bold text-uppercase invite-popover-title">Add member by email</MudText>
+                                </div>
+
+                                <div class="d-flex flex-column gap-2 mb-2">
+                                    <MudAutocomplete T="UserSearchDto"
+                                                     @bind-Value="_selectedUserToAdd"
+                                                     AdornmentIcon=@Icons.Material.Filled.Close
+                                                     IconSize=@Size.Small
+                                                     SearchFunc=@SearchUsersAsync
+                                                     ToStringFunc=@(user => user == null ? null : user.Email)
+                                                     Placeholder="Type email..."
+                                                     Variant=@Variant.Outlined
+                                                     Margin=@Margin.Dense
+                                                     Class="compact-input invite-autocomplete"
+                                                     PopoverClass="invite-autocomplete-popover"
+                                                     ResetValueOnEmptyText="true"
+                                                     MinCharacters="2"
+                                                     ShowProgressIndicator="true">
+
+                                        <ItemTemplate Context="user">
+                                            <div class="d-flex align-center gap-3 py-0">
+                                                <MudAvatar Size="@Size.Small"
+                                                           Class="avatar-tiny"
+                                                           Style=@($"background-color: {(string.IsNullOrEmpty(user.AvatarColor) ? "#64748b" : user.AvatarColor)}; color: white;")>
+                                                    @if (!string.IsNullOrEmpty(user.AvatarUrl))
+                                                    {
+                                                        <img src=@user.AvatarUrl
+                                                             alt="Avatar"
+                                                             style="width: 100%; height: 100%; object-fit: cover;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        @(user.Initials ?? "??")
+                                                    }
+                                                </MudAvatar>
+
+                                                <div class="d-flex flex-column">
+                                                    <MudText Typo=@Typo.body2
+                                                             Class="font-weight-medium text-light">@user.FullName</MudText>
+
+                                                    <MudText Typo=@Typo.caption
+                                                             Class="text-muted-dark text-xs-tight">@user.Email</MudText>
+                                                </div>
+                                            </div>
+                                        </ItemTemplate>
+                                    </MudAutocomplete>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <MudSelect T="WorkspaceRole"
+                                               @bind-Value="_inviteRole"
+                                               Variant=@Variant.Outlined
+                                               Margin=@Margin.Dense
+                                               Dense="true"
+                                               Class="invite-role-select rounded-lg"
+                                               PopoverClass="dark-popover">
+
+                                        <MudSelectItem T="WorkspaceRole"
+                                                       Value="@WorkspaceRole.Member">Member</MudSelectItem>
+
+                                        <MudSelectItem T="WorkspaceRole"
+                                                       Value="@WorkspaceRole.Observer">Observer</MudSelectItem>
+                                    </MudSelect>
+
+                                    <MudButton Variant=@Variant.Filled
+                                               Class="@($"invite-confirm-btn rounded-lg text-none {(_selectedUserToAdd == null ? "btn-disable" : "")}")"
+                                               Disabled="@(_selectedUserToAdd == null)"
+                                               OnClick="@ConfirmInviteAsync">
+                                        Add
+                                    </MudButton>
+                                </div>
+                            </MudPaper>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (_isLoadingMembers)
+            {
+                <div class="d-flex justify-center align-center pa-8">
+                    <MudProgressCircular Color=@Color.Primary
+                                         Indeterminate="true"
+                                         Size=@Size.Medium />
+                </div>
+            }
+            else
+            {
+                @foreach (var member in _currentWorkspaceMembers)
+                {
+                    var isDeleting = _pendingDeleteUserId == member.Id;
+
+                    <div class=@($"d-flex align-center justify-space-between pa-4 member-row {(isDeleting ? "member-row-deleting" : "")}")>
+                        <div class="d-flex align-center gap-4">
+                            <MudAvatar Style=@($"background-color: {member.AvatarColor}; color: white; font-weight: 600;")
+                                       Class="member-avatar"
+                                       Size=@Size.Medium>
+                                @if (!string.IsNullOrEmpty(member.AvatarUrl))
+                                {
+                                    <MudImage Src="@member.AvatarUrl" />
+                                }
+                                else
+                                {
+                                    @member.Initials
+                                }
+                            </MudAvatar>
+
+                            <div class="d-flex flex-column">
+                                <div class="d-flex align-center gap-2">
+                                    <MudText Typo=@Typo.body1
+                                             Class="font-weight-medium text-light">@member.Name</MudText>
+
+                                    @if (member.IsCurrentUser)
+                                    {
+                                        <MudChip T="string"
+                                                 Size=@Size.Small
+                                                 Class="ma-0 badge-you"
+                                                 Variant=@Variant.Filled>You</MudChip>
+                                    }
+                                </div>
+
+                                <MudText Typo=@Typo.caption
+                                         Class="text-muted-dark">@member.Email</MudText>
+                            </div>
+                        </div>
+
+                        @if (isDeleting)
+                        {
+                            <div class="d-flex align-center gap-3">
+                                <MudText Typo=@Typo.body2
+                                         Class="delete-confirm-text">Remove member?</MudText>
+
+                                <MudButton Variant=@Variant.Filled
+                                           Color=@Color.Error
+                                           Size=@Size.Small
+                                           Class="rounded-lg text-none"
+                                           OnClick=@(() => ConfirmDeleteAsync(member))>
+                                    Remove
+                                </MudButton>
+
+                                <MudButton Variant=@Variant.Outlined
+                                           Color=@Color.Default
+                                           Size=@Size.Small
+                                           Class="rounded-lg text-none text-light"
+                                           OnClick=@CancelDelete>
+                                    Cancel
+                                </MudButton>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-center gap-3">
+                                <div class="role-col d-flex justify-end">
+                                    @if (CanEditRole(member))
+                                    {
+                                        <MudSelect T="WorkspaceRole"
+                                                   Value=@member.Role
+                                                   ValueChanged=@(newRole => OnRoleChanged(member, newRole))
+                                                   Variant=@Variant.Outlined
+                                                   Margin=@Margin.Dense
+                                                   Dense="true"
+                                                   Class=@($"role-select rounded-lg {GetRoleSelectClass(member.Role)}")
+                                                   PopoverClass="dark-popover">
+
+                                            <MudSelectItem T="WorkspaceRole"
+                                                           Value="@WorkspaceRole.Member">Member</MudSelectItem>
+
+                                            <MudSelectItem T="WorkspaceRole"
+                                                           Value="@WorkspaceRole.Observer">Observer</MudSelectItem>
+                                        </MudSelect>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string"
+                                                 Size=@Size.Small
+                                                 Icon=@(member.Role == WorkspaceRole.Owner ? Icons.Material.Filled.WorkspacePremium : Icons.Material.Outlined.Lock)
+                                                 Class=@($"ma-0 role-static-badge {GetRoleSelectClass(member.Role)}")
+                                                 Variant=@Variant.Filled>@GetRoleLabel(member.Role)</MudChip>
+                                    }
+                                </div>
+
+                                <div class="d-flex justify-center align-center" style="width: 2.5rem;">
+                                    @if (!member.IsCurrentUser && member.Role != WorkspaceRole.Owner && !IsCurrentUserObserver)
+                                    {
+                                        <MudTooltip Text="Remove member">
+                                            <MudIconButton Icon=@Icons.Material.Outlined.Delete
+                                                           Size=@Size.Small
+                                                           Color=@Color.Error
+                                                           OnClick=@(() => PromptDelete(member.Id)) />
+                                        </MudTooltip>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </MudPaper>
+    }
+</div>

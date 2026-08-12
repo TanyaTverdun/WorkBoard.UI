@@ -22,6 +22,9 @@ public partial class MainLayout : IAsyncDisposable
     [Inject]
     BoardStateService BoardStateService { get; set; } = default!;
 
+    [Inject]
+    WorkspaceStateProvider WorkspaceStateService { get; set; } = default!;
+
     private MudTheme _customTheme = new MudTheme()
     {
     };
@@ -36,6 +39,7 @@ public partial class MainLayout : IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         AppHubService.OnSidebarBoardStatusChanged += HandleSidebarBoardStatusChanged;
+        AppHubService.OnWorkspacesListUpdated += HandleWorkspacesListUpdated;
 
         try
         {
@@ -58,9 +62,20 @@ public partial class MainLayout : IAsyncDisposable
         });
     }
 
+    private void HandleWorkspacesListUpdated()
+    {
+        InvokeAsync(() =>
+        {
+            WorkspaceStateService.NotifyWorkspacesListChanged();
+            StateHasChanged();
+        });
+    }
+
     public async ValueTask DisposeAsync()
     {
         AppHubService.OnSidebarBoardStatusChanged -= HandleSidebarBoardStatusChanged;
+        AppHubService.OnWorkspacesListUpdated -= HandleWorkspacesListUpdated;
+
         await AppHubService.StopConnectionAsync();
     }
 }

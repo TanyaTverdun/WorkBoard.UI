@@ -20,13 +20,13 @@ internal class BoardService : IBoardService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<BoardDto>> GetWorkspaceBoardsAsync(
+    public async Task<IReadOnlyList<BoardDto>> GetWorkspaceBoardsForUserAsync(
         Guid workspaceId,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _boardApi.GetWorkspaceBoardsAsync(
+            return await _boardApi.GetWorkspaceBoardsForUserAsync(
                 workspaceId, 
                 cancellationToken);
         }

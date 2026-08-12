@@ -3,6 +3,7 @@
 public interface IAppHubService : IAsyncDisposable
 {
     event Action? OnSidebarBoardStatusChanged;
+    event Action? OnWorkspacesListUpdated;
 
     Task StartConnectionAsync(
         string backendUrl, 

@@ -8,6 +8,7 @@ public static class AppRoutes
     public const string Profile = "profile";
     public const string NotFound = "not-found";
     public const string ArchivationTracker = "archivation";
+    public const string RolesManagement = "roles-management";
 
     public static class Auth
     {
