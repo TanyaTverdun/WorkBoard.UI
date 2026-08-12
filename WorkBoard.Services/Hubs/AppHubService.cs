@@ -13,6 +13,7 @@ internal class AppHubService : IAppHubService
     private readonly IAccessTokenProvider _tokenProvider;
 
     public event Action? OnSidebarBoardStatusChanged;
+    public event Action? OnWorkspacesListUpdated;
 
     public AppHubService(
         ILogger<AppHubService> logger,
@@ -54,6 +55,16 @@ internal class AppHubService : IAppHubService
                         "Global AppHub event: Board {BoardId} changed status to {Status}");
 
                     OnSidebarBoardStatusChanged?.Invoke();
+                });
+
+            _hubConnection.On(
+                AppHubEvents.WorkspacesListUpdated,
+                () =>
+                {
+                    _logger.LogInformation(
+                        "Global AppHub event: Workspaces list updated for the current user");
+
+                    OnWorkspacesListUpdated?.Invoke();
                 });
 
             await _hubConnection.StartAsync(cancellationToken);
