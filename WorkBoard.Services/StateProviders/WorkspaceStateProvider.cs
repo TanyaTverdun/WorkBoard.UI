@@ -22,4 +22,11 @@ public class WorkspaceStateProvider
     }
 
     public event Action<Guid?, WorkspaceRole?>? OnWorkspaceChanged;
+
+    public event Action? OnWorkspacesListChanged;
+
+    public void NotifyWorkspacesListChanged()
+    {
+        OnWorkspacesListChanged?.Invoke();
+    }
 }
