@@ -6,24 +6,43 @@ public class WorkspaceStateProvider
 {
     private Guid? _selectedWorkspaceId;
     private WorkspaceRole? _currentRole;
+    private SubscriptionTier? _currentWorkspaceTier;
 
     public Guid? SelectedWorkspaceId => _selectedWorkspaceId;
     public WorkspaceRole? CurrentRole => _currentRole;
+    public SubscriptionTier? CurrentWorkspaceTier => _currentWorkspaceTier;
 
-    public void SetActiveWorkspace(Guid? workspaceId, WorkspaceRole? role)
+    public event Action<Guid?, WorkspaceRole?, SubscriptionTier?>? OnWorkspaceChanged;
+
+    public void SetActiveWorkspace(
+        Guid? workspaceId,
+        WorkspaceRole? role,
+        SubscriptionTier? tier)
     {
-        if (_selectedWorkspaceId != workspaceId || _currentRole != role)
+        bool isDowngrade = _selectedWorkspaceId != null &&
+                           _selectedWorkspaceId == workspaceId &&
+                           _currentWorkspaceTier == SubscriptionTier.Pro &&
+                           tier == SubscriptionTier.Free;
+
+        if (_selectedWorkspaceId != workspaceId || 
+            _currentRole != role || 
+            _currentWorkspaceTier != tier)
         {
             _selectedWorkspaceId = workspaceId;
             _currentRole = role;
+            _currentWorkspaceTier = tier;
 
-            OnWorkspaceChanged?.Invoke(workspaceId, role);
+            OnWorkspaceChanged?.Invoke(workspaceId, role, tier);
+
+            if (isDowngrade)
+            {
+                OnWorkspaceDowngraded?.Invoke();
+            }
         }
     }
 
-    public event Action<Guid?, WorkspaceRole?>? OnWorkspaceChanged;
-
     public event Action? OnWorkspacesListChanged;
+    public event Action? OnWorkspaceDowngraded;
 
     public void NotifyWorkspacesListChanged()
     {

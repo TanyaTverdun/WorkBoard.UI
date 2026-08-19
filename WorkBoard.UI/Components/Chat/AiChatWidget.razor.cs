@@ -51,7 +51,8 @@ namespace WorkBoard.UI.Components.Chat
 
         private void HandleWorkspaceChanged(
             Guid? workspaceId, 
-            WorkspaceRole? role)
+            WorkspaceRole? role,
+            SubscriptionTier? tier)
         {
             _messages.Clear();
             _isOpen = false;

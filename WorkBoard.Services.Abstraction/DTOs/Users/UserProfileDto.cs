@@ -1,4 +1,6 @@
-﻿namespace WorkBoard.Services.Abstraction.DTOs.Users;
+﻿using WorkBoard.Domain.Enums;
+
+namespace WorkBoard.Services.Abstraction.DTOs.Users;
 
 public class UserProfileDto
 {
@@ -8,4 +10,5 @@ public class UserProfileDto
     public string? AvatarUrl { get; set; }
     public string? AvatarColor { get; set; }
     public required string Initials { get; set; }
+    public SubscriptionTier SubscriptionTier { get; set; }
 }
