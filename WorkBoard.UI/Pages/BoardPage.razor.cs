@@ -19,6 +19,7 @@ using WorkBoard.Services.Abstraction.Requests.BoardMembers;
 using WorkBoard.Services.Abstraction.Requests.Cards;
 using WorkBoard.Services.Abstraction.Requests.Sections;
 using WorkBoard.Services.Abstraction.Services;
+using WorkBoard.Services.Abstraction.StateProviders;
 using WorkBoard.Services.StateProviders;
 using WorkBoard.UI.Components.Card;
 using WorkBoard.UI.ViewModels.Board;
@@ -66,10 +67,14 @@ public partial class BoardPage
     [Inject]
     private IDialogService DialogService { get; set; } = default!;
 
+    [Inject]
+    private ICurrentUserProvider CurrentUserProvider { get; set; } = default!;
+
     [Parameter]
     public Guid BoardIdGuid { get; set; }
 
-    private Guid? WorkspaceId => WorkspaceStateProvider.SelectedWorkspaceId;
+    private Guid? _boardWorkspaceId;
+    private Guid? WorkspaceId => _boardWorkspaceId ?? WorkspaceStateProvider.SelectedWorkspaceId;
 
     private MudDropContainer<KanbanTaskViewModel> _dropContainer = default!;
     private bool _addSectionOpen;
@@ -252,6 +257,8 @@ public partial class BoardPage
 
     protected override async Task OnParametersSetAsync()
     {
+        _boardWorkspaceId = null;
+
         if (WorkspaceId == null)
         {
             NavigationManager.NavigateTo("/");
@@ -263,6 +270,8 @@ public partial class BoardPage
             var board = await BoardService.GetBoardAsync(
                 WorkspaceId.Value,
                 BoardIdGuid);
+
+            _boardWorkspaceId = board.WorkspaceId;
 
             BoardStateService.SetBoardName(board.Name);
 
@@ -561,6 +570,16 @@ public partial class BoardPage
             return;
         }
 
+        if (WorkspaceStateProvider.CurrentWorkspaceTier == SubscriptionTier.Free &&
+            _sections.Count >= 10)
+        {
+            Snackbar.Add(
+                    "You can only create up to 10 sections on the Free plan. " +
+                    "Please upgrade to Pro to create more.",
+                    Severity.Warning);
+            return;
+        }
+
         _addSectionOpen = true;
     }
 
@@ -843,11 +862,11 @@ public partial class BoardPage
     private async Task OpenCardDetails(KanbanTaskViewModel card)
     {
         var parameters = new DialogParameters<CardDetails>
-    {
-        { x => x.Card, card },
-        { x => x.CurrentUserId, _currentUserId ?? Guid.Empty },
-        { x => x.IsObserver, IsCurrentUserObserver }
-    };
+        {
+            { x => x.Card, card },
+            { x => x.CurrentUserId, _currentUserId ?? Guid.Empty },
+            { x => x.IsObserver, IsCurrentUserObserver }
+        };
 
         var options = new DialogOptions
         {
@@ -1077,7 +1096,6 @@ public partial class BoardPage
             InvokeAsync(() =>
             {
                 Snackbar.Add(message, Severity.Warning);
-                BoardStateService.NotifyBoardsListChanged();
                 NavigationManager.NavigateTo("/");
             });
             return;
