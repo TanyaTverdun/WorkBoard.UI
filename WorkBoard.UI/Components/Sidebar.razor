@@ -1,4 +1,5 @@
 ﻿@using WorkBoard.Domain.Constants
+@using WorkBoard.Domain.Enums
 @using WorkBoard.UI.Components.Boards
 @using WorkBoard.UI.Components.Workspaces
 
@@ -48,15 +49,18 @@
                     <i class="bi bi-shield-check"></i> Roles & Members
                 </a>
             </li>
+            @if (CurrentUserProvider.Profile?.SubscriptionTier == SubscriptionTier.Pro)
+            {
+                <li class="nav-item">
+                    <a class="nav-link text-white d-flex align-items-center gap-2 py-2 px-3 rounded"
+                       href=@AppRoutes.ArchivationTracker>
+                        <i class="bi bi-archive"></i> Archivation Tracker
+                    </a>
+                </li>
+            }
             <li class="nav-item">
                 <a class="nav-link text-white d-flex align-items-center gap-2 py-2 px-3 rounded" 
-                   href=@AppRoutes.ArchivationTracker>
-                    <i class="bi bi-archive"></i> Archivation Tracker
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white d-flex align-items-center gap-2 py-2 px-3 rounded" 
-                   href="#">
+                   href="@AppRoutes.Subscriptions">
                     <i class="bi bi-credit-card"></i> Subscriptions
                 </a>
             </li>

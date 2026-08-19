@@ -17,6 +17,7 @@ using WorkBoard.Services.Servises.Checklist;
 using WorkBoard.Services.Servises.Comment;
 using WorkBoard.Services.Servises.Label;
 using WorkBoard.Services.Servises.Section;
+using WorkBoard.Services.Servises.Subscriptions;
 using WorkBoard.Services.Servises.Users;
 using WorkBoard.Services.Servises.Workspace;
 using WorkBoard.Services.StateProviders;
@@ -122,6 +123,12 @@ public static class DependencyInjection
             .AddHttpMessageHandler(CreateAuthorizationHandler);
 
         services.AddScoped<IChatService, ChatService>();
+
+        services.AddRefitClient<ISubscriptionApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri(backendBaseUrl))
+            .AddHttpMessageHandler(CreateAuthorizationHandler);
+
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
 
         return services;
     }

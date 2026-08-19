@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
+using MudBlazor;
 using WorkBoard.Domain.Enums;
 using WorkBoard.Services.Abstraction.DTOs.Users;
 using WorkBoard.Services.Abstraction.Services;
+using WorkBoard.Services.Abstraction.StateProviders;
 using WorkBoard.Services.StateProviders;
 
 namespace WorkBoard.UI.Components.Boards;
@@ -20,6 +22,12 @@ public partial class SidebarBoards : ComponentBase, IDisposable
 
     [Inject]
     protected NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private ICurrentUserProvider CurrentUserProvider { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
 
     protected bool CanManageBoards =>
             WorkspaceStateProvider.CurrentRole.HasValue &&
@@ -85,11 +93,11 @@ public partial class SidebarBoards : ComponentBase, IDisposable
 
     private async void HandleWorkspaceChanged(
         Guid? newWorkspaceId,
-        WorkspaceRole? role)
+        WorkspaceRole? role,
+        SubscriptionTier? tier)
     {
         if (newWorkspaceId.HasValue)
         {
-            SelectedBoardId = null;
             await LoadBoardsAsync(newWorkspaceId.Value);
         }
         else
@@ -111,7 +119,6 @@ public partial class SidebarBoards : ComponentBase, IDisposable
             if (SelectedBoardId.HasValue && !Boards.Any(b => b.Id == SelectedBoardId.Value))
             {
                 SelectedBoardId = null;
-                NavigationManager.NavigateTo("/");
             }
         }
         catch (Exception)
@@ -133,6 +140,11 @@ public partial class SidebarBoards : ComponentBase, IDisposable
         if (board != null)
         {
             BoardStateService.SetBoardName(board.Name);
+
+            WorkspaceStateProvider.SetActiveWorkspace(
+                board.WorkspaceId,
+                WorkspaceStateProvider.CurrentRole,
+                WorkspaceStateProvider.CurrentWorkspaceTier);
         }
 
         NavigationManager.NavigateTo($"/boards/{id}");
@@ -140,6 +152,20 @@ public partial class SidebarBoards : ComponentBase, IDisposable
 
     protected void OpenCreateModal()
     {
+        if (WorkspaceStateProvider.CurrentWorkspaceTier == SubscriptionTier.Free)
+        {
+            var boardCount = Boards?.Count ?? 0;
+
+            if (boardCount >= 5)
+            {
+                Snackbar.Add(
+                    "This workspace is on the Free plan and can only have up to 5 boards. " +
+                    "The workspace owner needs to upgrade to Pro to create more.",
+                    Severity.Warning);
+                return;
+            }
+        }
+
         _boardToModify = null;
         _isCreateModalOpen = true;
     }

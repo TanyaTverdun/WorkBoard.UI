@@ -52,7 +52,7 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
     {
         if (Assignees != null)
         {
-            _assignees = Assignees.ToList();
+            _assignees = Assignees.DistinctBy(a => a.UserId).ToList();
         }
     }
 
@@ -89,23 +89,29 @@ public partial class CardAssigneesSection : ComponentBase, IDisposable
 
             await CardService.AddCardAssigneeAsync(CardId, request);
 
-            var newAssignee = new CardAssigneeDto(
-                user.UserId,
-                user.FullName,
-                user.Email,
-                user.AvatarUrl,
-                user.AvatarColor,
-                user.Initials ?? "Un");
+            if (!_assignees.Any(a => a.UserId == user.UserId))
+            {
+                var newAssignee = new CardAssigneeDto(
+                    user.UserId,
+                    user.FullName,
+                    user.Email,
+                    user.AvatarUrl,
+                    user.AvatarColor,
+                    user.Initials ?? "Un");
 
-            _assignees.Add(newAssignee);
-            Assignees.Add(newAssignee);
+                _assignees.Add(newAssignee);
+                Assignees.Add(newAssignee);
 
-            await AssigneesChanged.InvokeAsync(Assignees);
-            StateHasChanged();
+                await AssigneesChanged.InvokeAsync(_assignees);
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error adding assignee: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
         }
     }
 

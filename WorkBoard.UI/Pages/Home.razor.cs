@@ -59,7 +59,8 @@ public partial class Home
 
                 WorkspaceStateProvider.SetActiveWorkspace(
                     firstWorkspace.Id, 
-                    firstWorkspace.UserRole);
+                    firstWorkspace.UserRole,
+                    firstWorkspace.SubscriptionTier);
 
                 var boards = await BoardService.GetWorkspaceBoardsForUserAsync(
                     firstWorkspace.Id);

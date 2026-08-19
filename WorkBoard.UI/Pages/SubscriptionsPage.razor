@@ -1,0 +1,300 @@
+﻿@page "/subscriptions"
+
+
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using WorkBoard.Domain.Enums
+@attribute [Authorize]
+
+<div class="pa-6 subscriptions-page d-flex flex-column">
+    <div class="d-flex justify-space-between align-start mb-8">
+        <div class="d-flex gap-4 align-center">
+            <MudAvatar Variant=@Variant.Filled
+                       Size=@Size.Large
+                       Class="rounded-lg header-icon-bg">
+                <MudIcon Icon=@Icons.Material.Outlined.CreditCard
+                         Color=@Color.Inherit />
+            </MudAvatar>
+
+            <div>
+                <MudText Typo=@Typo.h6
+                         Class="font-weight-bold text-light">Subscription Plans</MudText>
+
+                <MudText Typo=@Typo.body2
+                         Class="text-muted-dark">Manage your plan and billing</MudText>
+
+                <div class="d-flex align-center gap-2 mt-1">
+                    <MudText Typo=@Typo.caption 
+                             Class="text-muted-dark">Current plan:</MudText>
+
+                    <MudChip T="string"
+                             Size=@Size.Small
+                             Variant=@Variant.Filled
+                             Class=@($"ma-0 {(_currentPlan == SubscriptionTier.Pro ? "badge-pro" : "badge-free")}")>
+                        @(_currentPlan == SubscriptionTier.Pro ? "Pro" : "Free")
+                    </MudChip>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center align-center"
+             style="height: 50vh;">
+            <MudProgressCircular Color=@Color.Primary
+                                 Indeterminate="true"
+                                 Size=@Size.Large />
+        </div>
+    }
+    else
+    {
+        <div class="d-flex gap-4 plans-container">
+            <MudPaper Elevation="0"
+                      Class=@($"plan-card plan-free {(_currentPlan == SubscriptionTier.Free ? "current" : "")}")>
+
+                <div class="current-plan-ribbon ribbon-free"
+                     style=@(_currentPlan == SubscriptionTier.Free ? "" : "visibility: hidden;")>
+                    <MudIcon Icon=@Icons.Material.Filled.Check 
+                             Size=@Size.Small 
+                             Class="mr-1" />
+                    CURRENT PLAN
+                </div>
+
+                <div class="pa-6 d-flex flex-column flex-grow-1">
+                    <div class="d-flex align-center gap-3 mb-4">
+                        <MudAvatar Variant=@Variant.Filled 
+                                   Size=@Size.Medium 
+                                   Class="rounded-lg plan-icon-free">
+                            <MudIcon Icon=@Icons.Material.Outlined.CreditCard 
+                                     Color=@Color.Inherit />
+                        </MudAvatar>
+
+                        <MudText Typo=@Typo.h6 
+                                 Class="font-weight-bold text-light">Free</MudText>
+                    </div>
+
+                    <div class="d-flex align-end gap-1 mb-2">
+                        <MudText Typo=@Typo.h3 
+                                 Class="font-weight-bold text-light">$0</MudText>
+                    </div>
+
+                    <MudText Typo=@Typo.body2 
+                             Class="text-muted-dark mb-6" 
+                             Style="min-height: 48px;">
+                        Perfect for personal projects and getting started.
+                    </MudText>
+
+                    <div class="d-flex gap-4 mb-6 plan-stats">
+                        <div class="d-flex flex-column align-center">
+                            <MudText Typo=@Typo.subtitle1 
+                                     Class="font-weight-bold text-light">1</MudText>
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted-dark">Workspace</MudText>
+                        </div>
+
+                        <div class="d-flex flex-column align-center">
+                            <MudText Typo=@Typo.subtitle1 
+                                     Class="font-weight-bold text-light">5</MudText>
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted-dark">Boards</MudText>
+                        </div>
+
+                        <div class="d-flex flex-column align-center">
+                            <MudText Typo=@Typo.subtitle1 
+                                     Class="font-weight-bold text-light">10</MudText>
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted-dark">Sections / Board</MudText>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2 mb-6 flex-grow-1">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-free" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">1 Workspace</MudText>
+                        </div>
+
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-free" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">Up to 5 Boards</MudText>
+                        </div>
+
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-free" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">Up to 10 Sections per Board</MudText>
+                        </div>
+                    </div>
+
+                    @if (_currentPlan == SubscriptionTier.Pro)
+                    {
+                        <MudButton Variant=@Variant.Outlined
+                                   FullWidth="true"
+                                   Disabled=@_isProcessing
+                                   EndIcon=@Icons.Material.Filled.ArrowForward
+                                   Class="action-btn action-btn-downgrade rounded-lg text-none"
+                                   @onclick="OnDowngradeClickAsync">
+                            Downgrade
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant=@Variant.Filled
+                                   FullWidth="true"
+                                   Disabled="true"
+                                   Class="action-btn action-btn-current rounded-lg text-none">
+                            Active Plan
+                        </MudButton>
+                    }
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="0"
+                      Class=@($"plan-card plan-pro {(_currentPlan == SubscriptionTier.Pro ? "current" : "")}")>
+
+                <div class="current-plan-ribbon ribbon-pro"
+                     style=@(_currentPlan == SubscriptionTier.Pro ? "" : "visibility: hidden;")>
+                    <MudIcon Icon=@Icons.Material.Filled.Check
+                             Size=@Size.Small 
+                             Class="mr-1" />
+                    CURRENT PLAN
+                </div>
+
+                @if (_currentPlan != SubscriptionTier.Pro)
+                {
+                    <MudChip T="string" 
+                             Size=@Size.Small 
+                             Variant=@Variant.Filled 
+                             Class="ma-0 popular-badge">Recommended</MudChip>
+                }
+
+                <div class="pa-6 d-flex flex-column flex-grow-1">
+                    <div class="d-flex align-center gap-3 mb-4">
+                        <MudAvatar Variant=@Variant.Filled 
+                                   Size=@Size.Medium 
+                                   Class="rounded-lg plan-icon-pro">
+                            <MudIcon Icon=@Icons.Material.Outlined.WorkspacePremium 
+                                     Color=@Color.Inherit />
+                        </MudAvatar>
+
+                        <MudText Typo=@Typo.h6 
+                                 Class="font-weight-bold text-light">Pro</MudText>
+                    </div>
+
+                    <div class="d-flex align-end gap-1 mb-2">
+                        <MudText Typo=@Typo.h3 
+                                 Class="font-weight-bold text-light">@ProPlanPrice</MudText>
+
+                        <MudText Typo=@Typo.body2 
+                                 Class="text-muted-dark mb-1">per user / month</MudText>
+                    </div>
+
+                    <MudText Typo=@Typo.body2 
+                             Class="text-muted-dark mb-6" 
+                             Style="min-height: 48px;">
+                        For unlimited scale and advanced collaboration tools.
+                    </MudText>
+
+                    <div class="d-flex gap-4 mb-6 plan-stats">
+                        <div class="d-flex flex-column align-center">
+                            <MudIcon Icon=@Icons.Material.Filled.AllInclusive 
+                                     Class="text-light" />
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted-dark">Workspaces</MudText>
+                        </div>
+
+                        <div class="d-flex flex-column align-center">
+                            <MudIcon Icon=@Icons.Material.Filled.AllInclusive 
+                                     Class="text-light" />
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted-dark">Boards</MudText>
+                        </div>
+
+                        <div class="d-flex flex-column align-center">
+                            <MudIcon Icon=@Icons.Material.Filled.AllInclusive 
+                                     Class="text-light" />
+
+                            <MudText Typo=@Typo.caption 
+                                     Class="text-muted-dark">Sections</MudText>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2 mb-6 flex-grow-1">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-pro" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">Unlimited Workspaces, Boards & Sections</MudText>
+                        </div>
+
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-pro" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">Board Archivation</MudText>
+                        </div>
+
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-pro" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">AI Chat</MudText>
+                        </div>
+
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon=@Icons.Material.Filled.Check 
+                                     Size=@Size.Small 
+                                     Class="feature-check-pro" />
+
+                            <MudText Typo=@Typo.body2 
+                                     Class="text-light">Live Meet</MudText>
+                        </div>
+                    </div>
+
+                    @if (_currentPlan == SubscriptionTier.Free)
+                    {
+                        <MudButton Variant=@Variant.Filled
+                                   FullWidth="true"
+                                   Disabled=@_isProcessing
+                                   EndIcon=@Icons.Material.Filled.ArrowForward
+                                   Class="action-btn action-btn-upgrade rounded-lg text-none"
+                                   @onclick="OnUpgradeClickAsync">
+                            Upgrade
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant=@Variant.Filled
+                                   FullWidth="true"
+                                   Disabled="true"
+                                   Class="action-btn action-btn-current rounded-lg text-none">
+                            Active Plan
+                        </MudButton>
+                    }
+                </div>
+            </MudPaper>
+        </div>
+    }
+</div>
