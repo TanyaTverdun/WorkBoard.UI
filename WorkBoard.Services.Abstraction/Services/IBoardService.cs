@@ -41,4 +41,8 @@ public interface IBoardService
 
     Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<BoardSearchResultDto>> SearchBoardsAsync(
+        string query,
+        CancellationToken cancellationToken = default);
 }

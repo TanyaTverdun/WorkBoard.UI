@@ -279,4 +279,35 @@ internal class BoardService : IBoardService
             throw;
         }
     }
+
+    public async Task<IReadOnlyList<BoardSearchResultDto>> SearchBoardsAsync(
+        string query,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _boardApi.SearchBoardsAsync(
+                query,
+                cancellationToken);
+        }
+        catch (ApiException apiEx)
+        {
+            _logger.LogError(
+                apiEx,
+                "API error occurred while searching boards. " +
+                "Query: {Query}. Status: {StatusCode}",
+                query,
+                apiEx.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error occurred while searching boards. " +
+                "Query: {Query}",
+                query);
+            throw;
+        }
+    }
 }
