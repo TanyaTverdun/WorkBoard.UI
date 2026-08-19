@@ -99,8 +99,11 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
             try
             {
                 await LabelService.AddLabelToCardAsync(CardId, label.Id);
-                _labels.Add(label);
-                await AppliedLabelsChanged.InvokeAsync(_labels);
+                if (!_labels.Any(x => x.Id == label.Id))
+                {
+                    _labels.Add(label);
+                    await AppliedLabelsChanged.InvokeAsync(_labels);
+                }
             }
             catch (Exception ex)
             {
@@ -260,8 +263,15 @@ public partial class CardLabelsSection : ComponentBase, IDisposable
                 CardId,
                 request);
 
-            _allAvailableLabels.Add(newLabel);
-            _labels.Add(newLabel);
+            if (!_allAvailableLabels.Any(l => l.Id == newLabel.Id))
+            {
+                _allAvailableLabels.Add(newLabel);
+            }
+
+            if (!_labels.Any(l => l.Id == newLabel.Id))
+            {
+                _labels.Add(newLabel);
+            }
 
             HideCreateLabelForm();
 
