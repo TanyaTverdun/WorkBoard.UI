@@ -25,6 +25,9 @@ public partial class MainLayout : IAsyncDisposable
     [Inject]
     WorkspaceStateProvider WorkspaceStateService { get; set; } = default!;
 
+    [Inject]
+    ISnackbar Snackbar { get; set; } = default!;
+
     private MudTheme _customTheme = new MudTheme()
     {
     };
@@ -40,6 +43,8 @@ public partial class MainLayout : IAsyncDisposable
     {
         AppHubService.OnSidebarBoardStatusChanged += HandleSidebarBoardStatusChanged;
         AppHubService.OnWorkspacesListUpdated += HandleWorkspacesListUpdated;
+        CurrentUserProvider.OnProfileChanged += HandleProfileChanged;
+        WorkspaceStateService.OnWorkspaceDowngraded += HandleWorkspaceDowngraded;
 
         try
         {
@@ -71,10 +76,30 @@ public partial class MainLayout : IAsyncDisposable
         });
     }
 
+    private void HandleProfileChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleWorkspaceDowngraded()
+    {
+        InvokeAsync(() =>
+        {
+            Snackbar.Add(
+                "This workspace has been downgraded to the Free plan. " +
+                "Some boards or sections exceeding the limit may have been removed.",
+                Severity.Warning);
+
+            StateHasChanged();
+        });
+    }
+
     public async ValueTask DisposeAsync()
     {
         AppHubService.OnSidebarBoardStatusChanged -= HandleSidebarBoardStatusChanged;
         AppHubService.OnWorkspacesListUpdated -= HandleWorkspacesListUpdated;
+        CurrentUserProvider.OnProfileChanged -= HandleProfileChanged;
+        WorkspaceStateService.OnWorkspaceDowngraded -= HandleWorkspaceDowngraded;
 
         await AppHubService.StopConnectionAsync();
     }

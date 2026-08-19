@@ -1,6 +1,7 @@
-﻿@using WorkBoard.UI.Components
+﻿@using MudBlazor
+@using WorkBoard.Domain.Enums
+@using WorkBoard.UI.Components
 @using WorkBoard.UI.Components.Chat
-@using MudBlazor
 @inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_customTheme" />
@@ -38,4 +39,7 @@
 
 </div>
 
-<AiChatWidget />
+@if (WorkspaceStateService.CurrentWorkspaceTier == SubscriptionTier.Pro)
+{
+    <AiChatWidget />
+}
