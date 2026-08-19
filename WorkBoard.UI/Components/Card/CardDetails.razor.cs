@@ -19,7 +19,7 @@ public partial class CardDetails: ComponentBase, IDisposable
 {
     private const string ImportCommand = "import";
 
-    private const string JsModulePath = "./Components/Boards/CardDetails.razor.js";
+    private const string JsModulePath = "./Components/Card/CardDetails.razor.js";
 
     [CascadingParameter] 
     IMudDialogInstance MudDialog { get; set; } = default!;
