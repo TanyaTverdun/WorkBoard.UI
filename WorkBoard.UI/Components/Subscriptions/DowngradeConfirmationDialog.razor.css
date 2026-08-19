@@ -1,0 +1,12 @@
+﻿::deep .text-light {
+    color: #f8fafc !important;
+}
+
+::deep .warning-icon {
+    color: #fb923c !important;
+}
+
+::deep .limit-dot {
+    color: #fb923c !important;
+    font-size: 0.5rem !important;
+}

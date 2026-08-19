@@ -1,0 +1,76 @@
+﻿@using MudBlazor
+
+<MudDialog Class="downgrade-dialog">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon=@Icons.Material.Filled.WarningAmber 
+                     Class="warning-icon" />
+
+            <MudText Typo=@Typo.h6 
+                     Class="text-light">Downgrade to Free plan?</MudText>
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo=@Typo.body2 
+                 Class="mb-4" 
+                 Style="color:#a3b3cc">
+            You are about to cancel your Pro subscription. Your account will immediately be
+            restricted to the Free tier limits:
+        </MudText>
+
+        <div class="d-flex flex-column gap-2 mb-4">
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon=@Icons.Material.Filled.FiberManualRecord 
+                         Size=@Size.Small 
+                         Class="limit-dot" />
+
+                <MudText Typo=@Typo.body2 
+                         Class="text-light">1 Workspace</MudText>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon=@Icons.Material.Filled.FiberManualRecord 
+                         Size=@Size.Small 
+                         Class="limit-dot" />
+
+                <MudText Typo=@Typo.body2 
+                         Class="text-light">Maximum of 5 Boards</MudText>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon=@Icons.Material.Filled.FiberManualRecord 
+                         Size=@Size.Small 
+                         Class="limit-dot" />
+
+                <MudText Typo=@Typo.body2 
+                         Class="text-light">Maximum of 10 Sections per Board</MudText>
+            </div>
+        </div>
+
+        <MudAlert Severity=@Severity.Warning 
+                  Variant=@Variant.Filled 
+                  Class="warning-alert" 
+                  Dense="true">
+            If your current workspaces or boards exceed these limits, the excess data will be
+            <b>permanently deleted</b> upon confirmation. Please export or reorganize your data
+            before proceeding.
+        </MudAlert>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant=@Variant.Text 
+                   Class="text-none" 
+                   style="color:#cbd5e1" 
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Variant=@Variant.Filled 
+                   Class="text-none" 
+                   style="color:#ffffff; background-color:#ca5454" 
+                   OnClick="Confirm">
+            Confirm Downgrade
+        </MudButton>
+    </DialogActions>
+</MudDialog>
