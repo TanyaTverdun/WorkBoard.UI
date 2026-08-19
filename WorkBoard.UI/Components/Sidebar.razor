@@ -31,15 +31,53 @@
             </span>
         </div>
 
-        <div class="px-3 mb-3">
-            <div class="input-group search-box">
-                <span class="input-group-text bg-dark border-0 text-muted">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" 
-                       class="form-control bg-dark border-0 text-white shadow-none py-2" 
-                       placeholder="Search boards..." />
+        <div class="px-3 mb-3 position-relative">
+            <div class="search-box">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text"
+                       placeholder="Search boards..."
+                       @bind=@SearchQuery
+                       @bind:event="oninput"
+                       @onkeyup=@HandleSearchInput
+                       @onfocusout=@HideSearchResults />
             </div>
+
+            @if (_isSearching)
+            {
+                <div class="search-dropdown">
+                    <div class="search-status">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        Searching...
+                    </div>
+                </div>
+            }
+            else if (_searchResults != null && _searchResults.Any())
+            {
+                <div class="search-dropdown">
+                    <ul class="list-unstyled m-0">
+                        @foreach (var result in _searchResults)
+                        {
+                            <li class="search-item" 
+                                style="cursor: pointer;"
+                                @onmousedown=@(() => SelectSearchResult(result))>
+                                <span class="search-item-title">@result.BoardName</span>
+
+                                <span class="search-item-meta">
+                                    <i class="bi bi-briefcase-fill"></i>@result.WorkspaceName
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            else if (_searchResults != null && !_searchResults.Any())
+            {
+                <div class="search-dropdown">
+                    <div class="search-status">
+                        <i class="bi bi-inbox"></i> No boards found.
+                    </div>
+                </div>
+            }
         </div>
 
         <ul class="nav flex-column px-2 mb-4 gap-1">
