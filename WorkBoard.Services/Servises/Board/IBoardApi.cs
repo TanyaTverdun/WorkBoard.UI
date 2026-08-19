@@ -50,4 +50,9 @@ internal interface IBoardApi
     [Get("/api/boards/archivation")]
     Task<IReadOnlyList<BoardArchivationDto>> GetBoardsForArchivationAsync(
         CancellationToken cancellationToken = default);
+
+    [Get("/api/boards/search")]
+    Task<IReadOnlyList<BoardSearchResultDto>> SearchBoardsAsync(
+        [Query] string query,
+        CancellationToken cancellationToken = default);
 }
